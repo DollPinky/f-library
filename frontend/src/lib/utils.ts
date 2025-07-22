@@ -26,31 +26,35 @@ export function formatDateTime(date: Date | string): string {
 }
 
 export function getStatusColor(status: string): string {
-  switch (status.toLowerCase()) {
-    case 'available':
-      return 'bg-green-100 text-green-800'
-    case 'borrowed':
+  switch (status) {
+    case 'BORROWED':
       return 'bg-blue-100 text-blue-800'
-    case 'overdue':
+    case 'RETURNED':
+      return 'bg-green-100 text-green-800'
+    case 'OVERDUE':
       return 'bg-red-100 text-red-800'
-    case 'reserved':
+    case 'RENEWED':
       return 'bg-yellow-100 text-yellow-800'
-    case 'lost':
-      return 'bg-gray-100 text-gray-800'
+    case 'AVAILABLE':
+      return 'bg-green-100 text-green-800'
+    case 'MAINTENANCE':
+      return 'bg-red-100 text-red-800'
+    case 'RESERVED':
+      return 'bg-yellow-100 text-yellow-800'
     default:
       return 'bg-gray-100 text-gray-800'
   }
 }
 
 export function getRoleColor(role: string): string {
-  switch (role.toLowerCase()) {
-    case 'admin':
-      return 'bg-purple-100 text-purple-800'
-    case 'librarian':
+  switch (role) {
+    case 'ADMIN':
+      return 'bg-red-100 text-red-800'
+    case 'LIBRARIAN':
       return 'bg-blue-100 text-blue-800'
-    case 'manager':
-      return 'bg-orange-100 text-orange-800'
-    case 'reader':
+    case 'MANAGER':
+      return 'bg-purple-100 text-purple-800'
+    case 'READER':
       return 'bg-green-100 text-green-800'
     default:
       return 'bg-gray-100 text-gray-800'
@@ -66,4 +70,37 @@ export function debounce<T extends (...args: any[]) => any>(
     clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)
   }
+}
+
+// Pagination compatibility utilities
+export function getPageNumber(response: any): number {
+  return response.number ?? response.pageNumber ?? 0
+}
+
+export function getPageSize(response: any): number {
+  return response.size ?? response.pageSize ?? 20
+}
+
+export function getTotalPages(response: any): number {
+  return response.totalPages ?? 0
+}
+
+export function getTotalElements(response: any): number {
+  return response.totalElements ?? 0
+}
+
+export function hasNextPage(response: any): boolean {
+  return response.hasNext ?? false
+}
+
+export function hasPreviousPage(response: any): boolean {
+  return response.hasPrevious ?? false
+}
+
+export function isFirstPage(response: any): boolean {
+  return response.isFirst ?? false
+}
+
+export function isLastPage(response: any): boolean {
+  return response.isLast ?? false
 } 

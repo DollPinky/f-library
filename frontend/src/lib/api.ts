@@ -23,7 +23,6 @@ const api = axios.create({
   },
 })
 
-// Request interceptor để thêm token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {
@@ -32,7 +31,6 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Response interceptor để xử lý lỗi
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -44,31 +42,78 @@ api.interceptors.response.use(
   }
 )
 
-// Auth API
 export const authAPI = {
-  login: async (username: string, password: string) => {
-    const response = await api.post<ApiResponse<{ token: string; user: User }>>('/auth/login', {
-      username,
-      password,
-    })
+  login: async (credentials: { username: string; password: string }) => {
+    const response = await api.post<ApiResponse<{ token: string; user: User }>>('/auth/login', credentials)
+    return response.data
+  },
+  
+  register: async (userData: {
+    username: string
+    email: string
+    password: string
+    fullName: string
+    phone: string
+    studentId?: string | null
+    faculty?: string | null
+    major?: string | null
+    year?: number | null
+    campusId?: number | null
+    libraryId?: number | null
+    role: string
+    isActive: boolean
+    profile?: {
+      studentId?: string
+      faculty?: string
+      major?: string
+      year?: number
+      campusId?: number
+      libraryId?: number
+    }
+  }) => {
+    const response = await api.post<ApiResponse<{ token: string; user: User }>>('/auth/register', userData)
     return response.data
   },
   
   logout: async () => {
-    const response = await api.post('/auth/logout')
+    const response = await api.post<ApiResponse<void>>('/auth/logout')
     return response.data
   },
   
-  getCurrentUser: async () => {
-    const response = await api.get<ApiResponse<User>>('/auth/me')
+  refreshToken: async () => {
+    const response = await api.post<ApiResponse<{ token: string }>>('/auth/refresh')
     return response.data
   },
+  
+  getProfile: async () => {
+    const response = await api.get<ApiResponse<User>>('/auth/profile')
+    return response.data
+  },
+  
+  updateProfile: async (profileData: Partial<User>) => {
+    const response = await api.put<ApiResponse<User>>('/auth/profile', profileData)
+    return response.data
+  },
+  
+  changePassword: async (passwordData: { oldPassword: string; newPassword: string }) => {
+    const response = await api.post<ApiResponse<void>>('/auth/change-password', passwordData)
+    return response.data
+  },
+  
+  forgotPassword: async (email: string) => {
+    const response = await api.post<ApiResponse<void>>('/auth/forgot-password', { email })
+    return response.data
+  },
+  
+  resetPassword: async (resetData: { token: string; newPassword: string }) => {
+    const response = await api.post<ApiResponse<void>>('/auth/reset-password', resetData)
+    return response.data
+  }
 }
 
-// Books API
 export const booksAPI = {
   getBooks: async (params: BookSearchParams = {}) => {
-    const response = await api.get<PaginatedResponse<Book>>('/books', { params })
+    const response = await api.get<ApiResponse<PaginatedResponse<Book>>>('/books', { params })
     return response.data
   },
   
@@ -100,7 +145,6 @@ export const booksAPI = {
   },
 }
 
-// Book Copies API
 export const bookCopiesAPI = {
   getBookCopies: async (bookId: number) => {
     const response = await api.get<ApiResponse<BookCopy[]>>(`/books/${bookId}/copies`)
@@ -128,10 +172,9 @@ export const bookCopiesAPI = {
   },
 }
 
-// Borrowings API
 export const borrowingsAPI = {
   getBorrowings: async (params: BorrowingSearchParams = {}) => {
-    const response = await api.get<PaginatedResponse<Borrowing>>('/borrowings', { params })
+    const response = await api.get<ApiResponse<PaginatedResponse<Borrowing>>>('/borrowings', { params })
     return response.data
   },
   
@@ -161,10 +204,9 @@ export const borrowingsAPI = {
   },
 }
 
-// Users API
 export const usersAPI = {
   getUsers: async (params: any = {}) => {
-    const response = await api.get<PaginatedResponse<User>>('/users', { params })
+    const response = await api.get<ApiResponse<PaginatedResponse<User>>>('/users', { params })
     return response.data
   },
   
@@ -189,7 +231,6 @@ export const usersAPI = {
   },
 }
 
-// Libraries API
 export const librariesAPI = {
   getLibraries: async () => {
     const response = await api.get<ApiResponse<Library[]>>('/libraries')
@@ -202,7 +243,6 @@ export const librariesAPI = {
   },
 }
 
-// Campuses API
 export const campusesAPI = {
   getCampuses: async () => {
     const response = await api.get<ApiResponse<Campus[]>>('/campuses')
@@ -215,7 +255,6 @@ export const campusesAPI = {
   },
 }
 
-// Categories API
 export const categoriesAPI = {
   getCategories: async () => {
     const response = await api.get<ApiResponse<Category[]>>('/categories')
@@ -228,7 +267,6 @@ export const categoriesAPI = {
   },
 }
 
-// Dashboard API
 export const dashboardAPI = {
   getStats: async () => {
     const response = await api.get<ApiResponse<DashboardStats>>('/dashboard/stats')
@@ -250,7 +288,6 @@ export const dashboardAPI = {
   },
 }
 
-// Health API
 export const healthAPI = {
   check: async () => {
     const response = await api.get('/health')

@@ -1,262 +1,544 @@
-# University Library Management System
+# Hệ Thống Quản Lý Thư Viện Đại Học
 
-Library management solution designed for multi-campus university environments, built with modern Java technologies and scalable architecture patterns.
+Hệ thống quản lý thư viện hiện đại cho môi trường đại học đa phân hiệu
 
-## Architecture Overview
+## 🏗️ Kiến Trúc Hệ Thống
 
-### Technology Stack
-- **Runtime Environment:** Java 21 with Spring Boot 3.2.0
-- **Data Persistence:** PostgreSQL 15 (production), H2 (development)
-- **Caching Strategy:** Multi-tier caching with Caffeine (L1) and Redis (L2)
-- **Event Processing:** Apache Kafka for asynchronous event handling
-- **Build System:** Gradle 8.5+ with aggressive caching and parallel execution
-- **Continuous Integration:** GitHub Actions with automated testing pipeline
-- **Containerization:** Docker and Docker Compose for development environment
+### Công Nghệ Sử Dụng
+- **Backend:** Java 21 + Spring Boot 3.2.0
+- **Frontend:** Next.js 14 + TypeScript + Tailwind CSS
+- **Database:** PostgreSQL 15 (production), H2 (development)
+- **Cache:** Redis + Caffeine (multi-tier caching)
+- **Message Queue:** Apache Kafka
+- **Build Tool:** Gradle 8.5+
+- **Container:** Docker + Docker Compose
 
-### Data Model
-- **campuses:** University campus entities with geographical distribution
-- **libraries:** Library facilities associated with each campus
-- **staff:** Library personnel with role-based access control (ADMIN, LIBRARIAN, MANAGER)
-- **categories:** Hierarchical book classification system
-- **books:** Bibliographic information at ISBN level
-- **book_copies:** Physical inventory management for individual book instances
-- **readers:** Patron management for students and faculty
-- **borrowings:** Transactional data for book lending and returns
-
-## Development Environment Setup
-
-### Prerequisites
-- Java Development Kit 21 or higher
-- Docker Desktop with Docker Compose
-- Git version control system
-
-### Initial Setup
-```bash
-# Clone the repository
-git clone <repository-url>
-cd Library-Management
-
-# Initialize the project
-gradlew.bat wrapper
+### Cấu Trúc Thư Mục
+```
+Library-Management/
+├── src/main/java/com/university/library/
+│   ├── base/                    # Base classes và utilities
+│   ├── config/                  # Cấu hình Spring
+│   ├── constants/               # Constants và enums
+│   ├── controller/              # REST Controllers
+│   ├── dto/                     # Data Transfer Objects
+│   ├── entity/                  # JPA Entities
+│   ├── facade/                  # Facade layer (CQRS)
+│   ├── service/                 # Business logic services
+│   │   ├── command/            # Command services (CUD operations)
+│   │   └── query/              # Query services (R operations)
+│   ├── repository/              # Data access layer
+│   ├── mapper/                  # Object mapping
+│   └── event/                   # Event handling
+├── frontend/                    # Next.js frontend
+└── docker-compose.yml          # Infrastructure services
 ```
 
-### Infrastructure Services
+## 🚀 Cách Chạy Dự Án
+
+### Yêu Cầu Hệ Thống
+- Java 21 trở lên
+- Docker Desktop
+- Node.js 18+ (cho frontend)
+
+### Bước 1: Khởi động Infrastructure
 ```bash
-# Start required services (PostgreSQL, Redis, Kafka, Zookeeper)
+# Khởi động PostgreSQL, Redis, Kafka
 docker-compose up -d
 
-# Verify service status
+# Kiểm tra services
 docker-compose ps
 ```
 
-### Application Build and Execution
+### Bước 2: Chạy Backend
 ```bash
-# Build the application
-gradlew.bat build
+# Build project
+./gradlew build
 
-# Run with development profile
-gradlew.bat bootRun --args='--spring.profiles.active=docker'
+# Chạy với profile docker
+./gradlew bootRun --args='--spring.profiles.active=docker'
 ```
 
-### Service Endpoints
-- **Application Server:** http://localhost:8080
-- **REST API Base:** http://localhost:8080/api
-- **API Documentation:** http://localhost:8080/swagger-ui.html
-- **Health Monitoring:** http://localhost:8080/api/health
-- **Kafka Management:** http://localhost:8081
-- **Redis Management:** http://localhost:8082
-
-## Data Management
-
-### Sample Dataset
-The system includes comprehensive sample data in `library_sample_data(1).sql`:
-- **3 University Campuses:** Hanoi, Ho Chi Minh City, Da Nang
-- **3 Library Facilities:** One library per campus
-- **15 Library Staff:** Various roles across campuses
-- **5 Book Categories:** Academic classification system
-- **30 Book Titles:** Diverse academic literature
-- **60 Book Copies:** Physical inventory distribution
-- **30 Registered Readers:** Students and faculty members
-- **40 Borrowing Transactions:** Historical lending data
-
-### Database Configuration
-- **Development:** H2 in-memory database for rapid iteration
-- **Production:** PostgreSQL with connection pooling and optimization
-
-## Configuration Management
-
-### Environment Profiles
-- **docker:** PostgreSQL + Redis + Kafka (containerized development)
-- **prod:** Production-optimized configuration with managed services
-
-### Production Environment Variables
+### Bước 3: Chạy Frontend
 ```bash
-# Database Configuration
-JDBC_DATABASE_URL=jdbc:postgresql://host:port/database
-JDBC_DATABASE_USERNAME=username
-JDBC_DATABASE_PASSWORD=password
-
-# Cache Configuration
-REDIS_URL=redis-host
-REDIS_PORT=6379
-REDIS_PASSWORD=redis-password
-
-# Message Queue Configuration
-KAFKA_URL=kafka-broker-url
-
-# Application Configuration
-PORT=8080
+cd frontend
+npm install
+npm run dev
 ```
 
-## Continuous Integration Pipeline
+### Truy Cập Hệ Thống
+- **Backend API:** http://localhost:8080
+- **Frontend:** http://localhost:3002
+- **API Docs:** http://localhost:8080/swagger-ui.html
+- **Kafka UI:** http://localhost:8081
+- **Redis UI:** http://localhost:8082
 
-### GitHub Actions Workflow
-- **Trigger Events:** Push to main/develop branches and pull requests
-- **Build Environment:** Ubuntu latest with JDK 21
-- **Service Integration:** PostgreSQL, Redis, and Kafka containers
-- **Testing Framework:** Comprehensive unit and integration tests
+## 📊 Mô Hình Dữ Liệu
 
-### Performance Optimizations
-- **Gradle Caching:** Local and remote build cache
-- **Parallel Execution:** Multi-threaded build and test execution
-- **Configuration Cache:** Incremental build optimization
-- **Dependency Management:** Efficient artifact resolution
+### Entities Chính
+- **Campus:** Phân hiệu đại học (Hà Nội, TP.HCM, Đà Nẵng)
+- **Library:** Thư viện tại mỗi phân hiệu
+- **User:** Người dùng (Reader, Librarian, Admin, Manager)
+- **Category:** Danh mục sách (hierarchical)
+- **Book:** Thông tin sách (ISBN level)
+- **BookCopy:** Bản sao vật lý (QR code tracking)
+- **Borrowing:** Giao dịch mượn/trả sách
 
-### Quality Assurance
-- **Automated Testing:** PostgreSQL, Redis, and Kafka integration tests
-- **Build Performance:** Optimized caching for faster builds
-- **Environment Isolation:** Dedicated test environments
-- **Artifact Management:** Test reports and coverage analysis
-
-## Monitoring and Observability
-
-### Health Monitoring
-- **Application Health:** `/actuator/health` - Comprehensive system status
-- **Application Information:** `/actuator/info` - Version and configuration details
-- **Performance Metrics:** `/actuator/metrics` - Runtime performance indicators
-- **Prometheus Integration:** `/actuator/prometheus` - Time-series metrics export
-
-### Logging Strategy
-- **Development:** Console-based logging with DEBUG level for detailed troubleshooting
-- **Production:** Structured logging with rotation and centralized aggregation
-
-## System Capabilities
-
-### Core Functionality
-- **Multi-Campus Management:** Centralized administration across university branches
-- **Inventory Control:** Comprehensive book and copy management system
-- **Circulation Management:** Automated borrowing and return processing
-- **Role-Based Access:** Granular permission system for staff members
-- **Asset Tracking:** QR code-based physical inventory tracking
-- **Financial Management:** Automated fine calculation and processing
-
-### Enterprise Architecture
-- **Multi-Tier Caching:** Caffeine (L1) and Redis (L2) for optimal performance
-- **Event-Driven Processing:** Kafka-based asynchronous event handling
-- **Database Optimization:** Strategic indexing and query optimization
-- **Connection Management:** Efficient connection pooling and resource utilization
-- **System Monitoring:** Comprehensive health checks and performance metrics
-- **API Documentation:** Interactive OpenAPI documentation with Swagger UI
-
-### Roadmap Features
-- **Reservation System:** Advanced book reservation and hold management
-- **Communication Platform:** Automated email and SMS notifications
-- **Mobile Application:** Cross-platform mobile interface for patrons
-- **Analytics Dashboard:** Business intelligence and reporting capabilities
-- **System Integration:** LMS and SIS integration for seamless data flow
-
-## Containerized Development Environment
-
-### Service Orchestration
-```bash
-# Start all infrastructure services
-docker-compose up -d
-
-# Monitor service logs
-docker-compose logs -f
-
-# Graceful shutdown
-docker-compose down
+### Quan Hệ Dữ Liệu
+```
+Campus (1) ←→ (N) Library
+Library (1) ←→ (N) BookCopy
+Book (1) ←→ (N) BookCopy
+User (1) ←→ (N) Borrowing
+BookCopy (1) ←→ (N) Borrowing
+Category (1) ←→ (N) Book
 ```
 
-### Infrastructure Components
-- **PostgreSQL 15:** Primary relational database with advanced features
-- **Redis 7:** High-performance in-memory data structure store
-- **Apache Kafka 7.4:** Distributed streaming platform for event processing
-- **Apache Zookeeper:** Distributed coordination service for Kafka
-- **Kafka UI:** Web-based management interface for Kafka clusters
-- **Redis Commander:** Web-based Redis database management tool
+## 🏛️ Kiến Trúc Phần Mềm
 
-## API Reference
-
-### Interactive Documentation
-- **Swagger UI:** http://localhost:8080/swagger-ui.html - Interactive API explorer
-- **OpenAPI Specification:** http://localhost:8080/api-docs - Machine-readable API definition
-
-### Core API Endpoints
-- `GET /api/health` - System health status verification
-- `GET /api/health/ping` - Basic connectivity test
-- `GET /api/health/info` - Application metadata and version information
-- `GET /api/books` - Retrieve paginated book catalog
-- `GET /api/books/{id}` - Fetch detailed book information
-- `POST /api/borrowings` - Create new book borrowing transaction
-- `PUT /api/borrowings/{id}/return` - Process book return operation
-- `GET /api/readers/{id}/borrowings` - Retrieve patron borrowing history
-
-## Security Framework
-
-### Current Security Measures
-- **Input Validation:** Comprehensive request parameter validation
-- **Data Sanitization:** Protection against malicious input injection
-- **SQL Injection Prevention:** JPA/Hibernate parameterized queries
-- **CORS Configuration:** Cross-origin resource sharing policies
-
-### Planned Security Enhancements
-- **Authentication System:** Spring Security with JWT token-based authentication
-- **Authorization Framework:** Role-based access control (RBAC) implementation
-- **API Protection:** Rate limiting and request throttling mechanisms
-- **Audit Logging:** Comprehensive security event tracking and monitoring
-
-## Deployment Strategy
-
-### Cloud Platform Deployment
-```bash
-# Heroku deployment configuration (currently disabled)
-# deploy:
-#   provider: heroku
-#   api_key: $HEROKU_API_KEY
-#   app: university-library
+### 1. Controller Layer (REST API)
+```java
+@RestController
+@RequestMapping("/api/books")
+public class BookController {
+    
+    @GetMapping
+    public ResponseEntity<StandardResponse<PagedResponse<Book>>> getBooks(
+            BookSearchParams params) {
+        // Chỉ xử lý HTTP request/response
+        // Không chứa business logic
+    }
+}
 ```
 
-### Production Deployment
-```bash
-# Build production artifact
-gradlew.bat build
+**Nguyên tắc:**
+- Chỉ xử lý HTTP request/response
+- Validate input parameters
+- Gọi Facade service
+- Return ResponseEntity<StandardResponse<T>>
+- Không chứa business logic
 
-# Execute with production configuration
-java -Dspring.profiles.active=prod -jar build/libs/library-management-*.jar
+### 2. Facade Layer (CQRS Pattern)
+```java
+@Service
+public class BookFacade {
+    
+    private final BookQueryService queryService;
+    private final BookCommandService commandService;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    
+    public PagedResponse<Book> searchBooks(BookSearchParams params) {
+        return queryService.searchBooks(params);
+    }
+    
+    public Book createBook(CreateBookCommand command) {
+        Book book = commandService.createBook(command);
+        // Gửi event qua Kafka
+        kafkaTemplate.send("book-events", new BookCreatedEvent(book));
+        return book;
+    }
+}
 ```
 
-## Development Guidelines
+**Nguyên tắc:**
+- Orchestrate giữa Query và Command services
+- Xử lý events và notifications
+- Không chứa business logic phức tạp
 
-### Contribution Process
-1. **Repository Fork:** Create a personal fork of the main repository
-2. **Feature Branch:** Develop new features in dedicated branches
-3. **Code Review:** Submit pull requests for peer review
-4. **Quality Assurance:** Ensure all tests pass before merging
-5. **Documentation:** Update relevant documentation for new features
+### 3. Service Layer (CQRS)
+```java
+// Query Service - Chỉ đọc dữ liệu
+@Service
+public class BookQueryService {
+    
+    private final BookRepository bookRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
+    
+    public PagedResponse<Book> searchBooks(BookSearchParams params) {
+        // Cache key
+        String cacheKey = "books:search:" + params.hashCode();
+        
+        // Kiểm tra cache
+        PagedResponse<Book> cached = redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+        
+        // Query database
+        Page<Book> books = bookRepository.searchBooks(params);
+        PagedResponse<Book> response = PagedResponse.fromPage(books);
+        
+        // Cache kết quả
+        redisTemplate.opsForValue().set(cacheKey, response, Duration.ofMinutes(10));
+        
+        return response;
+    }
+}
 
-## Licensing
+// Command Service - Chỉ thay đổi dữ liệu
+@Service
+public class BookCommandService {
+    
+    private final BookRepository bookRepository;
+    private final BookCopyRepository bookCopyRepository;
+    
+    @Transactional
+    public Book createBook(CreateBookCommand command) {
+        // Validate business rules
+        validateBookCreation(command);
+        
+        // Create book
+        Book book = BookMapper.toEntity(command);
+        book = bookRepository.save(book);
+        
+        // Create book copies
+        createBookCopies(book, command.getCopies());
+        
+        return book;
+    }
+}
+```
 
-This project is licensed under the MIT License, providing maximum flexibility for academic and commercial use.
+**Nguyên tắc:**
+- **Query Service:** Chỉ đọc dữ liệu, sử dụng cache, không có transaction
+- **Command Service:** Chỉ thay đổi dữ liệu, có transaction, gửi events
+- Tách biệt rõ ràng giữa đọc và ghi
 
-## Support and Maintenance
+### 4. Repository Layer
+```java
+@Repository
+public interface BookRepository extends JpaRepository<Book, Long> {
+    
+    // Chỉ sử dụng method names, không @Query
+    List<Book> findByCategoryIdAndStatus(Long categoryId, String status);
+    
+    // Sử dụng Specification cho complex queries
+    Page<Book> findAll(Specification<Book> spec, Pageable pageable);
+    
+    // Custom query chỉ khi thực sự cần thiết
+    @Query("SELECT b FROM Book b WHERE b.title LIKE %:keyword% OR b.author LIKE %:keyword%")
+    Page<Book> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+}
+```
 
-For technical support and inquiries:
-- **Issue Tracking:** Create detailed issues in the project repository
-- **Development Team:** Contact the core development team for urgent matters
-- **Documentation:** Refer to comprehensive project documentation
+**Nguyên tắc:**
+- Không viết derived queries phức tạp
+- Sử dụng method names đơn giản
+- Chỉ dùng @Query khi thực sự cần thiết
+- Tối ưu truy vấn với indexes
+
+### 5. Event Handling
+```java
+@Component
+public class BookEventHandler {
+    
+    @KafkaListener(topics = "book-events")
+    public void handleBookEvent(BookEvent event) {
+        switch (event.getType()) {
+            case BOOK_CREATED:
+                handleBookCreated((BookCreatedEvent) event);
+                break;
+            case BOOK_UPDATED:
+                handleBookUpdated((BookUpdatedEvent) event);
+                break;
+        }
+    }
+    
+    private void handleBookCreated(BookCreatedEvent event) {
+        // Update cache
+        // Send notifications
+        // Update search index
+    }
+}
+```
+
+## 🔧 Cấu Hình Hệ Thống
+
+### Application Properties
+```yaml
+# Database
+spring.datasource.url: jdbc:postgresql://localhost:5432/library
+spring.datasource.username: postgres
+spring.datasource.password: password
+
+# Redis Cache
+spring.redis.host: localhost
+spring.redis.port: 6379
+spring.cache.type: redis
+
+# Kafka
+spring.kafka.bootstrap-servers: localhost:9092
+spring.kafka.consumer.group-id: library-group
+
+# JPA
+spring.jpa.hibernate.ddl-auto: validate
+spring.jpa.show-sql: false
+spring.jpa.properties.hibernate.format_sql: true
+```
+
+### Cache Strategy
+```java
+@Configuration
+@EnableCaching
+public class CacheConfig {
+    
+    @Bean
+    public CacheManager cacheManager(RedisConnectionFactory factory) {
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+            .entryTtl(Duration.ofMinutes(30))
+            .serializeKeysWith(RedisSerializationContext.SerializationPair
+                .fromSerializer(new StringRedisSerializer()))
+            .serializeValuesWith(RedisSerializationContext.SerializationPair
+                .fromSerializer(new GenericJackson2JsonRedisSerializer()));
+        
+        return RedisCacheManager.builder(factory)
+            .cacheDefaults(config)
+            .build();
+    }
+}
+```
+
+## 📱 Frontend Architecture
+
+### Cấu Trúc Thư Mục
+```
+frontend/src/
+├── app/                    # Next.js App Router
+│   ├── (auth)/            # Authentication pages
+│   ├── admin/             # Admin pages
+│   ├── books/             # Book management
+│   └── layout.tsx         # Root layout
+├── components/            # Reusable components
+│   ├── ui/               # Base UI components
+│   ├── layout/           # Layout components
+│   └── forms/            # Form components
+├── lib/                  # Utilities
+│   ├── api.ts           # API client
+│   └── utils.ts         # Helper functions
+├── store/               # State management
+└── types/               # TypeScript types
+```
+
+### API Integration
+```typescript
+// Standard response format
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp: string;
+}
+
+// Pagination response
+interface PaginatedResponse<T> {
+  content: T[];
+  number: number;        // pageNumber
+  size: number;          // pageSize
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  isFirst: boolean;
+  isLast: boolean;
+}
+```
+
+## 🧪 Testing Strategy
+
+### Unit Tests
+```java
+@ExtendWith(MockitoExtension.class)
+class BookQueryServiceTest {
+    
+    @Mock
+    private BookRepository bookRepository;
+    
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+    
+    @InjectMocks
+    private BookQueryService queryService;
+    
+    @Test
+    void searchBooks_ShouldReturnCachedResult() {
+        // Given
+        BookSearchParams params = new BookSearchParams();
+        PagedResponse<Book> expected = PagedResponse.empty();
+        
+        when(redisTemplate.opsForValue().get(anyString()))
+            .thenReturn(expected);
+        
+        // When
+        PagedResponse<Book> result = queryService.searchBooks(params);
+        
+        // Then
+        assertEquals(expected, result);
+        verify(bookRepository, never()).searchBooks(any());
+    }
+}
+```
+
+### Integration Tests
+```java
+@SpringBootTest
+@Testcontainers
+class BookControllerIntegrationTest {
+    
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    
+    @Container
+    static RedisContainer<?> redis = new RedisContainer<>("redis:7");
+    
+    @Test
+    void getBooks_ShouldReturnPaginatedResponse() {
+        // Test API endpoints với real database
+    }
+}
+```
+
+## 📈 Performance Optimization
+
+### Database Optimization
+```sql
+-- Indexes cho queries thường xuyên
+CREATE INDEX idx_book_title_author ON books(title, author);
+CREATE INDEX idx_book_category ON books(category_id);
+CREATE INDEX idx_borrowing_status ON borrowings(status);
+CREATE INDEX idx_borrowing_dates ON borrowings(borrow_date, due_date);
+```
+
+### Cache Strategy
+- **L1 Cache (Caffeine):** In-memory cache cho hot data
+- **L2 Cache (Redis):** Distributed cache cho shared data
+- **Cache Keys:** Structured naming convention
+- **TTL:** Different TTL cho different data types
+
+### Query Optimization
+- Sử dụng pagination cho tất cả list queries
+- Lazy loading cho relationships
+- Batch processing cho bulk operations
+- Connection pooling optimization
+
+## 🔒 Security
+
+### Input Validation
+```java
+@Validated
+@RestController
+public class BookController {
+    
+    @PostMapping
+    public ResponseEntity<StandardResponse<Book>> createBook(
+            @Valid @RequestBody CreateBookRequest request) {
+        // Validation tự động với @Valid
+    }
+}
+```
+
+### Authentication & Authorization
+```java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/librarian/**").hasRole("LIBRARIAN")
+                .anyRequest().authenticated()
+            )
+            .build();
+    }
+}
+```
+
+## 🚀 Deployment
+
+### Docker Deployment
+```dockerfile
+FROM openjdk:21-jdk-slim
+COPY build/libs/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+```
+
+### Production Configuration
+```yaml
+# application-prod.yml
+spring:
+  profiles: prod
+  datasource:
+    url: ${JDBC_DATABASE_URL}
+    username: ${JDBC_DATABASE_USERNAME}
+    password: ${JDBC_DATABASE_PASSWORD}
+  redis:
+    host: ${REDIS_HOST}
+    password: ${REDIS_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+```
+
+## 📋 Development Guidelines
+
+### Code Standards
+- **Naming:** Descriptive names, không viết tắt
+- **Comments:** Chỉ comment cho business logic phức tạp
+- **Constants:** Sử dụng constants thay vì hardcoded strings
+- **Error Handling:** Consistent error handling pattern
+- **Logging:** Structured logging với appropriate levels
+
+### Git Workflow
+1. **Feature Branch:** Tạo branch cho mỗi feature
+2. **Commit Messages:** Descriptive commit messages
+3. **Pull Request:** Code review trước khi merge
+4. **Testing:** Tất cả tests phải pass
+
+### Code Review Checklist
+- [ ] Business logic đúng
+- [ ] Performance considerations
+- [ ] Security implications
+- [ ] Error handling
+- [ ] Test coverage
+- [ ] Documentation updates
+
+## 🎯 Roadmap
+
+### Phase 1: Core Features ✅
+- [x] Book management
+- [x] User management
+- [x] Borrowing system
+- [x] Basic reporting
+
+### Phase 2: Advanced Features
+- [ ] QR code scanning
+- [ ] Email notifications
+- [ ] Advanced analytics
+- [ ] Mobile app
+
+### Phase 3: Enterprise Features
+- [ ] Multi-tenant support
+- [ ] Advanced security
+- [ ] Integration APIs
+- [ ] Performance monitoring
+
+## 🤝 Contributing
+
+1. Fork repository
+2. Tạo feature branch
+3. Commit changes
+4. Push to branch
+5. Tạo Pull Request
+
+## 📞 Support
+
+- **Issues:** Tạo issue trên GitHub
+- **Documentation:** Xem docs trong thư mục docs/
+- **Email:** library-support@university.edu.vn
 
 ---
 
-**Developed for Academic Excellence in Library Management**
+**Phát triển bởi Đội ngũ Công nghệ Thông tin Đại học**

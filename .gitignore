@@ -347,3 +347,6 @@ test-data/
 # CI/CD artifacts
 .ci/
 .cache/
+
+build/
+.gradle/
