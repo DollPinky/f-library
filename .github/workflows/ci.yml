@@ -19,12 +19,13 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+    - name: Install Gradle
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gradle
 
     - name: Install Docker Compose
       run: |
-        sudo apt-get update
         sudo apt-get install -y docker-compose
 
     - name: Start project infrastructure with Docker Compose
@@ -39,7 +40,7 @@ jobs:
         docker ps
 
     - name: Test application with real infrastructure
-      run: ./gradlew clean build --info -Dspring.profiles.active=docker
+      run: gradle clean build --info -Dspring.profiles.active=docker
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_management
         SPRING_DATASOURCE_USERNAME: postgres
@@ -49,7 +50,7 @@ jobs:
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
 
     - name: Run integration tests
-      run: ./gradlew test --info -Dspring.profiles.active=docker
+      run: gradle test --info -Dspring.profiles.active=docker
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_management
         SPRING_DATASOURCE_USERNAME: postgres
@@ -61,7 +62,7 @@ jobs:
     - name: Test API endpoints
       run: |
         echo "Starting application for API testing..."
-        timeout 60s ./gradlew bootRun --args='--spring.profiles.active=docker' &
+        timeout 60s gradle bootRun --args='--spring.profiles.active=docker' &
         APP_PID=$!
 
         echo "Waiting for application to start..."
