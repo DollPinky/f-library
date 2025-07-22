@@ -19,95 +19,53 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
     
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
-      with:
-        gradle-version: 8.5
-    
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     
-    - name: Start infrastructure services with Docker Compose
+    - name: Start PostgreSQL
       run: |
-        # Create a simplified docker-compose for CI
-        cat > docker-compose.ci.yml << 'EOF'
-        version: '3.8'
-        services:
-          postgres:
-            image: postgres:15
-            environment:
-              POSTGRES_PASSWORD: postgres
-              POSTGRES_DB: library_test
-            ports:
-              - "5432:5432"
-            healthcheck:
-              test: ["CMD-SHELL", "pg_isready -U postgres"]
-              interval: 10s
-              timeout: 5s
-              retries: 5
-          
-          redis:
-            image: redis:7
-            ports:
-              - "6379:6379"
-            healthcheck:
-              test: ["CMD", "redis-cli", "ping"]
-              interval: 10s
-              timeout: 5s
-              retries: 5
-          
-          zookeeper:
-            image: confluentinc/cp-zookeeper:7.4.0
-            environment:
-              ZOOKEEPER_CLIENT_PORT: 2181
-              ZOOKEEPER_TICK_TIME: 2000
-            ports:
-              - "2181:2181"
-            healthcheck:
-              test: ["CMD-SHELL", "echo srvr | nc localhost 2181"]
-              interval: 10s
-              timeout: 5s
-              retries: 5
-          
-          kafka:
-            image: confluentinc/cp-kafka:7.4.0
-            depends_on:
-              zookeeper:
-                condition: service_healthy
-            environment:
-              KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-              KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-              KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-            ports:
-              - "9092:9092"
-            healthcheck:
-              test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
-              interval: 10s
-              timeout: 5s
-              retries: 5
-        EOF
+        docker run -d --name postgres-ci \
+          -e POSTGRES_PASSWORD=postgres \
+          -e POSTGRES_DB=library_test \
+          -p 5432:5432 \
+          postgres:15
         
-        # Start services
-        docker-compose -f docker-compose.ci.yml up -d
+        echo "Waiting for PostgreSQL to start..."
+        sleep 20
     
-    - name: Wait for services to be ready
+    - name: Start Redis
       run: |
-        echo "Waiting for services to start..."
-        sleep 30
+        docker run -d --name redis-ci \
+          -p 6379:6379 \
+          redis:7
         
-        echo "Checking PostgreSQL..."
-        docker run --rm --network host postgres:15 pg_isready -h localhost -p 5432 -U postgres
-        
-        echo "Checking Redis..."
-        docker run --rm --network host redis:7 redis-cli -h localhost -p 6379 ping
-        
-        echo "Checking Zookeeper..."
-        docker run --rm --network host confluentinc/cp-zookeeper:7.4.0 echo srvr | nc localhost 2181
-        
-        echo "Checking Kafka..."
-        docker run --rm --network host confluentinc/cp-kafka:7.4.0 kafka-topics --bootstrap-server localhost:9092 --list
+        echo "Waiting for Redis to start..."
+        sleep 10
     
-    - name: Build with Gradle
+    - name: Start Zookeeper
+      run: |
+        docker run -d --name zookeeper-ci \
+          -e ZOOKEEPER_CLIENT_PORT=2181 \
+          -e ZOOKEEPER_TICK_TIME=2000 \
+          -p 2181:2181 \
+          confluentinc/cp-zookeeper:7.4.0
+        
+        echo "Waiting for Zookeeper to start..."
+        sleep 15
+    
+    - name: Start Kafka
+      run: |
+        docker run -d --name kafka-ci \
+          -e KAFKA_ZOOKEEPER_CONNECT=localhost:2181 \
+          -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+          -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+          -p 9092:9092 \
+          confluentinc/cp-kafka:7.4.0
+        
+        echo "Waiting for Kafka to start..."
+        sleep 20
+    
+    - name: Test build
       run: ./gradlew clean build --info -Dspring.profiles.active=docker
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_test
@@ -127,21 +85,11 @@ jobs:
         SPRING_REDIS_PORT: 6379
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
     
-    - name: Generate test report
-      run: ./gradlew jacocoTestReport
-    
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
+    - name: Cleanup containers
       if: always()
-      with:
-        name: test-results
-        path: |
-          build/reports/tests/
-          build/reports/jacoco/
-    
-    - name: Stop services
-      if: always()
-      run: docker-compose -f docker-compose.ci.yml down
+      run: |
+        docker stop postgres-ci redis-ci zookeeper-ci kafka-ci || true
+        docker rm postgres-ci redis-ci zookeeper-ci kafka-ci || true
     
     - name: Build status
       run: |
