@@ -1,0 +1,67 @@
+language: java
+jdk: "openjdk21"
+
+# Cache configuration for faster builds
+cache:
+  directories:
+    - $HOME/.gradle/caches
+    - $HOME/.gradle/wrapper
+    - $HOME/.m2/repository
+
+# Services for integration testing
+services:
+  - docker
+
+# Environment variables
+env:
+  global:
+    - GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+    - DOCKER_COMPOSE_VERSION=1.29.2
+
+# Before install
+before_install:
+  - chmod +x gradlew
+  - echo "Java version:"
+  - java -version
+  - echo "Gradle version:"
+  - ./gradlew --version
+  - echo "Docker version:"
+  - docker --version
+  - echo "Docker Compose version:"
+  - docker-compose --version
+
+# Build and test
+script:
+  - echo "Starting Docker services for testing..."
+  - docker-compose -f docker-compose.travis.yml up -d
+  - echo "Waiting for services to be ready..."
+  - sleep 30
+  - echo "Running tests with Travis profile..."
+  - ./gradlew clean test build --build-cache --scan --info -Dspring.profiles.active=travis
+  - ./gradlew jacocoTestReport
+
+# After success
+after_success:
+  - echo "Build completed successfully!"
+  - echo "Test results:"
+  - find . -name "TEST-*.xml" -exec cat {} \;
+  - echo "Stopping Docker services..."
+  - docker-compose -f docker-compose.travis.yml down
+
+# Deploy to Heroku
+# deploy:
+#   provider: heroku
+#   api_key: $HEROKU_API_KEY
+#   app: university-library
+#   on:
+#     branch: main
+
+# Notifications
+notifications:
+  email: false
+
+# Branches to build
+branches:
+  only:
+    - main
+    - develop 
