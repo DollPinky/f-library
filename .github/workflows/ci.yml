@@ -24,8 +24,19 @@ jobs:
       with:
         gradle-version: 8.14.2
 
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
     - name: Install Docker Compose
       run: |
+        sudo apt-get update
         sudo apt-get install -y docker-compose
 
     - name: Start project infrastructure with Docker Compose
@@ -33,14 +44,20 @@ jobs:
         echo "Starting project infrastructure..."
         docker-compose up -d postgres redis kafka zookeeper
 
-        echo "Waiting for services to be ready..."
-        sleep 45
+        echo "Waiting for PostgreSQL to be ready..."
+        timeout 120s bash -c 'until docker exec library-postgres pg_isready -U postgres; do sleep 2; done' || echo "PostgreSQL health check timeout"
 
-        echo "Checking if containers are running..."
+        echo "Waiting for Redis to be ready..."
+        timeout 60s bash -c 'until docker exec library-redis redis-cli ping; do sleep 2; done' || echo "Redis health check timeout"
+
+        echo "Waiting for Kafka to be ready..."
+        timeout 60s bash -c 'until docker exec library-kafka kafka-topics --bootstrap-server localhost:9092 --list; do sleep 5; done' || echo "Kafka health check timeout"
+
+        echo "All services are ready!"
         docker ps
 
     - name: Test application with real infrastructure
-      run: gradle clean build --info -Dspring.profiles.active=docker
+      run: gradle clean build --info --stacktrace --warning-mode all -Dspring.profiles.active=docker
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_management
         SPRING_DATASOURCE_USERNAME: postgres
@@ -50,7 +67,7 @@ jobs:
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
 
     - name: Run integration tests
-      run: gradle test --info -Dspring.profiles.active=docker
+      run: gradle test --info --stacktrace --warning-mode all -Dspring.profiles.active=docker
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_management
         SPRING_DATASOURCE_USERNAME: postgres
@@ -62,11 +79,11 @@ jobs:
     - name: Test API endpoints
       run: |
         echo "Starting application for API testing..."
-        timeout 60s gradle bootRun --args='--spring.profiles.active=docker' &
+        timeout 120s gradle bootRun --args='--spring.profiles.active=docker' &
         APP_PID=$!
 
         echo "Waiting for application to start..."
-        sleep 30
+        sleep 45
 
         echo "Testing health endpoint..."
         curl -f http://localhost:8080/api/health || echo "Health check failed"
