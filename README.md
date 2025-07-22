@@ -1,257 +1,262 @@
-# Library Management System
+# University Library Management System
 
-[![Build Status](https://travis-ci.com/yourusername/Library-Management.svg?branch=main)](https://travis-ci.com/yourusername/Library-Management) <!-- Replace 'yourusername' with your actual GitHub username -->
-[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/projects/jdk/21/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-green.svg)](https://spring.io/projects/spring-boot)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker-3.8-blue.svg)](https://www.docker.com/)
+Library management solution designed for multi-campus university environments, built with modern Java technologies and scalable architecture patterns.
 
-Hệ thống quản lý thư viện đại học multi-campus với Spring Boot 3.2.0, Java 21, và kiến trúc enterprise-ready.
+## Architecture Overview
 
-## 🏗️ Kiến trúc hệ thống
+### Technology Stack
+- **Runtime Environment:** Java 21 with Spring Boot 3.2.0
+- **Data Persistence:** PostgreSQL 15 (production), H2 (development)
+- **Caching Strategy:** Multi-tier caching with Caffeine (L1) and Redis (L2)
+- **Event Processing:** Apache Kafka for asynchronous event handling
+- **Build System:** Gradle 8.5+ with aggressive caching and parallel execution
+- **Continuous Integration:** Travis CI with automated testing pipeline
+- **Containerization:** Docker and Docker Compose for development environment
 
-### Tech Stack
-- **Backend:** Java 21 + Spring Boot 3.2.0
-- **Database:** H2 (local) + PostgreSQL (production)
-- **Cache:** Caffeine (L1) + Redis (L2)
-- **Message Queue:** Apache Kafka
-- **Build Tool:** Gradle 8.5+ với caching
-- **CI/CD:** Travis CI
-- **Deployment:** Heroku (commented out)
+### Data Model
+- **campuses:** University campus entities with geographical distribution
+- **libraries:** Library facilities associated with each campus
+- **staff:** Library personnel with role-based access control (ADMIN, LIBRARIAN, MANAGER)
+- **categories:** Hierarchical book classification system
+- **books:** Bibliographic information at ISBN level
+- **book_copies:** Physical inventory management for individual book instances
+- **readers:** Patron management for students and faculty
+- **borrowings:** Transactional data for book lending and returns
 
-### Database Schema
-- **campuses:** Quản lý các phân hiệu đại học
-- **libraries:** Thư viện của từng phân hiệu
-- **staff:** Nhân viên thư viện (ADMIN, LIBRARIAN, MANAGER)
-- **categories:** Danh mục sách
-- **books:** Thông tin sách (ISBN level)
-- **book_copies:** Bản sao cụ thể của sách
-- **readers:** Độc giả (sinh viên, giảng viên)
-- **borrowings:** Giao dịch mượn/trả sách
+## Development Environment Setup
 
-## 🚀 Setup Development Environment
+### Prerequisites
+- Java Development Kit 21 or higher
+- Docker Desktop with Docker Compose
+- Git version control system
 
-### 1. Prerequisites
-- Java 21
-- Docker & Docker Compose
-- Git
-
-### 2. Clone và Setup
+### Initial Setup
 ```bash
+# Clone the repository
 git clone <repository-url>
 cd Library-Management
+
+# Initialize the project
+gradlew.bat wrapper
 ```
 
-### 3. Start Infrastructure Services
+### Infrastructure Services
 ```bash
-# Start PostgreSQL, Redis, Kafka, Zookeeper
+# Start required services (PostgreSQL, Redis, Kafka, Zookeeper)
 docker-compose up -d
 
-# Verify services
+# Verify service status
 docker-compose ps
 ```
 
-### 4. Build và Run Application
+### Application Build and Execution
 ```bash
-# Build project
+# Build the application
 gradlew.bat build
 
-# Run với profile local
-gradlew.bat bootRun --args='--spring.profiles.active=local'
+# Run with development profile
+gradlew.bat bootRun --args='--spring.profiles.active=docker'
 ```
 
-### 5. Access Services
-- **Application:** http://localhost:8080
-- **API Base URL:** http://localhost:8080/api
-- **Swagger UI:** http://localhost:8080/swagger-ui.html
-- **Health Check:** http://localhost:8080/api/health
-- **Kafka UI:** http://localhost:8081
-- **Redis Commander:** http://localhost:8082
+### Service Endpoints
+- **Application Server:** http://localhost:8080
+- **REST API Base:** http://localhost:8080/api
+- **API Documentation:** http://localhost:8080/swagger-ui.html
+- **Health Monitoring:** http://localhost:8080/api/health
+- **Kafka Management:** http://localhost:8081
+- **Redis Management:** http://localhost:8082
 
-## 📊 Database
+## Data Management
 
-### Sample Data
-Hệ thống sử dụng file `library_sample_data(1).sql` chứa:
-- 3 campuses (Hà Nội, TP.HCM, Đà Nẵng)
-- 3 libraries (1 thư viện/campus)
-- 15 staff members
-- 5 categories
-- 30 books
-- 60 book copies
-- 30 readers
-- 40 borrowings
+### Sample Dataset
+The system includes comprehensive sample data in `library_sample_data(1).sql`:
+- **3 University Campuses:** Hanoi, Ho Chi Minh City, Da Nang
+- **3 Library Facilities:** One library per campus
+- **15 Library Staff:** Various roles across campuses
+- **5 Book Categories:** Academic classification system
+- **30 Book Titles:** Diverse academic literature
+- **60 Book Copies:** Physical inventory distribution
+- **30 Registered Readers:** Students and faculty members
+- **40 Borrowing Transactions:** Historical lending data
 
-### Database Connection
-- **Local:** H2 in-memory database
-- **Production:** PostgreSQL với environment variables
+### Database Configuration
+- **Development:** H2 in-memory database for rapid iteration
+- **Production:** PostgreSQL with connection pooling and optimization
 
-## 🔧 Configuration
+## Configuration Management
 
-### Profiles
-- **local:** H2 + Caffeine cache + local Kafka
-- **prod:** PostgreSQL + Redis cache + managed Kafka
+### Environment Profiles
+- **docker:** PostgreSQL + Redis + Kafka (containerized development)
+- **prod:** Production-optimized configuration with managed services
 
-### Environment Variables (Production)
+### Production Environment Variables
 ```bash
+# Database Configuration
 JDBC_DATABASE_URL=jdbc:postgresql://host:port/database
 JDBC_DATABASE_USERNAME=username
 JDBC_DATABASE_PASSWORD=password
-KAFKA_URL=kafka-broker-url
+
+# Cache Configuration
 REDIS_URL=redis-host
 REDIS_PORT=6379
 REDIS_PASSWORD=redis-password
+
+# Message Queue Configuration
+KAFKA_URL=kafka-broker-url
+
+# Application Configuration
 PORT=8080
 ```
 
-## 🏭 CI/CD Pipeline
+## Continuous Integration Pipeline
 
-### Travis CI
-- **Build:** Java 21 + Gradle với caching
-- **Test:** Unit tests + Integration tests với Docker services
-- **Deploy:** Heroku (commented out)
-- **Monitoring:** Build status + notifications
+### Build Process
+- **Java Environment:** JDK 21 with optimized JVM settings
+- **Build System:** Gradle with aggressive caching strategies
+- **Testing Framework:** Comprehensive unit and integration tests
+- **Container Services:** Docker-based test environment
 
-### Build Optimization
-- Gradle build cache
-- Parallel execution
-- Configuration cache
-- Remote cache support
-- Docker services for testing
+### Performance Optimizations
+- **Gradle Caching:** Local and remote build cache
+- **Parallel Execution:** Multi-threaded build and test execution
+- **Configuration Cache:** Incremental build optimization
+- **Dependency Management:** Efficient artifact resolution
 
-### CI/CD Features
-- ✅ Automated testing với PostgreSQL, Redis, Kafka
-- ✅ Build caching cho performance
-- ✅ Environment-specific configurations
-- ✅ Deployment ready cho Heroku
-- ✅ Slack notifications (optional)
+### Quality Assurance
+- **Automated Testing:** PostgreSQL, Redis, and Kafka integration tests
+- **Build Performance:** Optimized caching for faster builds
+- **Environment Isolation:** Dedicated test environments
+- **Deployment Readiness:** Production deployment pipeline
 
-## 📈 Monitoring & Observability
+## Monitoring and Observability
 
-### Actuator Endpoints
-- `/actuator/health` - Health check
-- `/actuator/info` - Application info
-- `/actuator/metrics` - Metrics
-- `/actuator/prometheus` - Prometheus metrics
+### Health Monitoring
+- **Application Health:** `/actuator/health` - Comprehensive system status
+- **Application Information:** `/actuator/info` - Version and configuration details
+- **Performance Metrics:** `/actuator/metrics` - Runtime performance indicators
+- **Prometheus Integration:** `/actuator/prometheus` - Time-series metrics export
 
-### Logging
-- **Local:** Console logging với DEBUG level
-- **Production:** File logging với rotation
+### Logging Strategy
+- **Development:** Console-based logging with DEBUG level for detailed troubleshooting
+- **Production:** Structured logging with rotation and centralized aggregation
 
-## 🎯 Features
+## System Capabilities
 
-### Core Features
-- ✅ Multi-campus library management
-- ✅ Book inventory management
-- ✅ Borrowing/returning system
-- ✅ Staff role management
-- ✅ QR code tracking
-- ✅ Fine calculation
+### Core Functionality
+- **Multi-Campus Management:** Centralized administration across university branches
+- **Inventory Control:** Comprehensive book and copy management system
+- **Circulation Management:** Automated borrowing and return processing
+- **Role-Based Access:** Granular permission system for staff members
+- **Asset Tracking:** QR code-based physical inventory tracking
+- **Financial Management:** Automated fine calculation and processing
 
-### Enterprise Features
-- ✅ 2-layer caching (Caffeine + Redis)
-- ✅ Event-driven architecture (Kafka)
-- ✅ Database indexing
-- ✅ Connection pooling
-- ✅ Health monitoring
-- ✅ API documentation
+### Enterprise Architecture
+- **Multi-Tier Caching:** Caffeine (L1) and Redis (L2) for optimal performance
+- **Event-Driven Processing:** Kafka-based asynchronous event handling
+- **Database Optimization:** Strategic indexing and query optimization
+- **Connection Management:** Efficient connection pooling and resource utilization
+- **System Monitoring:** Comprehensive health checks and performance metrics
+- **API Documentation:** Interactive OpenAPI documentation with Swagger UI
 
-### Future Enhancements
-- 🔄 Book reservations
-- 🔄 Email notifications
-- 🔄 Mobile app
-- 🔄 Analytics dashboard
-- 🔄 Integration with LMS/SIS
+### Roadmap Features
+- **Reservation System:** Advanced book reservation and hold management
+- **Communication Platform:** Automated email and SMS notifications
+- **Mobile Application:** Cross-platform mobile interface for patrons
+- **Analytics Dashboard:** Business intelligence and reporting capabilities
+- **System Integration:** LMS and SIS integration for seamless data flow
 
-## 🐳 Docker
+## Containerized Development Environment
 
-### Development Stack
+### Service Orchestration
 ```bash
-# Start all services
+# Start all infrastructure services
 docker-compose up -d
 
-# View logs
+# Monitor service logs
 docker-compose logs -f
 
-# Stop services
+# Graceful shutdown
 docker-compose down
 ```
 
-### Services
-- **PostgreSQL 15:** Database
-- **Redis 7:** Cache
-- **Kafka 7.4:** Message queue
-- **Zookeeper:** Kafka coordination
-- **Kafka UI:** Kafka management interface
-- **Redis Commander:** Redis management interface
+### Infrastructure Components
+- **PostgreSQL 15:** Primary relational database with advanced features
+- **Redis 7:** High-performance in-memory data structure store
+- **Apache Kafka 7.4:** Distributed streaming platform for event processing
+- **Apache Zookeeper:** Distributed coordination service for Kafka
+- **Kafka UI:** Web-based management interface for Kafka clusters
+- **Redis Commander:** Web-based Redis database management tool
 
-## 📝 API Documentation
+## API Reference
 
-### OpenAPI/Swagger
-- **URL:** http://localhost:8080/swagger-ui.html
-- **JSON:** http://localhost:8080/api-docs
+### Interactive Documentation
+- **Swagger UI:** http://localhost:8080/swagger-ui.html - Interactive API explorer
+- **OpenAPI Specification:** http://localhost:8080/api-docs - Machine-readable API definition
 
-### Key Endpoints
-- `GET /api/health` - Health check
-- `GET /api/health/ping` - Simple ping
-- `GET /api/health/info` - Application info
-- `GET /api/books` - List books
-- `GET /api/books/{id}` - Get book details
-- `POST /api/borrowings` - Borrow book
-- `PUT /api/borrowings/{id}/return` - Return book
-- `GET /api/readers/{id}/borrowings` - Reader's borrowing history
+### Core API Endpoints
+- `GET /api/health` - System health status verification
+- `GET /api/health/ping` - Basic connectivity test
+- `GET /api/health/info` - Application metadata and version information
+- `GET /api/books` - Retrieve paginated book catalog
+- `GET /api/books/{id}` - Fetch detailed book information
+- `POST /api/borrowings` - Create new book borrowing transaction
+- `PUT /api/borrowings/{id}/return` - Process book return operation
+- `GET /api/readers/{id}/borrowings` - Retrieve patron borrowing history
 
-## 🔒 Security
+## Security Framework
 
-### Current Implementation
-- Basic validation
-- Input sanitization
-- SQL injection prevention (JPA)
+### Current Security Measures
+- **Input Validation:** Comprehensive request parameter validation
+- **Data Sanitization:** Protection against malicious input injection
+- **SQL Injection Prevention:** JPA/Hibernate parameterized queries
+- **CORS Configuration:** Cross-origin resource sharing policies
 
-### Future Enhancements
-- Spring Security
-- JWT authentication
-- Role-based access control
-- API rate limiting
+### Planned Security Enhancements
+- **Authentication System:** Spring Security with JWT token-based authentication
+- **Authorization Framework:** Role-based access control (RBAC) implementation
+- **API Protection:** Rate limiting and request throttling mechanisms
+- **Audit Logging:** Comprehensive security event tracking and monitoring
 
-## 🚀 Deployment
+## Deployment Strategy
 
-### Heroku (Commented Out)
+### Cloud Platform Deployment
 ```bash
-# Uncomment in .travis.yml
+# Heroku deployment configuration (currently disabled)
 # deploy:
 #   provider: heroku
 #   api_key: $HEROKU_API_KEY
 #   app: university-library
 ```
 
-### Manual Deployment
+### Production Deployment
 ```bash
-# Build JAR
+# Build production artifact
 gradlew.bat build
 
-# Run with production profile
+# Execute with production configuration
 java -Dspring.profiles.active=prod -jar build/libs/library-management-*.jar
 ```
 
-## 🤝 Contributing
+## Development Guidelines
 
-1. Fork repository
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Create Pull Request
+### Contribution Process
+1. **Repository Fork:** Create a personal fork of the main repository
+2. **Feature Branch:** Develop new features in dedicated branches
+3. **Code Review:** Submit pull requests for peer review
+4. **Quality Assurance:** Ensure all tests pass before merging
+5. **Documentation:** Update relevant documentation for new features
 
-## 📄 License
+## Licensing
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License, providing maximum flexibility for academic and commercial use.
 
-## 🆘 Support
+## Support and Maintenance
 
-For support and questions:
-- Create an issue
-- Contact development team
-- Check documentation
+For technical support and inquiries:
+- **Issue Tracking:** Create detailed issues in the project repository
+- **Development Team:** Contact the core development team for urgent matters
+- **Documentation:** Refer to comprehensive project documentation
 
 ---
 
-**Built with ❤️ for University Library Management**
+**Developed for Academic Excellence in Library Management**
