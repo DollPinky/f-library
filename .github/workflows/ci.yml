@@ -9,30 +9,35 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: 'temurin'
-    
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-    
+
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+
     - name: Start project infrastructure with Docker Compose
       run: |
         echo "Starting project infrastructure..."
         docker-compose up -d postgres redis kafka zookeeper
-        
+
         echo "Waiting for services to be ready..."
         sleep 45
-        
+
         echo "Checking if containers are running..."
         docker ps
-    
+
     - name: Test application with real infrastructure
       run: ./gradlew clean build --info -Dspring.profiles.active=docker
       env:
@@ -42,7 +47,7 @@ jobs:
         SPRING_REDIS_HOST: localhost
         SPRING_REDIS_PORT: 6379
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
-    
+
     - name: Run integration tests
       run: ./gradlew test --info -Dspring.profiles.active=docker
       env:
@@ -52,22 +57,22 @@ jobs:
         SPRING_REDIS_HOST: localhost
         SPRING_REDIS_PORT: 6379
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
-    
+
     - name: Test API endpoints
       run: |
         echo "Starting application for API testing..."
         timeout 60s ./gradlew bootRun --args='--spring.profiles.active=docker' &
         APP_PID=$!
-        
+
         echo "Waiting for application to start..."
         sleep 30
-        
+
         echo "Testing health endpoint..."
         curl -f http://localhost:8080/api/health || echo "Health check failed"
-        
+
         echo "Testing Swagger endpoint..."
         curl -f http://localhost:8080/swagger-ui.html || echo "Swagger check failed"
-        
+
         echo "Stopping application..."
         kill $APP_PID || true
         wait $APP_PID 2>/dev/null || true
@@ -78,20 +83,20 @@ jobs:
         SPRING_REDIS_HOST: localhost
         SPRING_REDIS_PORT: 6379
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
-    
+
     - name: Verify database initialization
       run: |
         echo "Checking if sample data was loaded..."
         docker exec postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM campuses;" || echo "Database check failed"
         docker exec postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM books;" || echo "Database check failed"
         docker exec postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM readers;" || echo "Database check failed"
-    
+
     - name: Cleanup project infrastructure
       if: always()
       run: |
         echo "Stopping project infrastructure..."
         docker-compose down -v
-    
+
     - name: Build status
       run: |
         if [ ${{ job.status }} == 'success' ]; then
