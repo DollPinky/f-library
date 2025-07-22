@@ -8,29 +8,15 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificationExecutor<Book> {
+public interface BookRepository extends JpaRepository<Book, UUID>, JpaSpecificationExecutor<Book> {
     
     /**
      * Tìm sách theo danh mục
      */
-    List<Book> findByCategoryId(Long categoryId);
-    
-    /**
-     * Tìm sách theo thư viện
-     */
-    List<Book> findByLibraryId(Long libraryId);
-    
-    /**
-     * Tìm sách theo trạng thái
-     */
-    List<Book> findByStatus(String status);
-    
-    /**
-     * Tìm sách theo ISBN
-     */
-    Book findByIsbn(String isbn);
+    List<Book> findByCategory_CategoryId(UUID categoryId);
     
     /**
      * Tìm kiếm sách theo từ khóa (title, author, isbn)
@@ -45,14 +31,4 @@ public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificat
      * Kiểm tra ISBN đã tồn tại chưa
      */
     boolean existsByIsbn(String isbn);
-    
-    /**
-     * Đếm số sách theo danh mục
-     */
-    long countByCategoryId(Long categoryId);
-    
-    /**
-     * Đếm số sách theo thư viện
-     */
-    long countByLibraryId(Long libraryId);
 } 

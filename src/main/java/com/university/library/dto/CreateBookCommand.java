@@ -1,5 +1,6 @@
 package com.university.library.dto;
 
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,10 +33,8 @@ public class CreateBookCommand {
     @Positive(message = "Năm xuất bản phải là số dương")
     private Integer publishYear;
     
-    private String description;
-    
     @NotNull(message = "Danh mục không được để trống")
-    private Long categoryId;
+    private UUID categoryId;
     
     private List<BookCopyInfo> copies;
     
@@ -45,7 +44,7 @@ public class CreateBookCommand {
     @AllArgsConstructor
     public static class BookCopyInfo {
         @NotNull(message = "Thư viện không được để trống")
-        private Long libraryId;
+        private UUID libraryId;
         
         @NotNull(message = "Số lượng không được để trống")
         @Positive(message = "Số lượng phải là số dương")

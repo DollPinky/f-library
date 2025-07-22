@@ -1,5 +1,7 @@
 package com.university.library.service.query;
 
+import com.university.library.annotation.MultiLayerCache;
+import com.university.library.annotation.MultiLayerCacheEvict;
 import com.university.library.base.PagedResponse;
 import com.university.library.dto.BookSearchParams;
 import com.university.library.entity.Book;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -24,11 +27,11 @@ public class BookQueryService {
     
     private final BookRepository bookRepository;
     private final RedisTemplate<String, Object> redisTemplate;
-    
+
     /**
-     * Tìm kiếm sách với pagination và caching
+     * Tìm kiếm sách với phân trang và cache
      */
-    @Cacheable(value = "books", key = "#params.hashCode()")
+    @MultiLayerCache(value = "books", key = "#params.hashCode()", localTtl = 5, distributedTtl = 15)
     public PagedResponse<Book> searchBooks(BookSearchParams params) {
         log.info("Searching books with params: {}", params);
         
@@ -65,8 +68,8 @@ public class BookQueryService {
     /**
      * Lấy sách theo ID với cache
      */
-    @Cacheable(value = "books", key = "#id")
-    public Book getBookById(Long id) {
+    @MultiLayerCache(value = "books", key = "#id", localTtl = 10, distributedTtl = 30)
+    public Book getBookById(UUID id) {
         log.info("Getting book by id: {}", id);
         return bookRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
@@ -75,25 +78,16 @@ public class BookQueryService {
     /**
      * Lấy tất cả sách theo danh mục
      */
-    @Cacheable(value = "books", key = "'category:' + #categoryId")
-    public List<Book> getBooksByCategory(Long categoryId) {
+    @MultiLayerCache(value = "books", key = "'category:' + #categoryId", localTtl = 5, distributedTtl = 15)
+    public List<Book> getBooksByCategory(UUID categoryId) {
         log.info("Getting books by category: {}", categoryId);
-        return bookRepository.findByCategoryId(categoryId);
-    }
-    
-    /**
-     * Lấy sách theo thư viện
-     */
-    @Cacheable(value = "books", key = "'library:' + #libraryId")
-    public List<Book> getBooksByLibrary(Long libraryId) {
-        log.info("Getting books by library: {}", libraryId);
-        return bookRepository.findByLibraryId(libraryId);
+        return bookRepository.findByCategory_CategoryId(categoryId);
     }
     
     /**
      * Tìm kiếm sách theo từ khóa
      */
-    @Cacheable(value = "books", key = "'search:' + #keyword")
+    @MultiLayerCache(value = "books", key = "'search:' + #keyword", localTtl = 5, distributedTtl = 15)
     public List<Book> searchBooksByKeyword(String keyword) {
         log.info("Searching books by keyword: {}", keyword);
         return bookRepository.searchByKeyword(keyword);
@@ -118,18 +112,11 @@ public class BookQueryService {
             
             // Filter by category
             if (params.getCategoryId() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("category").get("id"), params.getCategoryId()));
+                predicates.add(criteriaBuilder.equal(root.get("category").get("categoryId"), params.getCategoryId()));
             }
             
-            // Filter by library
-            if (params.getLibraryId() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("library").get("id"), params.getLibraryId()));
-            }
-            
-            // Filter by status
-            if (params.getStatus() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("status"), params.getStatus()));
-            }
+            // Book entity không có library field, chỉ có qua BookCopy
+            // Filter by status - Book entity không có status field
             
             return criteriaBuilder.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };

@@ -1,5 +1,6 @@
 package com.university.library.dto;
 
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +24,7 @@ public class AuthResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UserInfo {
-        private Long id;
+        private UUID id;
         private String username;
         private String email;
         private String fullName;
@@ -34,7 +35,7 @@ public class AuthResponse {
         private String faculty;
         private String major;
         private Integer year;
-        private Long campusId;
-        private Long libraryId;
+        private UUID campusId;
+        private UUID libraryId;
     }
 } 

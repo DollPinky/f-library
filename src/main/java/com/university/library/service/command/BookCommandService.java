@@ -1,5 +1,6 @@
 package com.university.library.service.command;
 
+import com.university.library.annotation.MultiLayerCacheEvict;
 import com.university.library.dto.CreateBookCommand;
 import com.university.library.entity.Book;
 import com.university.library.entity.BookCopy;
@@ -29,10 +30,10 @@ public class BookCommandService {
     private final LibraryRepository libraryRepository;
     
     /**
-     * Tạo sách mới với các bản sao
+     * Tạo sách mới
      */
     @Transactional
-    @CacheEvict(value = "books", allEntries = true)
+    @MultiLayerCacheEvict(value = {"books"}, allEntries = true)
     public Book createBook(CreateBookCommand command) {
         log.info("Creating new book: {}", command.getTitle());
         
@@ -43,35 +44,34 @@ public class BookCommandService {
         Category category = categoryRepository.findById(command.getCategoryId())
             .orElseThrow(() -> new RuntimeException("Category not found: " + command.getCategoryId()));
         
-        // Tạo sách
+        // Tạo sách mới
         Book book = Book.builder()
             .title(command.getTitle())
             .author(command.getAuthor())
             .isbn(command.getIsbn())
             .publisher(command.getPublisher())
-            .publishYear(command.getPublishYear())
-            .description(command.getDescription())
+            .year(command.getPublishYear()) // Book entity dùng 'year'
+            // Book entity không có description field
             .category(category)
-            .status("ACTIVE")
             .build();
         
-        book = bookRepository.save(book);
-        log.info("Book created with id: {}", book.getId());
+        Book savedBook = bookRepository.save(book);
+        log.info("Book created successfully: {}", savedBook.getBookId()); // Book entity dùng 'bookId'
         
-        // Tạo các bản sao sách
+        // Tạo các bản sao sách nếu có
         if (command.getCopies() != null && !command.getCopies().isEmpty()) {
-            createBookCopies(book, command.getCopies());
+            createBookCopies(savedBook, command.getCopies());
         }
         
-        return book;
+        return savedBook;
     }
     
     /**
      * Cập nhật thông tin sách
      */
     @Transactional
-    @CacheEvict(value = "books", allEntries = true)
-    public Book updateBook(Long id, CreateBookCommand command) {
+    @MultiLayerCacheEvict(value = {"books"}, allEntries = true)
+    public Book updateBook(UUID id, CreateBookCommand command) {
         log.info("Updating book with id: {}", id);
         
         // Tìm sách hiện tại
@@ -90,12 +90,12 @@ public class BookCommandService {
         existingBook.setAuthor(command.getAuthor());
         existingBook.setIsbn(command.getIsbn());
         existingBook.setPublisher(command.getPublisher());
-        existingBook.setPublishYear(command.getPublishYear());
-        existingBook.setDescription(command.getDescription());
+        existingBook.setYear(command.getPublishYear()); // Book entity dùng 'year'
+        // Book entity không có description field
         existingBook.setCategory(category);
         
         Book updatedBook = bookRepository.save(existingBook);
-        log.info("Book updated successfully: {}", updatedBook.getId());
+        log.info("Book updated successfully: {}", updatedBook.getBookId()); // Book entity dùng 'bookId'
         
         return updatedBook;
     }
@@ -104,8 +104,8 @@ public class BookCommandService {
      * Xóa sách
      */
     @Transactional
-    @CacheEvict(value = "books", allEntries = true)
-    public void deleteBook(Long id) {
+    @MultiLayerCacheEvict(value = {"books"}, allEntries = true)
+    public void deleteBook(UUID id) {
         log.info("Deleting book with id: {}", id);
         
         // Kiểm tra sách có tồn tại không
@@ -113,13 +113,13 @@ public class BookCommandService {
             .orElseThrow(() -> new RuntimeException("Book not found: " + id));
         
         // Kiểm tra có bản sao nào đang được mượn không
-        List<BookCopy> borrowedCopies = bookCopyRepository.findByBookIdAndStatus(id, "BORROWED");
+        List<BookCopy> borrowedCopies = bookCopyRepository.findByBookBookIdAndStatus(id, BookCopy.BookStatus.BORROWED);
         if (!borrowedCopies.isEmpty()) {
             throw new RuntimeException("Cannot delete book with borrowed copies");
         }
         
         // Xóa các bản sao sách
-        List<BookCopy> copies = bookCopyRepository.findByBookId(id);
+        List<BookCopy> copies = bookCopyRepository.findByBookBookId(id);
         bookCopyRepository.deleteAll(copies);
         
         // Xóa sách
@@ -137,14 +137,13 @@ public class BookCommandService {
             Library library = libraryRepository.findById(copyInfo.getLibraryId())
                 .orElseThrow(() -> new RuntimeException("Library not found: " + copyInfo.getLibraryId()));
             
-            // Tạo các bản sao
             for (int i = 0; i < copyInfo.getQuantity(); i++) {
                 BookCopy copy = BookCopy.builder()
                     .book(book)
                     .library(library)
                     .qrCode(generateQRCode())
-                    .status("AVAILABLE")
-                    .location(copyInfo.getLocation())
+                    .status(BookCopy.BookStatus.AVAILABLE)
+                    .shelfLocation(copyInfo.getLocation()) 
                     .build();
                 
                 bookCopyRepository.save(copy);
@@ -153,19 +152,17 @@ public class BookCommandService {
         
         log.info("Created {} book copies for book: {}", 
             copyInfos.stream().mapToInt(CreateBookCommand.BookCopyInfo::getQuantity).sum(), 
-            book.getId());
+            book.getBookId());  
     }
     
     /**
      * Validate khi tạo sách
      */
     private void validateBookCreation(CreateBookCommand command) {
-        // Kiểm tra ISBN đã tồn tại chưa
         if (bookRepository.existsByIsbn(command.getIsbn())) {
             throw new RuntimeException("ISBN already exists: " + command.getIsbn());
         }
         
-        // Kiểm tra năm xuất bản
         if (command.getPublishYear() > java.time.Year.now().getValue()) {
             throw new RuntimeException("Publish year cannot be in the future");
         }
@@ -175,13 +172,11 @@ public class BookCommandService {
      * Validate khi cập nhật sách
      */
     private void validateBookUpdate(CreateBookCommand command, Book existingBook) {
-        // Kiểm tra ISBN đã tồn tại chưa (trừ sách hiện tại)
         if (!existingBook.getIsbn().equals(command.getIsbn()) && 
             bookRepository.existsByIsbn(command.getIsbn())) {
             throw new RuntimeException("ISBN already exists: " + command.getIsbn());
         }
         
-        // Kiểm tra năm xuất bản
         if (command.getPublishYear() > java.time.Year.now().getValue()) {
             throw new RuntimeException("Publish year cannot be in the future");
         }

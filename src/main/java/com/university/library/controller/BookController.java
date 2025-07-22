@@ -4,6 +4,7 @@ import com.university.library.base.PagedResponse;
 import com.university.library.base.StandardResponse;
 import com.university.library.dto.BookSearchParams;
 import com.university.library.dto.CreateBookCommand;
+import com.university.library.entity.Account;
 import com.university.library.entity.Book;
 import com.university.library.service.BookFacade;
 import jakarta.validation.Valid;
@@ -13,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/books")
@@ -21,6 +24,9 @@ public class BookController {
     
     private final BookFacade bookFacade;
     
+    /**
+     * Lấy danh sách sách với pagination và search
+     */
     @GetMapping
     public ResponseEntity<StandardResponse<PagedResponse<Book>>> getBooks(
             @Valid BookSearchParams params) {
@@ -44,7 +50,7 @@ public class BookController {
      * Lấy thông tin sách theo ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<StandardResponse<Book>> getBook(@PathVariable Long id) {
+    public ResponseEntity<StandardResponse<Book>> getBook(@PathVariable UUID id) {
         log.info("GET /api/books/{}", id);
         
         try {
@@ -53,11 +59,6 @@ public class BookController {
                 "Lấy thông tin sách thành công", book);
             
             return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            log.error("Book not found with id: {}", id);
-            StandardResponse<Book> response = StandardResponse.error(
-                "Không tìm thấy sách: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         } catch (Exception e) {
             log.error("Error getting book: ", e);
             StandardResponse<Book> response = StandardResponse.error(
@@ -75,7 +76,10 @@ public class BookController {
         log.info("POST /api/books with title: {}", command.getTitle());
         
         try {
-            Book book = bookFacade.createBook(command);
+            // TODO: Lấy current account từ SecurityContext
+            Account currentAccount = createMockAccount();
+            
+            Book book = bookFacade.createBook(command, currentAccount);
             StandardResponse<Book> response = StandardResponse.success(
                 "Tạo sách thành công", book);
             
@@ -98,12 +102,15 @@ public class BookController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<StandardResponse<Book>> updateBook(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody CreateBookCommand command) {
         log.info("PUT /api/books/{} with title: {}", id, command.getTitle());
         
         try {
-            Book book = bookFacade.updateBook(id, command);
+            // TODO: Lấy current account từ SecurityContext
+            Account currentAccount = createMockAccount();
+            
+            Book book = bookFacade.updateBook(id, command, currentAccount, "Cập nhật thông tin sách");
             StandardResponse<Book> response = StandardResponse.success(
                 "Cập nhật sách thành công", book);
             
@@ -125,11 +132,14 @@ public class BookController {
      * Xóa sách
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<StandardResponse<Void>> deleteBook(@PathVariable Long id) {
+    public ResponseEntity<StandardResponse<Void>> deleteBook(@PathVariable UUID id) {
         log.info("DELETE /api/books/{}", id);
         
         try {
-            bookFacade.deleteBook(id);
+            // TODO: Lấy current account từ SecurityContext
+            Account currentAccount = createMockAccount();
+            
+            bookFacade.deleteBook(id, currentAccount, "Xóa sách theo yêu cầu");
             StandardResponse<Void> response = StandardResponse.success(
                 "Xóa sách thành công", null);
             
@@ -175,5 +185,22 @@ public class BookController {
                 "Không thể tìm kiếm sách: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+    
+    /**
+     * Tạo mock account tạm thời cho testing
+     */
+    private Account createMockAccount() {
+        return Account.builder()
+            .accountId(UUID.randomUUID())
+            .username("admin")
+            .email("admin@library.com")
+            .passwordHash("mock")
+            .fullName("System Administrator")
+            .userType(Account.UserType.STAFF)
+            .status(Account.AccountStatus.ACTIVE)
+            .emailVerified(true)
+            .phoneVerified(true)
+            .build();
     }
 }

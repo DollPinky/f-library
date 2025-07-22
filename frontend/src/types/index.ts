@@ -121,7 +121,6 @@ export interface PaginatedResponse<T> {
     empty: boolean
   }
   hasContent: boolean
-  // Frontend compatibility aliases
   pageNumber?: number
   pageSize?: number
 }
@@ -156,19 +155,14 @@ export interface DashboardStats {
 }
 
 export interface ChartData {
-  // Borrowing trends over time
   borrowingTrends?: BorrowingTrend[]
   
-  // Category distribution
   categoryDistribution?: CategoryDistribution[]
   
-  // Top books
   topBooks?: TopBook[]
   
-  // Campus comparison
   campusStats?: CampusStats[]
   
-  // Monthly stats
   monthlyStats?: MonthlyStats[]
 }
 

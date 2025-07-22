@@ -42,7 +42,6 @@ public class PagedResponse<T> implements Page<T> {
     
     private boolean hasContent;
     
-    // Static factory method from Spring Page
     public static <T> PagedResponse<T> fromPage(Page<T> page) {
         return PagedResponse.<T>builder()
                 .content(page.getContent())
@@ -59,7 +58,6 @@ public class PagedResponse<T> implements Page<T> {
                 .build();
     }
     
-    // Static factory method for empty page
     public static <T> PagedResponse<T> empty() {
         return PagedResponse.<T>builder()
                 .content(List.of())
@@ -76,7 +74,6 @@ public class PagedResponse<T> implements Page<T> {
                 .build();
     }
     
-    // Static factory method for custom content
     public static <T> PagedResponse<T> of(List<T> content, int pageNumber, int pageSize, long totalElements) {
         int totalPages = (int) Math.ceil((double) totalElements / pageSize);
         
@@ -95,7 +92,6 @@ public class PagedResponse<T> implements Page<T> {
                 .build();
     }
     
-    // Page interface methods
     @Override
     public int getTotalPages() {
         return totalPages;
@@ -189,7 +185,6 @@ public class PagedResponse<T> implements Page<T> {
         return content.iterator();
     }
     
-    // Convenience methods for frontend compatibility
     public int getPageNumber() {
         return number;
     }

@@ -29,6 +29,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public abstract class BaseEntity {
+  @Column(name = "is_deleted")
+  private Boolean isDeleted = false;
+
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
@@ -36,9 +39,6 @@ public abstract class BaseEntity {
   @LastModifiedDate
   @Column(name = "updated_at", nullable = false)
   private LocalDateTime updatedAt;
-
-  @Column(name = "is_deleted")
-  private Boolean isDeleted = false;
 
   @PrePersist
   protected void onCreate() {

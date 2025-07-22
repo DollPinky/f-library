@@ -1,16 +1,3 @@
-FROM gradle:8.14.2-jdk21 AS build
-
-WORKDIR /app
-
-COPY gradle/ gradle/
-COPY gradlew build.gradle.kts settings.gradle.kts ./
-
-RUN gradle dependencies --no-daemon
-
-COPY src/ src/
-
-RUN gradle build --no-daemon -x test
-
 FROM openjdk:21-jdk-slim
 
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
@@ -19,7 +6,7 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 WORKDIR /app
 
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY build/libs/*.jar app.jar
 
 RUN chown appuser:appuser app.jar
 

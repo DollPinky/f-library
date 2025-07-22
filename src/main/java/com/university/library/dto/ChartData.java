@@ -1,5 +1,6 @@
 package com.university.library.dto;
 
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -51,7 +52,7 @@ public class ChartData {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class TopBook {
-        private Long bookId;
+        private UUID bookId;
         private String title;
         private String author;
         private long borrowCount;

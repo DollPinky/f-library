@@ -54,7 +54,6 @@ public class StandardResponse<T> {
                 .build();
     }
     
-    // Static factory methods for error responses
     public static <T> StandardResponse<T> error(String message) {
         return StandardResponse.<T>builder()
                 .success(false)

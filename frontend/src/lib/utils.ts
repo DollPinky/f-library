@@ -72,7 +72,6 @@ export function debounce<T extends (...args: any[]) => any>(
   }
 }
 
-// Pagination compatibility utilities
 export function getPageNumber(response: any): number {
   return response.number ?? response.pageNumber ?? 0
 }

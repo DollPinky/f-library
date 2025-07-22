@@ -147,7 +147,7 @@ export default function RegisterPage() {
 
   const handleCampusChange = (campusId: number) => {
     setValue('campusId', campusId)
-    setValue('libraryId', null) // Reset library when campus changes
+    setValue('libraryId', undefined) // Reset library when campus changes
     setSelectedCampus(campusId)
   }
 

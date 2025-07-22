@@ -1,5 +1,6 @@
 package com.university.library.dto;
 
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -43,8 +44,8 @@ public class RegisterRequest {
     private String faculty;
     private String major;
     private Integer year;
-    private Long campusId;
-    private Long libraryId;
+    private UUID campusId;
+    private UUID libraryId;
     
     @NotBlank(message = "Vai trò không được để trống")
     private String role; // READER, LIBRARIAN, MANAGER
@@ -63,7 +64,7 @@ public class RegisterRequest {
         private String faculty;
         private String major;
         private Integer year;
-        private Long campusId;
-        private Long libraryId;
+        private UUID campusId;
+        private UUID libraryId;
     }
 } 

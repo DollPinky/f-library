@@ -217,7 +217,6 @@ export default function QRScanner({ mode, onSuccess, onClose }: QRScannerProps) 
 
     setIsProcessing(true)
     try {
-             // Find the borrowing record
        const borrowingResponse = await borrowingsAPI.getBorrowings({ 
          status: 'BORROWED' 
        })
