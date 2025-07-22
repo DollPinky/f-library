@@ -1,20 +1,28 @@
-package com.university.library.domain;
+package com.university.library.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "borrowings")
+@Data
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Borrowing {
-    
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "borrow_id")
     private UUID borrowId;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "copy_id")
     private BookCopy bookCopy;
@@ -44,105 +52,5 @@ public class Borrowing {
     
     public enum BorrowingStatus {
         BORROWED, RETURNED, OVERDUE
-    }
-    
-    public Borrowing() {
-        this.borrowedAt = LocalDateTime.now();
-        this.status = BorrowingStatus.BORROWED;
-        this.fineAmount = BigDecimal.ZERO;
-    }
-    
-    public Borrowing(BookCopy bookCopy, Reader reader, LocalDate dueDate) {
-        this();
-        this.bookCopy = bookCopy;
-        this.reader = reader;
-        this.dueDate = dueDate;
-    }
-    
-    public UUID getBorrowId() {
-        return borrowId;
-    }
-    
-    public void setBorrowId(UUID borrowId) {
-        this.borrowId = borrowId;
-    }
-    
-    public BookCopy getBookCopy() {
-        return bookCopy;
-    }
-    
-    public void setBookCopy(BookCopy bookCopy) {
-        this.bookCopy = bookCopy;
-    }
-    
-    public Reader getReader() {
-        return reader;
-    }
-    
-    public void setReader(Reader reader) {
-        this.reader = reader;
-    }
-    
-    public LocalDateTime getBorrowedAt() {
-        return borrowedAt;
-    }
-    
-    public void setBorrowedAt(LocalDateTime borrowedAt) {
-        this.borrowedAt = borrowedAt;
-    }
-    
-    public LocalDate getDueDate() {
-        return dueDate;
-    }
-    
-    public void setDueDate(LocalDate dueDate) {
-        this.dueDate = dueDate;
-    }
-    
-    public LocalDate getReturnedAt() {
-        return returnedAt;
-    }
-    
-    public void setReturnedAt(LocalDate returnedAt) {
-        this.returnedAt = returnedAt;
-    }
-    
-    public BorrowingStatus getStatus() {
-        return status;
-    }
-    
-    public void setStatus(BorrowingStatus status) {
-        this.status = status;
-    }
-    
-    public BigDecimal getFineAmount() {
-        return fineAmount;
-    }
-    
-    public void setFineAmount(BigDecimal fineAmount) {
-        this.fineAmount = fineAmount;
-    }
-    
-    public String getNote() {
-        return note;
-    }
-    
-    public void setNote(String note) {
-        this.note = note;
-    }
-    
-    @Override
-    public String toString() {
-        return "Borrowing{" +
-                "borrowId=" + borrowId +
-                ", bookCopy=" + (bookCopy != null ? bookCopy.getQrCode() : "null") +
-                ", reader=" + (reader != null ? reader.getName() : "null") +
-                ", borrowedAt=" + borrowedAt +
-                ", dueDate=" + dueDate +
-                ", returnedAt=" + returnedAt +
-                ", status=" + status +
-                ", fineAmount=" + fineAmount +
-                ", note='" + note + '\'' +
-                '}';
     }
 } 

@@ -1,14 +1,23 @@
-package com.university.library.domain;
+package com.university.library.entity;
 
+import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "readers")
-public class Reader {
+@Data
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Reader extends BaseEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -39,105 +48,5 @@ public class Reader {
     
     @OneToMany(mappedBy = "reader", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Borrowing> borrowings = new ArrayList<>();
-    
-    public Reader() {
-        this.registeredAt = LocalDateTime.now();
-        this.isActive = true;
-    }
-    
-    public Reader(Campus campus, String name, String studentId, String email, String phone) {
-        this();
-        this.campus = campus;
-        this.name = name;
-        this.studentId = studentId;
-        this.email = email;
-        this.phone = phone;
-    }
-    
 
-    public UUID getReaderId() {
-        return readerId;
-    }
-    
-    public void setReaderId(UUID readerId) {
-        this.readerId = readerId;
-    }
-    
-    public Campus getCampus() {
-        return campus;
-    }
-    
-    public void setCampus(Campus campus) {
-        this.campus = campus;
-    }
-    
-    public String getName() {
-        return name;
-    }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-    
-    public String getStudentId() {
-        return studentId;
-    }
-    
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
-    
-    public String getEmail() {
-        return email;
-    }
-    
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    
-    public String getPhone() {
-        return phone;
-    }
-    
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-    
-    public LocalDateTime getRegisteredAt() {
-        return registeredAt;
-    }
-    
-    public void setRegisteredAt(LocalDateTime registeredAt) {
-        this.registeredAt = registeredAt;
-    }
-    
-    public Boolean getIsActive() {
-        return isActive;
-    }
-    
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-    
-    public List<Borrowing> getBorrowings() {
-        return borrowings;
-    }
-    
-    public void setBorrowings(List<Borrowing> borrowings) {
-        this.borrowings = borrowings;
-    }
-    
-    @Override
-    public String toString() {
-        return "Reader{" +
-                "readerId=" + readerId +
-                ", campus=" + (campus != null ? campus.getName() : "null") +
-                ", name='" + name + '\'' +
-                ", studentId='" + studentId + '\'' +
-                ", email='" + email + '\'' +
-                ", phone='" + phone + '\'' +
-                ", registeredAt=" + registeredAt +
-                ", isActive=" + isActive +
-                '}';
-    }
 } 
