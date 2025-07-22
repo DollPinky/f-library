@@ -1,7 +1,7 @@
-# ⚡ Quick Start - Test Travis CI
+# ⚡ Quick Start - Test GitHub Actions
 
 ## 🎯 Mục tiêu
-Test Travis CI pipeline cơ bản trong 5 phút.
+Test GitHub Actions pipeline cơ bản trong 5 phút.
 
 ## 🚀 5 Bước Nhanh
 
@@ -22,24 +22,24 @@ git branch -M main
 git push -u origin main
 ```
 
-### 3️⃣ Kích hoạt Travis CI
-1. Vào [travis-ci.com](https://travis-ci.com)
-2. Sign in với GitHub
-3. Toggle ON repository `Library-Management`
+### 3️⃣ Kiểm tra GitHub Actions
+1. Vào repository trên GitHub
+2. Click tab "Actions"
+3. Verify workflow `CI/CD Pipeline` exists
 
 ### 4️⃣ Test Build
 ```bash
 # Trigger build
-echo "Test Travis CI" >> README.md
+echo "Test GitHub Actions" >> README.md
 git add README.md
 git commit -m "test: trigger build"
 git push
 ```
 
 ### 5️⃣ Check Results
-- Vào [Travis CI Dashboard](https://app.travis-ci.com)
-- Click repository `Library-Management`
-- Xem build status: ✅ Green = Success
+- Vào GitHub repository
+- Click tab "Actions"
+- Xem workflow status: ✅ Green = Success
 
 ## ✅ Expected Output
 
@@ -47,6 +47,7 @@ git push
 ✓ Build completed successfully!
 ✓ All tests passed
 ✓ Application built successfully
+✓ Test reports generated
 ```
 
 ## 🔧 Troubleshooting
@@ -54,9 +55,9 @@ git push
 ### Build Fails?
 ```bash
 # Test locally first
-docker-compose -f docker-compose.travis.yml up -d
-./gradlew clean build -Dspring.profiles.active=travis
-docker-compose -f docker-compose.travis.yml down
+docker-compose up -d
+./gradlew clean build -Dspring.profiles.active=docker
+docker-compose down
 ```
 
 ### Repository not found?
@@ -65,11 +66,23 @@ git remote -v
 git remote set-url origin https://github.com/YOUR_USERNAME/Library-Management.git
 ```
 
+### Workflow not triggering?
+- Check file `.github/workflows/ci.yml` exists
+- Verify branch name is `main`
+- Check workflow syntax
+
 ## 📞 Need Help?
 
-1. Check build logs trên Travis CI
+1. Check workflow logs trên GitHub Actions
 2. Test locally với Docker
 3. Create issue trên GitHub
+
+## 🎉 Benefits
+
+- **Free:** Không giới hạn build cho public repos
+- **Fast:** Runners tối ưu và caching
+- **Reliable:** Tích hợp native với GitHub
+- **Powerful:** Workflow capabilities nâng cao
 
 ---
 

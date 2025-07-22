@@ -10,7 +10,7 @@ Library management solution designed for multi-campus university environments, b
 - **Caching Strategy:** Multi-tier caching with Caffeine (L1) and Redis (L2)
 - **Event Processing:** Apache Kafka for asynchronous event handling
 - **Build System:** Gradle 8.5+ with aggressive caching and parallel execution
-- **Continuous Integration:** Travis CI with automated testing pipeline
+- **Continuous Integration:** GitHub Actions with automated testing pipeline
 - **Containerization:** Docker and Docker Compose for development environment
 
 ### Data Model
@@ -110,11 +110,11 @@ PORT=8080
 
 ## Continuous Integration Pipeline
 
-### Build Process
-- **Java Environment:** JDK 21 with optimized JVM settings
-- **Build System:** Gradle with aggressive caching strategies
+### GitHub Actions Workflow
+- **Trigger Events:** Push to main/develop branches and pull requests
+- **Build Environment:** Ubuntu latest with JDK 21
+- **Service Integration:** PostgreSQL, Redis, and Kafka containers
 - **Testing Framework:** Comprehensive unit and integration tests
-- **Container Services:** Docker-based test environment
 
 ### Performance Optimizations
 - **Gradle Caching:** Local and remote build cache
@@ -126,7 +126,7 @@ PORT=8080
 - **Automated Testing:** PostgreSQL, Redis, and Kafka integration tests
 - **Build Performance:** Optimized caching for faster builds
 - **Environment Isolation:** Dedicated test environments
-- **Deployment Readiness:** Production deployment pipeline
+- **Artifact Management:** Test reports and coverage analysis
 
 ## Monitoring and Observability
 
