@@ -19,8 +19,10 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: 8.5
 
     - name: Install Docker Compose
       run: |
@@ -87,9 +89,9 @@ jobs:
     - name: Verify database initialization
       run: |
         echo "Checking if sample data was loaded..."
-        docker exec postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM campuses;" || echo "Database check failed"
-        docker exec postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM books;" || echo "Database check failed"
-        docker exec postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM readers;" || echo "Database check failed"
+        docker exec library-postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM campuses;" || echo "Database check failed"
+        docker exec library-postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM books;" || echo "Database check failed"
+        docker exec library-postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM readers;" || echo "Database check failed"
 
     - name: Cleanup project infrastructure
       if: always()
