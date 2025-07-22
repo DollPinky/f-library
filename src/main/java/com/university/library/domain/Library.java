@@ -4,15 +4,16 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "libraries")
 public class Library {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "library_id")
-    private Long libraryId;
+    private UUID libraryId;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "campus_id", nullable = false)
@@ -30,14 +31,12 @@ public class Library {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
-    // Relationships
     @OneToMany(mappedBy = "library", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Staff> staff = new ArrayList<>();
     
     @OneToMany(mappedBy = "library", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BookCopy> bookCopies = new ArrayList<>();
     
-    // Constructors
     public Library() {
         this.createdAt = LocalDateTime.now();
     }
@@ -50,12 +49,11 @@ public class Library {
         this.address = address;
     }
     
-    // Getters and Setters
-    public Long getLibraryId() {
+    public UUID getLibraryId() {
         return libraryId;
     }
     
-    public void setLibraryId(Long libraryId) {
+    public void setLibraryId(UUID libraryId) {
         this.libraryId = libraryId;
     }
     

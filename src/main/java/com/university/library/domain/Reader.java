@@ -4,15 +4,16 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "readers")
 public class Reader {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "reader_id")
-    private Long readerId;
+    private UUID readerId;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "campus_id")
@@ -36,11 +37,9 @@ public class Reader {
     @Column(name = "is_active")
     private Boolean isActive;
     
-    // Relationships
     @OneToMany(mappedBy = "reader", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Borrowing> borrowings = new ArrayList<>();
     
-    // Constructors
     public Reader() {
         this.registeredAt = LocalDateTime.now();
         this.isActive = true;
@@ -55,12 +54,12 @@ public class Reader {
         this.phone = phone;
     }
     
-    // Getters and Setters
-    public Long getReaderId() {
+
+    public UUID getReaderId() {
         return readerId;
     }
     
-    public void setReaderId(Long readerId) {
+    public void setReaderId(UUID readerId) {
         this.readerId = readerId;
     }
     

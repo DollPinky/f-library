@@ -4,15 +4,16 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "book_copies")
 public class BookCopy {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "copy_id")
-    private Long copyId;
+    private UUID copyId;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id")
@@ -35,16 +36,13 @@ public class BookCopy {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
-    // Relationships
     @OneToMany(mappedBy = "bookCopy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Borrowing> borrowings = new ArrayList<>();
     
-    // Enum for Book Status
     public enum BookStatus {
         AVAILABLE, BORROWED, RESERVED, LOST, DAMAGED
     }
     
-    // Constructors
     public BookCopy() {
         this.createdAt = LocalDateTime.now();
         this.status = BookStatus.AVAILABLE;
@@ -58,12 +56,11 @@ public class BookCopy {
         this.shelfLocation = shelfLocation;
     }
     
-    // Getters and Setters
-    public Long getCopyId() {
+    public UUID getCopyId() {
         return copyId;
     }
     
-    public void setCopyId(Long copyId) {
+    public void setCopyId(UUID copyId) {
         this.copyId = copyId;
     }
     

@@ -4,15 +4,16 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "borrowings")
 public class Borrowing {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "borrow_id")
-    private Long borrowId;
+    private UUID borrowId;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "copy_id")
@@ -41,12 +42,10 @@ public class Borrowing {
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
     
-    // Enum for Borrowing Status
     public enum BorrowingStatus {
         BORROWED, RETURNED, OVERDUE
     }
     
-    // Constructors
     public Borrowing() {
         this.borrowedAt = LocalDateTime.now();
         this.status = BorrowingStatus.BORROWED;
@@ -60,12 +59,11 @@ public class Borrowing {
         this.dueDate = dueDate;
     }
     
-    // Getters and Setters
-    public Long getBorrowId() {
+    public UUID getBorrowId() {
         return borrowId;
     }
     
-    public void setBorrowId(Long borrowId) {
+    public void setBorrowId(UUID borrowId) {
         this.borrowId = borrowId;
     }
     

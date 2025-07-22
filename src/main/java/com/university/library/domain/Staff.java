@@ -2,15 +2,16 @@ package com.university.library.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "staff")
 public class Staff {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "staff_id")
-    private Long staffId;
+    private UUID staffId;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "library_id", nullable = false)
@@ -54,11 +55,11 @@ public class Staff {
     }
     
 
-    public Long getStaffId() {
+    public UUID getStaffId() {
         return staffId;
     }
     
-    public void setStaffId(Long staffId) {
+    public void setStaffId(UUID staffId) {
         this.staffId = staffId;
     }
     
