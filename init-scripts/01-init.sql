@@ -25,7 +25,7 @@ CREATE TABLE staff (
                        library_id UUID NOT NULL REFERENCES libraries(library_id),
                        name VARCHAR(255) NOT NULL,
                        email VARCHAR(255) UNIQUE NOT NULL,
-                       phone VARCHAR(20),
+                       phone VARCHAR(50),
                        role VARCHAR(50) NOT NULL CHECK (role IN ('ADMIN', 'LIBRARIAN', 'MANAGER')),
                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                        is_active BOOLEAN DEFAULT TRUE
@@ -70,7 +70,7 @@ CREATE TABLE readers (
                          name VARCHAR(255) NOT NULL,
                          student_id VARCHAR(50) UNIQUE,
                          email VARCHAR(255) UNIQUE NOT NULL,
-                         phone VARCHAR(20),
+                         phone VARCHAR(50),
                          registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                          is_active BOOLEAN DEFAULT TRUE
 );
