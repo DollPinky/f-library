@@ -3,15 +3,16 @@ package com.university.library.domain;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "categories")
 public class Category {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "category_id")
-    private Long categoryId;
+    private UUID categoryId;
     
     @Column(name = "name", nullable = false, length = 255)
     private String name;
@@ -23,14 +24,12 @@ public class Category {
     @JoinColumn(name = "parent_category_id")
     private Category parentCategory;
     
-    // Relationships
     @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Category> subCategories = new ArrayList<>();
     
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Book> books = new ArrayList<>();
     
-    // Constructors
     public Category() {}
     
     public Category(String name, String description) {
@@ -43,12 +42,11 @@ public class Category {
         this.parentCategory = parentCategory;
     }
     
-    // Getters and Setters
-    public Long getCategoryId() {
+    public UUID getCategoryId() {
         return categoryId;
     }
     
-    public void setCategoryId(Long categoryId) {
+    public void setCategoryId(UUID categoryId) {
         this.categoryId = categoryId;
     }
     

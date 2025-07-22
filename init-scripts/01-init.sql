@@ -36,7 +36,7 @@ CREATE TABLE categories (
                             category_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
                             name VARCHAR(255) NOT NULL,
                             description TEXT,
-                            parent_category_id INT REFERENCES categories(category_id) -- Child categories inside category (Many to One)
+                            parent_category_id UUID REFERENCES categories(category_id) -- Child categories inside category (Many to One)
 );
 
 -- 5. books
@@ -47,7 +47,7 @@ CREATE TABLE books (
                        publisher VARCHAR(255),
                        year INT,
                        isbn VARCHAR(20),
-                       category_id INT REFERENCES categories(category_id),
+                       category_id UUID REFERENCES categories(category_id),
                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -4,15 +4,16 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "books")
 public class Book {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "book_id")
-    private Long bookId;
+    private UUID bookId;
     
     @Column(name = "title", nullable = false, length = 255)
     private String title;
@@ -53,11 +54,11 @@ public class Book {
         this.category = category;
     }
     
-    public Long getBookId() {
+    public UUID getBookId() {
         return bookId;
     }
     
-    public void setBookId(Long bookId) {
+    public void setBookId(UUID bookId) {
         this.bookId = bookId;
     }
     
