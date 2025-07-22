@@ -59,9 +59,9 @@ jobs:
     - name: Test application with real infrastructure
       run: gradle clean build --info --stacktrace --warning-mode all -Dspring.profiles.active=docker
       env:
-        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_management
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library
         SPRING_DATASOURCE_USERNAME: postgres
-        SPRING_DATASOURCE_PASSWORD: postgres
+        SPRING_DATASOURCE_PASSWORD: password
         SPRING_REDIS_HOST: localhost
         SPRING_REDIS_PORT: 6379
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
@@ -69,9 +69,9 @@ jobs:
     - name: Run integration tests
       run: gradle test --info --stacktrace --warning-mode all -Dspring.profiles.active=docker
       env:
-        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_management
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library
         SPRING_DATASOURCE_USERNAME: postgres
-        SPRING_DATASOURCE_PASSWORD: postgres
+        SPRING_DATASOURCE_PASSWORD: password
         SPRING_REDIS_HOST: localhost
         SPRING_REDIS_PORT: 6379
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
@@ -95,9 +95,9 @@ jobs:
         kill $APP_PID || true
         wait $APP_PID 2>/dev/null || true
       env:
-        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_management
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library
         SPRING_DATASOURCE_USERNAME: postgres
-        SPRING_DATASOURCE_PASSWORD: postgres
+        SPRING_DATASOURCE_PASSWORD: password
         SPRING_REDIS_HOST: localhost
         SPRING_REDIS_PORT: 6379
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
@@ -105,9 +105,9 @@ jobs:
     - name: Verify database initialization
       run: |
         echo "Checking if sample data was loaded..."
-        docker exec library-postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM campuses;" || echo "Database check failed"
-        docker exec library-postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM books;" || echo "Database check failed"
-        docker exec library-postgres psql -U postgres -d library_management -c "SELECT COUNT(*) FROM readers;" || echo "Database check failed"
+        docker exec library-postgres psql -U postgres -d library -c "SELECT COUNT(*) FROM campuses;" || echo "Database check failed"
+        docker exec library-postgres psql -U postgres -d library -c "SELECT COUNT(*) FROM books;" || echo "Database check failed"
+        docker exec library-postgres psql -U postgres -d library -c "SELECT COUNT(*) FROM readers;" || echo "Database check failed"
 
     - name: Cleanup project infrastructure
       if: always()
