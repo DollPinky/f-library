@@ -18,7 +18,6 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
-        cache: gradle
     
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v2
@@ -93,17 +92,23 @@ jobs:
     
     - name: Wait for services to be ready
       run: |
-        echo "Waiting for PostgreSQL..."
-        timeout 60 bash -c 'until pg_isready -h localhost -p 5432; do sleep 1; done'
-        echo "Waiting for Redis..."
-        timeout 60 bash -c 'until redis-cli -h localhost -p 6379 ping; do sleep 1; done'
-        echo "Waiting for Zookeeper..."
-        timeout 60 bash -c 'until echo srvr | nc localhost 2181; do sleep 1; done'
-        echo "Waiting for Kafka..."
-        timeout 60 bash -c 'until kafka-topics --bootstrap-server localhost:9092 --list; do sleep 1; done'
+        echo "Waiting for services to start..."
+        sleep 30
+        
+        echo "Checking PostgreSQL..."
+        docker run --rm --network host postgres:15 pg_isready -h localhost -p 5432 -U postgres
+        
+        echo "Checking Redis..."
+        docker run --rm --network host redis:7 redis-cli -h localhost -p 6379 ping
+        
+        echo "Checking Zookeeper..."
+        docker run --rm --network host confluentinc/cp-zookeeper:7.4.0 echo srvr | nc localhost 2181
+        
+        echo "Checking Kafka..."
+        docker run --rm --network host confluentinc/cp-kafka:7.4.0 kafka-topics --bootstrap-server localhost:9092 --list
     
     - name: Build with Gradle
-      run: ./gradlew clean build --build-cache --scan --info -Dspring.profiles.active=docker
+      run: ./gradlew clean build --info -Dspring.profiles.active=docker
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_test
         SPRING_DATASOURCE_USERNAME: postgres
@@ -113,7 +118,7 @@ jobs:
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
     
     - name: Run tests
-      run: ./gradlew test --build-cache --info -Dspring.profiles.active=docker
+      run: ./gradlew test --info -Dspring.profiles.active=docker
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_test
         SPRING_DATASOURCE_USERNAME: postgres
