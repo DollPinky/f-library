@@ -10,60 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: library_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-      
-      redis:
-        image: redis:7
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-      
-      kafka:
-        image: confluentinc/cp-kafka:7.4.0
-        env:
-          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-        options: >-
-          --health-cmd "kafka-topics --bootstrap-server localhost:9092 --list"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 9092:9092
-        depends_on:
-          zookeeper:
-            condition: service_healthy
-      
-      zookeeper:
-        image: confluentinc/cp-zookeeper:7.4.0
-        env:
-          ZOOKEEPER_CLIENT_PORT: 2181
-          ZOOKEEPER_TICK_TIME: 2000
-        options: >-
-          --health-cmd "echo srvr | nc localhost 2181"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 2181:2181
-
     steps:
     - uses: actions/checkout@v4
     
@@ -82,17 +28,82 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     
+    - name: Start infrastructure services with Docker Compose
+      run: |
+        # Create a simplified docker-compose for CI
+        cat > docker-compose.ci.yml << 'EOF'
+        version: '3.8'
+        services:
+          postgres:
+            image: postgres:15
+            environment:
+              POSTGRES_PASSWORD: postgres
+              POSTGRES_DB: library_test
+            ports:
+              - "5432:5432"
+            healthcheck:
+              test: ["CMD-SHELL", "pg_isready -U postgres"]
+              interval: 10s
+              timeout: 5s
+              retries: 5
+          
+          redis:
+            image: redis:7
+            ports:
+              - "6379:6379"
+            healthcheck:
+              test: ["CMD", "redis-cli", "ping"]
+              interval: 10s
+              timeout: 5s
+              retries: 5
+          
+          zookeeper:
+            image: confluentinc/cp-zookeeper:7.4.0
+            environment:
+              ZOOKEEPER_CLIENT_PORT: 2181
+              ZOOKEEPER_TICK_TIME: 2000
+            ports:
+              - "2181:2181"
+            healthcheck:
+              test: ["CMD-SHELL", "echo srvr | nc localhost 2181"]
+              interval: 10s
+              timeout: 5s
+              retries: 5
+          
+          kafka:
+            image: confluentinc/cp-kafka:7.4.0
+            depends_on:
+              zookeeper:
+                condition: service_healthy
+            environment:
+              KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+              KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+              KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+            ports:
+              - "9092:9092"
+            healthcheck:
+              test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+              interval: 10s
+              timeout: 5s
+              retries: 5
+        EOF
+        
+        # Start services
+        docker-compose -f docker-compose.ci.yml up -d
+    
     - name: Wait for services to be ready
       run: |
         echo "Waiting for PostgreSQL..."
         timeout 60 bash -c 'until pg_isready -h localhost -p 5432; do sleep 1; done'
         echo "Waiting for Redis..."
         timeout 60 bash -c 'until redis-cli -h localhost -p 6379 ping; do sleep 1; done'
+        echo "Waiting for Zookeeper..."
+        timeout 60 bash -c 'until echo srvr | nc localhost 2181; do sleep 1; done'
         echo "Waiting for Kafka..."
         timeout 60 bash -c 'until kafka-topics --bootstrap-server localhost:9092 --list; do sleep 1; done'
     
     - name: Build with Gradle
-      run: ./gradlew clean build --build-cache --scan --info -Dspring.profiles.active=travis
+      run: ./gradlew clean build --build-cache --scan --info -Dspring.profiles.active=docker
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_test
         SPRING_DATASOURCE_USERNAME: postgres
@@ -102,7 +113,7 @@ jobs:
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
     
     - name: Run tests
-      run: ./gradlew test --build-cache --info -Dspring.profiles.active=travis
+      run: ./gradlew test --build-cache --info -Dspring.profiles.active=docker
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/library_test
         SPRING_DATASOURCE_USERNAME: postgres
@@ -122,6 +133,10 @@ jobs:
         path: |
           build/reports/tests/
           build/reports/jacoco/
+    
+    - name: Stop services
+      if: always()
+      run: docker-compose -f docker-compose.ci.yml down
     
     - name: Build status
       run: |

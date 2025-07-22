@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# Deploy to Heroku script for Travis CI
+# Deploy to Heroku script for GitHub Actions
 set -e
 
 echo "Starting Heroku deployment..."
 
 # Check if we're on the main branch
-if [ "$TRAVIS_BRANCH" != "main" ]; then
+if [ "$GITHUB_REF" != "refs/heads/main" ]; then
     echo "Not on main branch, skipping deployment"
     exit 0
 fi
 
 # Check if this is a pull request
-if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
     echo "This is a pull request, skipping deployment"
     exit 0
 fi
@@ -26,7 +26,7 @@ echo "Logging in to Heroku..."
 echo $HEROKU_API_KEY | heroku auth:token
 
 # Set Heroku app name
-HEROKU_APP_NAME="university-library-${TRAVIS_BUILD_NUMBER}"
+HEROKU_APP_NAME="university-library-${GITHUB_RUN_NUMBER}"
 
 # Create new Heroku app
 echo "Creating new Heroku app: $HEROKU_APP_NAME"
