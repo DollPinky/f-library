@@ -49,4 +49,11 @@ public final class MessageConstants {
     public static final String COPY_RESERVED = "RESERVED";
     public static final String COPY_MAINTENANCE = "MAINTENANCE";
     public static final String COPY_LOST = "LOST";
+
+
+    public static final String SUCCESS_CREATE_ACCOUNT = "Create account successfully";
+    public static final String LOGIN_SUCCESS = "Login successfully";
+    public static final String INVALID_INPUT = "Invalid input/ Invalid request";
+    public static final String ACCOUNT_NON_EXIST = "Account doesn't exist";
+
 } 

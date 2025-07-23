@@ -29,10 +29,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.kafka:spring-kafka")
-    
+
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+
     runtimeOnly("com.h2database:h2")
     runtimeOnly("org.postgresql:postgresql")
-    
+
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
@@ -42,9 +45,10 @@ dependencies {
     implementation ("org.mapstruct:mapstruct:1.5.5.Final")
     annotationProcessor ("org.mapstruct:mapstruct-processor:1.5.5.Final")
     annotationProcessor ("org.projectlombok:lombok-mapstruct-binding:0.2.0")
-    
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
-    
+
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.testcontainers:junit-jupiter")
@@ -62,4 +66,3 @@ tasks.withType<Test> {
     }
 }
 
- 

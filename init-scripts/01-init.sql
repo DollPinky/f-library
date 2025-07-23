@@ -6,7 +6,8 @@ CREATE TABLE campuses (
                           name VARCHAR(255) NOT NULL,
                           code VARCHAR(50) UNIQUE NOT NULL,
                           address TEXT NOT NULL,
-                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                          updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 2. libraries
