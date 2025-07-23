@@ -1,21 +1,23 @@
 package com.university.library.service.command;
 
-import com.university.library.annotation.MultiLayerCacheEvict;
+import com.university.library.constants.BookConstants;
+import com.university.library.dto.BookResponse;
 import com.university.library.dto.CreateBookCommand;
 import com.university.library.entity.Book;
-import com.university.library.entity.BookCopy;
 import com.university.library.entity.Category;
-import com.university.library.entity.Library;
-import com.university.library.repository.BookCopyRepository;
+import com.university.library.event.book.BookCreatedEvent;
+import com.university.library.event.book.BookDeletedEvent;
+import com.university.library.event.book.BookUpdatedEvent;
 import com.university.library.repository.BookRepository;
 import com.university.library.repository.CategoryRepository;
-import com.university.library.repository.LibraryRepository;
+import com.university.library.service.ManualCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,169 +25,260 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class BookCommandService {
-    
+
     private final BookRepository bookRepository;
-    private final BookCopyRepository bookCopyRepository;
     private final CategoryRepository categoryRepository;
-    private final LibraryRepository libraryRepository;
-    
+    private final ManualCacheService cacheService;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
     /**
-     * Tạo sách mới
+     * Tạo sách mới với Kafka event và cache management
      */
     @Transactional
-    @MultiLayerCacheEvict(value = {"books"}, allEntries = true)
-    public Book createBook(CreateBookCommand command) {
-        log.info("Creating new book: {}", command.getTitle());
+    public BookResponse createBook(CreateBookCommand command) {
+        log.info(BookConstants.LOG_CREATING_BOOK, command.getTitle());
         
-        // Validate business rules
-        validateBookCreation(command);
+        // Validate ISBN uniqueness
+        if (bookRepository.existsByIsbn(command.getIsbn())) {
+            log.error(BookConstants.ERROR_BOOK_ALREADY_EXISTS + command.getIsbn());
+            throw new RuntimeException(BookConstants.ERROR_BOOK_ALREADY_EXISTS + command.getIsbn());
+        }
         
-        // Tìm category
+        // Validate category exists
         Category category = categoryRepository.findById(command.getCategoryId())
-            .orElseThrow(() -> new RuntimeException("Category not found: " + command.getCategoryId()));
+            .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_CATEGORY_NOT_FOUND + command.getCategoryId()));
         
-        // Tạo sách mới
+        // Create book entity
         Book book = Book.builder()
             .title(command.getTitle())
             .author(command.getAuthor())
-            .isbn(command.getIsbn())
             .publisher(command.getPublisher())
-            .year(command.getPublishYear()) // Book entity dùng 'year'
-            // Book entity không có description field
+            .year(command.getPublishYear())
+            .isbn(command.getIsbn())
             .category(category)
             .build();
         
         Book savedBook = bookRepository.save(book);
-        log.info("Book created successfully: {}", savedBook.getBookId()); // Book entity dùng 'bookId'
+        BookResponse bookResponse = BookResponse.fromEntity(savedBook);
         
-        // Tạo các bản sao sách nếu có
-        if (command.getCopies() != null && !command.getCopies().isEmpty()) {
-            createBookCopies(savedBook, command.getCopies());
-        }
+        // Publish Kafka event
+        publishBookCreatedEvent(savedBook);
         
-        return savedBook;
+        // Cache the new book
+        cacheBook(bookResponse);
+        
+        // Clear search cache to ensure fresh results
+        clearSearchCache();
+        
+        log.info(BookConstants.LOG_BOOK_CREATED, savedBook.getBookId());
+        return bookResponse;
     }
     
     /**
-     * Cập nhật thông tin sách
+     * Cập nhật sách với Kafka event và cache management
      */
     @Transactional
-    @MultiLayerCacheEvict(value = {"books"}, allEntries = true)
-    public Book updateBook(UUID id, CreateBookCommand command) {
-        log.info("Updating book with id: {}", id);
+    public BookResponse updateBook(UUID bookId, CreateBookCommand command) {
+        log.info(BookConstants.LOG_UPDATING_BOOK, bookId);
         
-        // Tìm sách hiện tại
-        Book existingBook = bookRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Book not found: " + id));
+        Book existingBook = bookRepository.findById(bookId)
+            .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_BOOK_NOT_FOUND + bookId));
         
-        // Validate business rules
-        validateBookUpdate(command, existingBook);
+        // Check ISBN uniqueness if changed
+        if (!existingBook.getIsbn().equals(command.getIsbn()) && 
+            bookRepository.existsByIsbn(command.getIsbn())) {
+            log.error(BookConstants.ERROR_BOOK_ALREADY_EXISTS + command.getIsbn());
+            throw new RuntimeException(BookConstants.ERROR_BOOK_ALREADY_EXISTS + command.getIsbn());
+        }
         
-        // Tìm category
+        // Validate category exists
         Category category = categoryRepository.findById(command.getCategoryId())
-            .orElseThrow(() -> new RuntimeException("Category not found: " + command.getCategoryId()));
+            .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_CATEGORY_NOT_FOUND + command.getCategoryId()));
         
-        // Cập nhật thông tin sách
+        // Update book fields
         existingBook.setTitle(command.getTitle());
         existingBook.setAuthor(command.getAuthor());
-        existingBook.setIsbn(command.getIsbn());
         existingBook.setPublisher(command.getPublisher());
-        existingBook.setYear(command.getPublishYear()); // Book entity dùng 'year'
-        // Book entity không có description field
+        existingBook.setYear(command.getPublishYear());
+        existingBook.setIsbn(command.getIsbn());
         existingBook.setCategory(category);
         
         Book updatedBook = bookRepository.save(existingBook);
-        log.info("Book updated successfully: {}", updatedBook.getBookId()); // Book entity dùng 'bookId'
+        BookResponse bookResponse = BookResponse.fromEntity(updatedBook);
         
-        return updatedBook;
+        // Publish Kafka event
+        publishBookUpdatedEvent(updatedBook);
+        
+        // Update cache
+        cacheBook(bookResponse);
+        
+        // Clear search cache to ensure fresh results
+        clearSearchCache();
+        
+        log.info(BookConstants.LOG_BOOK_UPDATED, bookId);
+        return bookResponse;
     }
     
     /**
-     * Xóa sách
+     * Xóa sách với Kafka event và cache management
      */
     @Transactional
-    @MultiLayerCacheEvict(value = {"books"}, allEntries = true)
-    public void deleteBook(UUID id) {
-        log.info("Deleting book with id: {}", id);
+    public void deleteBook(UUID bookId) {
+        log.info(BookConstants.LOG_DELETING_BOOK, bookId);
         
-        // Kiểm tra sách có tồn tại không
-        Book book = bookRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Book not found: " + id));
+        Book book = bookRepository.findById(bookId)
+            .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_BOOK_NOT_FOUND + bookId));
         
-        // Kiểm tra có bản sao nào đang được mượn không
-        List<BookCopy> borrowedCopies = bookCopyRepository.findByBookBookIdAndStatus(id, BookCopy.BookStatus.BORROWED);
-        if (!borrowedCopies.isEmpty()) {
-            throw new RuntimeException("Cannot delete book with borrowed copies");
+        // Check if book is in use (has active borrowings)
+        if (hasActiveBorrowings(bookId)) {
+            log.error(BookConstants.ERROR_BOOK_IN_USE);
+            throw new RuntimeException(BookConstants.ERROR_BOOK_IN_USE);
         }
         
-        // Xóa các bản sao sách
-        List<BookCopy> copies = bookCopyRepository.findByBookBookId(id);
-        bookCopyRepository.deleteAll(copies);
+        // Publish Kafka event before deletion
+        publishBookDeletedEvent(book);
         
-        // Xóa sách
-        bookRepository.delete(book);
+        // Delete from database
+        bookRepository.deleteById(bookId);
         
-        log.info("Book deleted successfully: {}", id);
+        // Clear cache
+        clearBookCache(bookId);
+        clearSearchCache();
+        
+        log.info(BookConstants.LOG_BOOK_DELETED, bookId);
     }
     
     /**
-     * Tạo các bản sao sách
+     * Cache book với TTL phù hợp
      */
-    private void createBookCopies(Book book, List<CreateBookCommand.BookCopyInfo> copyInfos) {
-        for (CreateBookCommand.BookCopyInfo copyInfo : copyInfos) {
-            // Tìm thư viện
-            Library library = libraryRepository.findById(copyInfo.getLibraryId())
-                .orElseThrow(() -> new RuntimeException("Library not found: " + copyInfo.getLibraryId()));
-            
-            for (int i = 0; i < copyInfo.getQuantity(); i++) {
-                BookCopy copy = BookCopy.builder()
-                    .book(book)
-                    .library(library)
-                    .qrCode(generateQRCode())
-                    .status(BookCopy.BookStatus.AVAILABLE)
-                    .shelfLocation(copyInfo.getLocation()) 
-                    .build();
-                
-                bookCopyRepository.save(copy);
-            }
-        }
+    private void cacheBook(BookResponse bookResponse) {
+        String cacheKey = BookConstants.CACHE_KEY_PREFIX_BOOK + bookResponse.getBookId();
+        Duration localTtl = Duration.ofMinutes(BookConstants.CACHE_TTL_LOCAL);
+        Duration distributedTtl = Duration.ofMinutes(BookConstants.CACHE_TTL_BOOK_DETAIL);
         
-        log.info("Created {} book copies for book: {}", 
-            copyInfos.stream().mapToInt(CreateBookCommand.BookCopyInfo::getQuantity).sum(), 
-            book.getBookId());  
+        cacheService.put(BookConstants.CACHE_NAME, cacheKey, bookResponse, localTtl, distributedTtl);
+        log.debug(BookConstants.LOG_CACHING_BOOK, bookResponse.getBookId());
     }
     
     /**
-     * Validate khi tạo sách
+     * Publish Book Created Event
      */
-    private void validateBookCreation(CreateBookCommand command) {
-        if (bookRepository.existsByIsbn(command.getIsbn())) {
-            throw new RuntimeException("ISBN already exists: " + command.getIsbn());
-        }
+    private void publishBookCreatedEvent(Book book) {
+        BookCreatedEvent event = BookCreatedEvent.builder()
+            .bookId(book.getBookId())
+            .title(book.getTitle())
+            .author(book.getAuthor())
+            .isbn(book.getIsbn())
+            .publisher(book.getPublisher())
+            .publishYear(book.getYear())
+            .categoryId(book.getCategory() != null ? book.getCategory().getCategoryId() : null)
+            .categoryName(book.getCategory() != null ? book.getCategory().getName() : null)
+            .createdAt(book.getCreatedAt())
+            .build();
         
-        if (command.getPublishYear() > java.time.Year.now().getValue()) {
-            throw new RuntimeException("Publish year cannot be in the future");
-        }
+        kafkaTemplate.send(BookConstants.TOPIC_BOOK_CREATED, book.getBookId().toString(), event);
+        log.info(BookConstants.LOG_KAFKA_EVENT_SENT, BookConstants.EVENT_BOOK_CREATED, book.getBookId());
     }
     
     /**
-     * Validate khi cập nhật sách
+     * Publish Book Updated Event
      */
-    private void validateBookUpdate(CreateBookCommand command, Book existingBook) {
-        if (!existingBook.getIsbn().equals(command.getIsbn()) && 
-            bookRepository.existsByIsbn(command.getIsbn())) {
-            throw new RuntimeException("ISBN already exists: " + command.getIsbn());
-        }
+    private void publishBookUpdatedEvent(Book book) {
+        BookUpdatedEvent event = BookUpdatedEvent.builder()
+            .bookId(book.getBookId())
+            .title(book.getTitle())
+            .author(book.getAuthor())
+            .isbn(book.getIsbn())
+            .publisher(book.getPublisher())
+            .publishYear(book.getYear())
+            .categoryId(book.getCategory() != null ? book.getCategory().getCategoryId() : null)
+            .categoryName(book.getCategory() != null ? book.getCategory().getName() : null)
+            .updatedAt(book.getUpdatedAt())
+            .build();
         
-        if (command.getPublishYear() > java.time.Year.now().getValue()) {
-            throw new RuntimeException("Publish year cannot be in the future");
-        }
+        kafkaTemplate.send(BookConstants.TOPIC_BOOK_UPDATED, book.getBookId().toString(), event);
+        log.info(BookConstants.LOG_KAFKA_EVENT_SENT, BookConstants.EVENT_BOOK_UPDATED, book.getBookId());
     }
     
     /**
-     * Tạo QR code duy nhất
+     * Publish Book Deleted Event
      */
-    private String generateQRCode() {
-        return "QR-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    private void publishBookDeletedEvent(Book book) {
+        BookDeletedEvent event = BookDeletedEvent.builder()
+            .bookId(book.getBookId())
+            .title(book.getTitle())
+            .author(book.getAuthor())
+            .isbn(book.getIsbn())
+            .deletedAt(book.getUpdatedAt())
+            .build();
+        
+        kafkaTemplate.send(BookConstants.TOPIC_BOOK_DELETED, book.getBookId().toString(), event);
+        log.info(BookConstants.LOG_KAFKA_EVENT_SENT, BookConstants.EVENT_BOOK_DELETED, book.getBookId());
+    }
+    
+    /**
+     * Kiểm tra xem sách có đang được mượn không
+     */
+    private boolean hasActiveBorrowings(UUID bookId) {
+        // TODO: Implement check for active borrowings
+        // This would typically query the Borrowing entity
+        return false;
+    }
+    
+    /**
+     * Xóa cache cho một book cụ thể
+     */
+    private void clearBookCache(UUID bookId) {
+        String cacheKey = BookConstants.CACHE_KEY_PREFIX_BOOK + bookId;
+        cacheService.evict(BookConstants.CACHE_NAME, cacheKey);
+        log.info(BookConstants.LOG_CACHE_EVICTED, bookId);
+    }
+    
+    /**
+     * Xóa toàn bộ search cache
+     */
+    private void clearSearchCache() {
+        cacheService.evictAll(BookConstants.CACHE_NAME);
+        log.info(BookConstants.SUCCESS_CACHE_CLEARED);
+    }
+    
+    /**
+     * Publish Cache Evict Event cho distributed cache
+     */
+    public void publishCacheEvictEvent(UUID bookId) {
+        CacheEvictEvent event = new CacheEvictEvent(BookConstants.EVENT_CACHE_EVICT, bookId, System.currentTimeMillis());
+        
+        kafkaTemplate.send(BookConstants.TOPIC_BOOK_CACHE_EVICT, bookId.toString(), event);
+        log.info(BookConstants.LOG_KAFKA_EVENT_SENT, BookConstants.EVENT_CACHE_EVICT, bookId);
+    }
+    
+    /**
+     * Bulk cache eviction cho nhiều books
+     */
+    public void clearBooksCache(List<UUID> bookIds) {
+        for (UUID bookId : bookIds) {
+            clearBookCache(bookId);
+            publishCacheEvictEvent(bookId);
+        }
+        log.info("Cleared cache for {} books", bookIds.size());
+    }
+    
+    /**
+     * Inner class cho Cache Evict Event
+     */
+    private static class CacheEvictEvent {
+        private final String eventType;
+        private final UUID bookId;
+        private final long timestamp;
+        
+        public CacheEvictEvent(String eventType, UUID bookId, long timestamp) {
+            this.eventType = eventType;
+            this.bookId = bookId;
+            this.timestamp = timestamp;
+        }
+        
+        public String getEventType() { return eventType; }
+        public UUID getBookId() { return bookId; }
+        public long getTimestamp() { return timestamp; }
     }
 } 

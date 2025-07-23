@@ -11,6 +11,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.university.library.config.UUIDDeserializer;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -34,6 +37,7 @@ public class CreateBookCommand {
     private Integer publishYear;
     
     @NotNull(message = "Danh mục không được để trống")
+    @JsonDeserialize(using = UUIDDeserializer.class)
     private UUID categoryId;
     
     private List<BookCopyInfo> copies;
@@ -44,6 +48,7 @@ public class CreateBookCommand {
     @AllArgsConstructor
     public static class BookCopyInfo {
         @NotNull(message = "Thư viện không được để trống")
+        @JsonDeserialize(using = UUIDDeserializer.class)
         private UUID libraryId;
         
         @NotNull(message = "Số lượng không được để trống")

@@ -9,6 +9,7 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Version;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public abstract class BaseEntity {
   @Column(name = "is_deleted")
+  @Builder.Default
   private Boolean isDeleted = false;
 
   @CreatedDate

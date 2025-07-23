@@ -1,6 +1,8 @@
 package com.university.library.repository;
 
 import com.university.library.entity.Book;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -25,7 +27,7 @@ public interface BookRepository extends JpaRepository<Book, UUID>, JpaSpecificat
            "LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(b.author) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(b.isbn) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    List<Book> searchByKeyword(@Param("keyword") String keyword);
+    Page<Book> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
     
     /**
      * Kiểm tra ISBN đã tồn tại chưa

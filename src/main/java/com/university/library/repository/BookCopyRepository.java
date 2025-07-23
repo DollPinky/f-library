@@ -1,53 +1,63 @@
 package com.university.library.repository;
 
 import com.university.library.entity.BookCopy;
-import com.university.library.entity.BookCopy.BookStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface BookCopyRepository extends JpaRepository<BookCopy, UUID> {
-
+public interface BookCopyRepository extends JpaRepository<BookCopy, UUID>, JpaSpecificationExecutor<BookCopy> {
+    
     /**
-     * Tìm bản sao theo sách
+     * Tìm bản sao sách theo sách
      */
     List<BookCopy> findByBookBookId(UUID bookId);
     
     /**
-     * Tìm bản sao theo sách và trạng thái
-     */
-    List<BookCopy> findByBookBookIdAndStatus(UUID bookId, BookCopy.BookStatus status);
-    
-    /**
-     * Tìm bản sao theo thư viện
+     * Tìm bản sao sách theo thư viện
      */
     List<BookCopy> findByLibraryLibraryId(UUID libraryId);
     
     /**
-     * Tìm bản sao theo QR code
+     * Tìm bản sao sách theo trạng thái
      */
-    BookCopy findByQrCode(String qrCode);
+    List<BookCopy> findByStatus(BookCopy.BookStatus status);
     
     /**
-     * Đếm số bản sao theo sách
+     * Tìm bản sao sách có thể mượn theo sách
      */
-    long countByBookBookId(UUID bookId);
+    List<BookCopy> findByBookBookIdAndStatus(UUID bookId, BookCopy.BookStatus status);
     
     /**
-     * Đếm số bản sao có sẵn theo sách
-     */
-    long countByBookBookIdAndStatus(UUID bookId, BookCopy.BookStatus status);
-    
-    /**
-     * Tìm bản sao có sẵn theo thư viện
+     * Tìm bản sao sách có thể mượn theo thư viện
      */
     List<BookCopy> findByLibraryLibraryIdAndStatus(UUID libraryId, BookCopy.BookStatus status);
     
     /**
-     * Tìm bản sao theo trạng thái
+     * Kiểm tra xem có bản sao nào có QR code này không
      */
-    List<BookCopy> findByStatus(BookCopy.BookStatus status);
+    boolean existsByQrCode(String qrCode);
+    
+    /**
+     * Tìm bản sao sách theo QR code
+     */
+    BookCopy findByQrCode(String qrCode);
+    
+    /**
+     * Tìm bản sao sách theo vị trí kệ
+     */
+    List<BookCopy> findByShelfLocationContainingIgnoreCase(String shelfLocation);
+    
+    /**
+     * Đếm số bản sao sách theo trạng thái
+     */
+    long countByStatus(BookCopy.BookStatus status);
+    
+    /**
+     * Đếm số bản sao sách theo sách và trạng thái
+     */
+    long countByBookBookIdAndStatus(UUID bookId, BookCopy.BookStatus status);
 } 

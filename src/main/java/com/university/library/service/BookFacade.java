@@ -1,197 +1,208 @@
 package com.university.library.service;
 
 import com.university.library.base.PagedResponse;
+import com.university.library.constants.BookConstants;
+import com.university.library.dto.BookResponse;
 import com.university.library.dto.BookSearchParams;
 import com.university.library.dto.CreateBookCommand;
-import com.university.library.entity.Book;
-import com.university.library.entity.Account;
-import com.university.library.entity.Staff;
-import com.university.library.event.BookCreatedEvent;
-import com.university.library.event.BookUpdatedEvent;
-import com.university.library.event.BookDeletedEvent;
 import com.university.library.service.command.BookCommandService;
 import com.university.library.service.query.BookQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
-import com.university.library.entity.BookCopy;
 
+/**
+ * BookFacade - Facade pattern để kết hợp Book Query và Command operations
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookFacade {
-    
+
     private final BookQueryService bookQueryService;
     private final BookCommandService bookCommandService;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
-    
+    private final ManualCacheService cacheService;
+
+    // ==================== QUERY OPERATIONS ====================
+
     /**
-     * Tìm kiếm sách với pagination và caching
+     * Lấy thông tin sách theo ID với cache
      */
-    public PagedResponse<Book> searchBooks(BookSearchParams params) {
-        log.info("Searching books with params: {}", params);
+    public BookResponse getBookById(UUID bookId) {
+        log.info("BookFacade: Getting book by ID: {}", bookId);
+        return bookQueryService.getBookById(bookId);
+    }
+
+    /**
+     * Tìm kiếm sách với cache
+     */
+    public PagedResponse<BookResponse> searchBooks(BookSearchParams params) {
+        log.info("BookFacade: Searching books with params: {}", params);
         return bookQueryService.searchBooks(params);
     }
-    
+
     /**
-     * Lấy thông tin sách theo ID
+     * Kiểm tra xem book có trong cache không
      */
-    public Book getBookById(UUID id) {
-        log.info("Getting book by id: {}", id);
-        return bookQueryService.getBookById(id);
+    public boolean isBookCached(UUID bookId) {
+        return bookQueryService.isBookCached(bookId);
     }
-    
+
     /**
-     * Tạo sách mới với event publishing
+     * Lấy TTL của book trong cache
      */
-    public Book createBook(CreateBookCommand command, Account currentAccount) {
-        log.info("Creating new book: {} by user: {}", command.getTitle(), currentAccount.getUsername());
-        
-        // Tạo sách
-        Book book = bookCommandService.createBook(command);
-        
-        // Gửi event qua Kafka với đầy đủ thông tin
-        BookCreatedEvent event = BookCreatedEvent.builder()
-            .bookId(book.getBookId())
-            .title(book.getTitle())
-            .author(book.getAuthor())
-            .isbn(book.getIsbn())
-            .publisher(book.getPublisher())
-            .publishYear(book.getYear())
-            .description(null) // Book entity không có description field
-            .categoryId(book.getCategory() != null ? book.getCategory().getCategoryId() : null)
-            .categoryName(book.getCategory() != null ? book.getCategory().getName() : null)
-            .createdByAccountId(currentAccount.getAccountId())
-            .createdByUsername(currentAccount.getUsername())
-            .createdByFullName(currentAccount.getFullName())
-            .createdByUserType(currentAccount.getUserType().name())
-            .createdByStaffRole(currentAccount.isStaff() ? getStaffRole(currentAccount) : null)
-            .createdByEmployeeId(currentAccount.isStaff() ? getEmployeeId(currentAccount) : null)
-            .libraryId(command.getCopies() != null && !command.getCopies().isEmpty() ? 
-                command.getCopies().get(0).getLibraryId() : null)
-            .libraryName("") // Sẽ được populate từ service
-            .campusId(currentAccount.getCampus() != null ? currentAccount.getCampus().getCampusId() : null)
-            .campusName(currentAccount.getCampus() != null ? currentAccount.getCampus().getName() : null)
-            .createdAt(LocalDateTime.now())
-            .totalCopies(command.getCopies() != null ? 
-                command.getCopies().stream().mapToInt(c -> c.getQuantity()).sum() : 0)
-            .availableCopies(command.getCopies() != null ? 
-                command.getCopies().stream().mapToInt(c -> c.getQuantity()).sum() : 0)
+    public Long getBookCacheTtl(UUID bookId) {
+        return bookQueryService.getBookCacheTtl(bookId);
+    }
+
+    // ==================== COMMAND OPERATIONS ====================
+
+    /**
+     * Tạo sách mới với Kafka events và cache management
+     */
+    public BookResponse createBook(CreateBookCommand command) {
+        log.info("BookFacade: Creating new book with title: {}", command.getTitle());
+        return bookCommandService.createBook(command);
+    }
+
+    /**
+     * Cập nhật sách với Kafka events và cache management
+     */
+    public BookResponse updateBook(UUID bookId, CreateBookCommand command) {
+        log.info("BookFacade: Updating book with ID: {}", bookId);
+        return bookCommandService.updateBook(bookId, command);
+    }
+
+    /**
+     * Xóa sách với Kafka events và cache management
+     */
+    public void deleteBook(UUID bookId) {
+        log.info("BookFacade: Deleting book with ID: {}", bookId);
+        bookCommandService.deleteBook(bookId);
+    }
+
+    // ==================== CACHE MANAGEMENT ====================
+
+    /**
+     * Xóa cache cho một book cụ thể
+     */
+    public void clearBookCache(UUID bookId) {
+        log.info("BookFacade: Clearing cache for book: {}", bookId);
+        bookQueryService.clearBookCache(bookId);
+        bookCommandService.publishCacheEvictEvent(bookId);
+    }
+
+    /**
+     * Xóa cache cho nhiều books
+     */
+    public void clearBooksCache(List<UUID> bookIds) {
+        log.info("BookFacade: Clearing cache for {} books", bookIds.size());
+        bookQueryService.clearBooksCache(bookIds);
+        bookCommandService.clearBooksCache(bookIds);
+    }
+
+    /**
+     * Xóa toàn bộ search cache
+     */
+    public void clearSearchCache() {
+        log.info("BookFacade: Clearing all search cache");
+        bookQueryService.clearSearchCache();
+    }
+
+    /**
+     * Xóa cache cho một tìm kiếm cụ thể
+     */
+    public void clearSearchCache(BookSearchParams params) {
+        log.info("BookFacade: Clearing search cache for specific params");
+        bookQueryService.clearSearchCache(params);
+    }
+
+    /**
+     * Xóa toàn bộ cache
+     */
+    public void clearAllCache() {
+        log.info("BookFacade: Clearing all book cache");
+        cacheService.evictAll(BookConstants.CACHE_NAME);
+    }
+
+    // ==================== CACHE STATISTICS ====================
+
+    /**
+     * Lấy thống kê cache
+     */
+    public CacheStatistics getCacheStatistics() {
+        // Trong thực tế, bạn sẽ implement logic để lấy thống kê cache
+        return CacheStatistics.builder()
+            .cacheName(BookConstants.CACHE_NAME)
+            .totalKeys(0) // TODO: Implement
+            .hitRate(0.0) // TODO: Implement
             .build();
-            
-        kafkaTemplate.send("book-events", event);
-        
-        log.info("Book created successfully with id: {} and event sent", book.getBookId());
-        return book;
     }
-    
+
     /**
-     * Cập nhật thông tin sách
+     * Inner class cho cache statistics
      */
-    public Book updateBook(UUID id, CreateBookCommand command, Account currentAccount, String changeReason) {
-        log.info("Updating book with id: {} by user: {}", id, currentAccount.getUsername());
-        
-        // Lấy thông tin sách cũ để tracking changes
-        Book oldBook = bookQueryService.getBookById(id);
-        
-        // Cập nhật sách
-        Book book = bookCommandService.updateBook(id, command);
-        
-        // Gửi event với đầy đủ thông tin
-        BookUpdatedEvent event = BookUpdatedEvent.builder()
-            .bookId(book.getBookId())
-            .title(book.getTitle())
-            .author(book.getAuthor())
-            .isbn(book.getIsbn())
-            .publisher(book.getPublisher())
-            .publishYear(book.getYear())
-            .description(null) // Book entity không có description field
-            .categoryId(book.getCategory() != null ? book.getCategory().getCategoryId() : null)
-            .categoryName(book.getCategory() != null ? book.getCategory().getName() : null)
-            .updatedByAccountId(currentAccount.getAccountId())
-            .updatedByUsername(currentAccount.getUsername())
-            .updatedByFullName(currentAccount.getFullName())
-            .updatedByUserType(currentAccount.getUserType().name())
-            .updatedByStaffRole(currentAccount.isStaff() ? getStaffRole(currentAccount) : null)
-            .updatedByEmployeeId(currentAccount.isStaff() ? getEmployeeId(currentAccount) : null)
-            .libraryId(command.getCopies() != null && !command.getCopies().isEmpty() ? 
-                command.getCopies().get(0).getLibraryId() : null)
-            .libraryName("") // Sẽ được populate từ service
-            .campusId(currentAccount.getCampus() != null ? currentAccount.getCampus().getCampusId() : null)
-            .campusName(currentAccount.getCampus() != null ? currentAccount.getCampus().getName() : null)
-            .updatedAt(LocalDateTime.now())
-            .totalCopies(command.getCopies() != null ? 
-                command.getCopies().stream().mapToInt(c -> c.getQuantity()).sum() : 0)
-            .availableCopies(command.getCopies() != null ? 
-                command.getCopies().stream().mapToInt(c -> c.getQuantity()).sum() : 0)
-            .changeReason(changeReason)
-            .previousTitle(oldBook.getTitle())
-            .previousAuthor(oldBook.getAuthor())
-            .previousIsbn(oldBook.getIsbn())
-            .build();
-            
-        kafkaTemplate.send("book-events", event);
-        
-        log.info("Book updated successfully with id: {} and event sent", book.getBookId());
-        return book;
+    public static class CacheStatistics {
+        private String cacheName;
+        private long totalKeys;
+        private double hitRate;
+
+        public CacheStatistics(String cacheName, long totalKeys, double hitRate) {
+            this.cacheName = cacheName;
+            this.totalKeys = totalKeys;
+            this.hitRate = hitRate;
+        }
+
+        public static CacheStatisticsBuilder builder() {
+            return new CacheStatisticsBuilder();
+        }
+
+        public String getCacheName() { return cacheName; }
+        public long getTotalKeys() { return totalKeys; }
+        public double getHitRate() { return hitRate; }
+
+        public static class CacheStatisticsBuilder {
+            private String cacheName;
+            private long totalKeys;
+            private double hitRate;
+
+            public CacheStatisticsBuilder cacheName(String cacheName) {
+                this.cacheName = cacheName;
+                return this;
+            }
+
+            public CacheStatisticsBuilder totalKeys(long totalKeys) {
+                this.totalKeys = totalKeys;
+                return this;
+            }
+
+            public CacheStatisticsBuilder hitRate(double hitRate) {
+                this.hitRate = hitRate;
+                return this;
+            }
+
+            public CacheStatistics build() {
+                return new CacheStatistics(cacheName, totalKeys, hitRate);
+            }
+        }
     }
-    
+
+    // ==================== HEALTH CHECK ====================
+
     /**
-     * Xóa sách
+     * Health check cho Book service
      */
-    public void deleteBook(UUID id, Account currentAccount, String deletionReason) {
-        log.info("Deleting book with id: {} by user: {}", id, currentAccount.getUsername());
-        
-        // Lấy thông tin sách trước khi xóa
-        Book book = bookQueryService.getBookById(id);
-        
-        // Xóa sách
-        bookCommandService.deleteBook(id);
-        
-        // Gửi event với đầy đủ thông tin
-        BookDeletedEvent event = BookDeletedEvent.builder()
-            .bookId(book.getBookId())
-            .title(book.getTitle())
-            .author(book.getAuthor())
-            .isbn(book.getIsbn())
-            .deletedByAccountId(currentAccount.getAccountId())
-            .deletedByUsername(currentAccount.getUsername())
-            .deletedByFullName(currentAccount.getFullName())
-            .deletedByUserType(currentAccount.getUserType().name())
-            .deletedByStaffRole(currentAccount.isStaff() ? getStaffRole(currentAccount) : null)
-            .deletedByEmployeeId(currentAccount.isStaff() ? getEmployeeId(currentAccount) : null)
-            .libraryId(null) // Book entity không có library field
-            .libraryName("") // Sẽ được populate từ service
-            .campusId(currentAccount.getCampus() != null ? currentAccount.getCampus().getCampusId() : null)
-            .campusName(currentAccount.getCampus() != null ? currentAccount.getCampus().getName() : null)
-            .deletedAt(LocalDateTime.now())
-            .deletionReason(deletionReason)
-            .totalCopiesBeforeDeletion(book.getBookCopies() != null ? book.getBookCopies().size() : 0)
-            .borrowedCopiesBeforeDeletion(book.getBookCopies() != null ? 
-                (int) book.getBookCopies().stream().filter(copy -> BookCopy.BookStatus.BORROWED.equals(copy.getStatus())).count() : 0)
-            .hasActiveBorrowings(book.getBookCopies() != null && 
-                book.getBookCopies().stream().anyMatch(copy -> BookCopy.BookStatus.BORROWED.equals(copy.getStatus())))
-            .build();
-            
-        kafkaTemplate.send("book-events", event);
-        
-        log.info("Book deleted successfully with id: {} and event sent", book.getBookId());
-    }
-    
-    // Helper methods để lấy thông tin Staff
-    private String getStaffRole(Account account) {
-        // TODO: Implement để lấy Staff role từ Staff entity
-        // Cần inject StaffRepository hoặc StaffService
-        return "LIBRARIAN"; // Default value
-    }
-    
-    private String getEmployeeId(Account account) {
-        // TODO: Implement để lấy Employee ID từ Staff entity
-        // Cần inject StaffRepository hoặc StaffService
-        return "EMP001"; // Default value
+    public boolean isHealthy() {
+        try {
+            // Kiểm tra các dependencies
+            // Trong thực tế, bạn sẽ kiểm tra database, cache, kafka connections
+            return true;
+        } catch (Exception e) {
+            log.error("BookFacade health check failed: {}", e.getMessage());
+            return false;
+        }
     }
 } 

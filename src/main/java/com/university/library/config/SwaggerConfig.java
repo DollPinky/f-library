@@ -1,5 +1,6 @@
 package com.university.library.config;
 
+import com.university.library.constants.EndpointConstants;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
@@ -16,11 +17,11 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI libraryManagementOpenAPI() {
         Server localServer = new Server();
-        localServer.setUrl("http://localhost:8080");
+        localServer.setUrl(EndpointConstants.BACKEND_URL);
         localServer.setDescription("Local Development Server");
 
         Server dockerServer = new Server();
-        dockerServer.setUrl("http://localhost:8080");
+        dockerServer.setUrl(EndpointConstants.BACKEND_URL);
         dockerServer.setDescription("Docker Development Server");
 
         Contact contact = new Contact();
