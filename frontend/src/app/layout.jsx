@@ -1,22 +1,47 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import './globals.css';
 import Navigation from '../components/ui/Navigation';
 
-export const metadata = {
-  title: 'Sage-Librarian - Hệ thống Quản lý Thư viện',
-  description: 'Hệ thống quản lý thư viện hiện đại với giao diện Sage-Librarian chuyên nghiệp',
-  keywords: 'thư viện, quản lý sách, mượn trả, hệ thống thư viện',
-  authors: [{ name: 'Sage-Librarian Team' }],
-};
-
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: 'cover',
-};
-
 export default function RootLayout({ children }) {
+  const [darkMode, setDarkMode] = useState(false);
+  const [user, setUser] = useState({
+    name: 'Admin User',
+    email: 'admin@library.com',
+    role: 'admin'
+  });
+
+  useEffect(() => {
+    // Check for saved theme preference or default to system preference
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+      setDarkMode(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+
+  const handleLogout = () => {
+    // Handle logout logic here
+    console.log('Logging out...');
+    // You can redirect to login page or clear user session
+  };
+
   return (
     <html lang="vi" className="h-full">
       <head>
@@ -32,10 +57,20 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Sage-Librarian" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <title>Sage-Librarian - Hệ thống Quản lý Thư viện</title>
+        <meta name="description" content="Hệ thống quản lý thư viện hiện đại với giao diện Sage-Librarian chuyên nghiệp" />
+        <meta name="keywords" content="thư viện, quản lý sách, mượn trả, hệ thống thư viện" />
+        <meta name="author" content="Sage-Librarian Team" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </head>
       <body className="h-full bg-sage-50 dark:bg-neutral-950 font-sans antialiased safe-area-top safe-area-bottom">
         <div className="min-h-screen flex flex-col">
-          <Navigation />
+          <Navigation 
+            user={user}
+            darkMode={darkMode}
+            onToggleDarkMode={toggleDarkMode}
+            onLogout={handleLogout}
+          />
           <main className="flex-1 w-full">
             {children}
           </main>

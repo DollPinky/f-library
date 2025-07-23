@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { 
   HomeIcon, 
   BookOpenIcon, 
@@ -19,50 +19,20 @@ import {
   ClipboardDocumentListIcon,
   QrCodeIcon,
   ArrowUpTrayIcon,
-  TagIcon
+  TagIcon,
+  DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
 
-const Navigation = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isDark, setIsDark] = useState(false);
+const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
+  const router = useRouter();
   const pathname = usePathname();
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-      setIsDark(true);
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
-
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
-
-  const toggleDarkMode = () => {
-    setIsDark(!isDark);
-    if (isDark) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    }
-  };
-
-  const navigation = [
-    { name: 'Trang chủ', href: '/', icon: HomeIcon },
-    { name: 'Sách', href: '/books', icon: BookOpenIcon },
-    { name: 'Quản lý', href: '/admin', icon: CogIcon },
-    { name: 'Báo cáo', href: '/admin/reports', icon: ChartBarIcon },
-  ];
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
   const adminNavigation = [
     { name: 'Dashboard', href: '/admin', icon: ChartBarIcon },
     { name: 'Quản lý sách', href: '/admin/books', icon: BookOpenIcon },
+    { name: 'Bản sách', href: '/admin/book-copies', icon: DocumentDuplicateIcon },
     { name: 'Danh mục', href: '/admin/categories', icon: TagIcon },
     { name: 'Quản lý mượn trả', href: '/admin/borrowings', icon: UserGroupIcon },
     { name: 'Quản lý độc giả', href: '/admin/readers', icon: UserIcon },
@@ -71,158 +41,238 @@ const Navigation = () => {
     { name: 'Import/Export', href: '/admin/import-export', icon: ArrowUpTrayIcon },
   ];
 
-  const isActive = (href) => {
-    if (href === '/') {
-      return pathname === '/';
-    }
-    return pathname.startsWith(href);
+  const userNavigation = [
+    { name: 'Trang chủ', href: '/', icon: HomeIcon },
+    { name: 'Sách', href: '/books', icon: BookOpenIcon },
+    { name: 'Mượn trả', href: '/borrowings', icon: ClipboardDocumentListIcon },
+    { name: 'Hồ sơ', href: '/profile', icon: UserIcon },
+  ];
+
+  const isAdmin = pathname.startsWith('/admin');
+  const navigation = isAdmin ? adminNavigation : userNavigation;
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
   };
 
-  const currentNavigation = pathname.startsWith('/admin') ? adminNavigation : navigation;
+  const handleLogout = () => {
+    onLogout();
+    closeMobileMenu();
+  };
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    closeMobileMenu();
+  }, [pathname]);
 
   return (
     <>
-      <nav className="bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border-b border-sage-200 dark:border-sage-700 sticky top-0 z-40 safe-area-top shadow-soft">
-        <div className="container-responsive">
-          <div className="flex justify-between items-center h-16 sm:h-18">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center space-x-3 group">
-                <div className="w-10 h-10 bg-gradient-to-br from-sage-500 to-sage-600 rounded-xl flex items-center justify-center shadow-soft group-hover:shadow-glow transition-all duration-300">
-                  <BuildingLibraryIcon className="w-6 h-6 text-white" />
-                </div>
-                <div className="hidden sm:block">
-                  <h1 className="text-xl font-serif font-bold text-sage-900 dark:text-sage-100">
-                    Sage-Librarian
-                  </h1>
-                  <p className="text-xs text-sage-600 dark:text-sage-400">
-                    Hệ thống quản lý thư viện
-                  </p>
-                </div>
-                <div className="sm:hidden">
-                  <h1 className="text-lg font-serif font-bold text-sage-900 dark:text-sage-100">
-                    Sage
-                  </h1>
-                </div>
-              </Link>
+      {/* Desktop Sidebar Navigation */}
+      <div className="hidden lg:flex lg:flex-col lg:w-80 lg:fixed lg:inset-y-0 lg:z-50 lg:bg-white dark:lg:bg-neutral-900 lg:border-r lg:border-sage-200 dark:lg:border-sage-700">
+        {/* Logo Section */}
+        <div className="flex items-center justify-between h-16 px-6 border-b border-sage-200 dark:border-sage-700">
+          <Link href={isAdmin ? '/admin' : '/'} className="flex items-center space-x-3 group">
+            <div className="w-10 h-10 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center group-hover:bg-sage-700 dark:group-hover:bg-sage-400 transition-colors duration-200">
+              <BuildingLibraryIcon className="w-6 h-6 text-white" />
             </div>
+            <div>
+              <h1 className="text-xl font-bold text-sage-900 dark:text-sage-100 group-hover:text-sage-700 dark:group-hover:text-sage-300 transition-colors duration-200">
+                Sage-Librarian
+              </h1>
+              <p className="text-xs text-sage-600 dark:text-sage-400">
+                Hệ thống quản lý thư viện
+              </p>
+            </div>
+          </Link>
+        </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-1">
-              {currentNavigation.map((item) => (
+        {/* Navigation Menu */}
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          <div className="space-y-1">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+              
+              return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 min-h-[44px] ${
-                    isActive(item.href)
-                      ? 'bg-sage-100 dark:bg-sage-800 text-sage-700 dark:text-sage-300 shadow-soft'
+                  className={`group flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? 'bg-sage-100 dark:bg-sage-800 text-sage-700 dark:text-sage-300 shadow-sm'
                       : 'text-sage-600 dark:text-sage-400 hover:bg-sage-50 dark:hover:bg-sage-800 hover:text-sage-700 dark:hover:text-sage-300'
                   }`}
                 >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.name}</span>
+                  <Icon className={`w-5 h-5 transition-colors duration-200 ${
+                    isActive ? 'text-sage-600 dark:text-sage-400' : 'text-sage-500 dark:text-sage-500'
+                  }`} />
+                  <span className="flex-1">{item.name}</span>
+                  {isActive && (
+                    <div className="w-1 h-6 bg-sage-600 dark:bg-sage-400 rounded-full"></div>
+                  )}
                 </Link>
-              ))}
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* User Profile Section */}
+        <div className="p-4 border-t border-sage-200 dark:border-sage-700">
+          <div className="flex items-center space-x-3 p-3 rounded-xl bg-sage-50 dark:bg-sage-800">
+            <div className="w-10 h-10 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center">
+              <UserIcon className="w-5 h-5 text-white" />
             </div>
-
-            {/* Right side actions */}
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              {/* Dark mode toggle */}
-              <button
-                onClick={toggleDarkMode}
-                className="p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:ring-offset-2 min-h-[44px] min-w-[44px]"
-              >
-                {isDark ? (
-                  <SunIcon className="w-5 h-5" />
-                ) : (
-                  <MoonIcon className="w-5 h-5" />
-                )}
-              </button>
-
-              {/* User menu - hidden on mobile */}
-              <div className="hidden sm:block">
-                <button className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200 min-h-[44px]">
-                  <UserIcon className="w-5 h-5" />
-                  <span className="text-sm font-medium">Admin</span>
-                </button>
-              </div>
-
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="lg:hidden p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200 min-h-[44px] min-w-[44px]"
-              >
-                {isOpen ? (
-                  <XMarkIcon className="w-6 h-6" />
-                ) : (
-                  <Bars3Icon className="w-6 h-6" />
-                )}
-              </button>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-sage-900 dark:text-sage-100 truncate">
+                {user?.name || 'Admin User'}
+              </p>
+              <p className="text-xs text-sage-600 dark:text-sage-400 truncate">
+                {user?.email || 'admin@library.com'}
+              </p>
             </div>
           </div>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between mt-3 space-x-2">
+            <button
+              onClick={onToggleDarkMode}
+              className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 text-sm font-medium text-sage-600 dark:text-sage-400 hover:bg-sage-100 dark:hover:bg-sage-800 rounded-xl transition-colors duration-200"
+            >
+              {darkMode ? (
+                <>
+                  <SunIcon className="w-4 h-4" />
+                  <span>Sáng</span>
+                </>
+              ) : (
+                <>
+                  <MoonIcon className="w-4 h-4" />
+                  <span>Tối</span>
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={handleLogout}
+              className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors duration-200"
+            >
+              <ArrowRightOnRectangleIcon className="w-4 h-4" />
+              <span>Đăng xuất</span>
+            </button>
+          </div>
         </div>
-      </nav>
+      </div>
+
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white dark:bg-neutral-900 border-b border-sage-200 dark:border-sage-700">
+        <div className="flex items-center justify-between h-16 px-4">
+          {/* Logo */}
+          <Link href={isAdmin ? '/admin' : '/'} className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center">
+              <BuildingLibraryIcon className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-sage-900 dark:text-sage-100">
+                Sage-Librarian
+              </h1>
+            </div>
+          </Link>
+
+          {/* Mobile Menu Button */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={onToggleDarkMode}
+              className="p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200"
+            >
+              {darkMode ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+            </button>
+            
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200"
+            >
+              <Bars3Icon className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Mobile Navigation Overlay */}
-      {isOpen && (
-        <div className="mobile-nav">
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          {/* Backdrop */}
           <div 
-            className="mobile-nav-overlay"
-            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={closeMobileMenu}
           />
-          <div className={`mobile-nav-content ${isOpen ? 'open' : 'closed'}`}>
-            <div className="flex flex-col h-full">
-              {/* Mobile Header */}
-              <div className="mobile-header">
-                <h2 className="mobile-header-title">
-                  Menu
-                </h2>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="mobile-header-close"
-                >
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
-              </div>
+          
+          {/* Mobile Menu */}
+          <div className="fixed right-0 top-0 h-full w-80 max-w-[85vw] bg-white dark:bg-neutral-900 shadow-strong transform transition-transform duration-300 ease-in-out">
+            {/* Mobile Header */}
+            <div className="mobile-header">
+              <h2 className="mobile-header-title">Menu</h2>
+              <button
+                onClick={closeMobileMenu}
+                className="mobile-header-close"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
 
-              {/* Mobile Navigation Items */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="p-4 space-y-2">
-                  {currentNavigation.map((item) => (
+            {/* Mobile Navigation */}
+            <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+              <div className="space-y-1">
+                {navigation.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
+                  
+                  return (
                     <Link
                       key={item.name}
                       href={item.href}
-                      onClick={() => setIsOpen(false)}
-                      className={`mobile-nav-item ${isActive(item.href) ? 'active' : ''}`}
+                      onClick={closeMobileMenu}
+                      className={`mobile-nav-item ${isActive ? 'active' : ''}`}
                     >
-                      <item.icon className="w-5 h-5" />
+                      <Icon className="w-5 h-5" />
                       <span>{item.name}</span>
                     </Link>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
+            </nav>
 
-              {/* Mobile Footer */}
-              <div className="mobile-footer">
-                {/* User info */}
-                <div className="mobile-user-info">
-                  <UserIcon className="w-5 h-5 text-sage-600 dark:text-sage-400" />
-                  <div>
-                    <p className="text-sm font-medium text-sage-900 dark:text-sage-100">Admin</p>
-                    <p className="text-xs text-sage-600 dark:text-sage-400">Quản trị viên</p>
-                  </div>
+            {/* Mobile Footer */}
+            <div className="mobile-footer">
+              <div className="mobile-user-info">
+                <div className="w-10 h-10 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center">
+                  <UserIcon className="w-5 h-5 text-white" />
                 </div>
-                
-                {/* Logout option */}
-                <button className="mobile-logout-btn">
-                  <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                  <span>Đăng xuất</span>
-                </button>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-sage-900 dark:text-sage-100 truncate">
+                    {user?.name || 'Admin User'}
+                  </p>
+                  <p className="text-xs text-sage-600 dark:text-sage-400 truncate">
+                    {user?.email || 'admin@library.com'}
+                  </p>
+                </div>
               </div>
+              
+              <button
+                onClick={handleLogout}
+                className="mobile-logout-btn"
+              >
+                <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                <span>Đăng xuất</span>
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Main Content Padding for Desktop */}
+      <div className="lg:pl-80">
+        {/* Mobile Top Spacing */}
+        <div className="lg:hidden h-16"></div>
+      </div>
     </>
   );
 };

@@ -194,6 +194,23 @@
   .table-responsive table {
     @apply min-w-full divide-y divide-sage-200 dark:divide-sage-700;
   }
+
+  /* Table improvements */
+  .table-cell-responsive {
+    @apply px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-sm;
+  }
+
+  .table-header-responsive {
+    @apply px-3 sm:px-4 lg:px-6 py-3 text-xs font-medium text-sage-600 dark:text-sage-400 uppercase tracking-wider;
+  }
+
+  .table-row-hover {
+    @apply hover:bg-sage-50 dark:hover:bg-sage-900/30 transition-colors duration-200;
+  }
+
+  .table-row-clickable {
+    @apply cursor-pointer;
+  }
   
   /* Mobile navigation */
   .mobile-nav {
