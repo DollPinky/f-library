@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Size;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterRequest {
-    
+
     @NotBlank(message = "Tên đăng nhập không được để trống")
     @Size(min = 3, max = 20, message = "Tên đăng nhập phải có từ 3-20 ký tự")
     @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Tên đăng nhập chỉ chứa chữ cái, số và dấu gạch dưới")
@@ -41,30 +41,15 @@ public class RegisterRequest {
     private String phone;
     
     private String studentId;
+
     private String faculty;
+
     private String major;
+
     private Integer year;
+
     private UUID campusId;
-    private UUID libraryId;
-    
-    @NotBlank(message = "Vai trò không được để trống")
-    private String role; // READER, LIBRARIAN, MANAGER
-    
+
     private boolean isActive = true;
-    
-    // Profile information
-    private UserProfile profile;
-    
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class UserProfile {
-        private String studentId;
-        private String faculty;
-        private String major;
-        private Integer year;
-        private UUID campusId;
-        private UUID libraryId;
-    }
+
 } 

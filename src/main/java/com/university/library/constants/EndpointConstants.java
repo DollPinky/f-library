@@ -12,4 +12,5 @@ public final class EndpointConstants {
   public static final String BOOKS_ENDPOINT = API + "/books";
   public static final String BOOK_COPIES_ENDPOINT = API + "/book-copies";
   public static final String BORROWINGS_ENDPOINT = API + "/borrowings";
+  public static final String ACCOUNT_ENDPOINT = API + "/accounts";
 }

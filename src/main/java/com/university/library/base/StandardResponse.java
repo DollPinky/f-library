@@ -28,7 +28,7 @@ public class StandardResponse<T> {
     
     private String errorCode;
     
-    public static <T> StandardResponse<T> success() {
+    public static <T> StandardResponse<T> success(String đăngNhậpThànhCông) {
         return StandardResponse.<T>builder()
                 .success(true)
                 .message("Thành công")
