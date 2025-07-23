@@ -61,7 +61,7 @@ public class AccountCommandServiceImpl implements AccountCommandService{
     }
 
     @Override
-    public void login(LoginRequest request) {
+    public AccountResponse login(LoginRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -70,6 +70,13 @@ public class AccountCommandServiceImpl implements AccountCommandService{
                     )
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            
+            // Get the authenticated account
+            Account account = (Account) authentication.getPrincipal();
+            account.updateLastLogin();
+            accountRepository.save(account);
+            
+            return accountMapper.toAccountResponse(account);
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("Invalid username or password.");
         }

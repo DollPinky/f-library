@@ -6,5 +6,5 @@ import com.university.library.dto.AccountResponse;
 
 public interface AccountCommandService {
     AccountResponse register(RegisterRequest request);
-    void login(LoginRequest request);
+    AccountResponse login(LoginRequest request);
 }

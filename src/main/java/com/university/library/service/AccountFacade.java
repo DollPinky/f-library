@@ -57,7 +57,7 @@ public class AccountFacade {
     /**
      * Login
      */
-    public void login(LoginRequest request) {
-        accountCommandService.login(request);
+    public AccountResponse login(LoginRequest request) {
+        return accountCommandService.login(request);
     }
 }

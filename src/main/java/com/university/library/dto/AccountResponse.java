@@ -15,14 +15,26 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AccountResponse {
     private UUID accountId;
+    private String username;
     private String email;
     private String fullName;
     private String phone;
+    private Account.UserType userType;
     private Account.AccountStatus status;
-    private LocalDateTime createAt;
+    private LocalDateTime lastLoginAt;
+    private Boolean emailVerified;
+    private Boolean phoneVerified;
+    private UUID campusId;
+    private UUID libraryId;
     private String studentId;
     private String faculty;
     private String major;
-    private Integer year;
-    private UUID campusId;
+    private Integer academicYear;
+    private Integer maxBorrowLimit;
+    private Integer currentBorrowCount;
+    private Integer totalBorrowCount;
+    private Integer overdueCount;
+    private Double fineAmount;
+    private LocalDateTime createAt;
+    private LocalDateTime updateAt;
 }

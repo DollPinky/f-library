@@ -131,7 +131,6 @@ const TableView = ({
               onClick={() => onRowClick && onRowClick(row)}
             >
               {columns.map((column, colIndex) => {
-                // Skip actions column on mobile if it's the last one
                 if (column.key === 'actions' && colIndex === columns.length - 1) {
                   return (
                     <div key={colIndex} className="pt-2 border-t border-sage-200 dark:border-sage-700">

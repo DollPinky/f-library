@@ -32,7 +32,7 @@ const LandingPage = () => {
       const response = await searchBooks({
         search: searchTerm,
         page: 0,
-        size: 5 // Limit to 5 results for dropdown
+        size: 5 
       });
       
       if (response.success) {

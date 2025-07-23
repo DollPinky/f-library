@@ -8,6 +8,7 @@ import DetailDrawer from '../components/ui/DetailDrawer';
 import ActionButton from '../components/ui/ActionButton';
 import NotificationToast from '../components/ui/NotificationToast';
 import useDashboardData from '../hooks/useDashboardData';
+import ProtectedRoute from '../components/auth/ProtectedRoute';
 
 const Dashboard = () => {
   const { dashboardStats, recentBooks, loading, error, refreshData } = useDashboardData();
@@ -309,4 +310,12 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+const HomePage = () => {
+  return (
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
+  );
+};
+
+export default HomePage; 

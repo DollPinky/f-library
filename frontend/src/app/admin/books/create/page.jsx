@@ -43,29 +43,21 @@ const BookCreatePage = () => {
   });
 
   useEffect(() => {
-    // Fetch categories and libraries for dropdowns
     const fetchData = async () => {
       try {
-        // TODO: Replace with actual API calls when endpoints are available
-        // For now, using mock data
-        setCategories([
-          { id: '1', name: 'Khoa học máy tính' },
-          { id: '2', name: 'Văn học' },
-          { id: '3', name: 'Lịch sử' },
-          { id: '4', name: 'Kinh tế' },
-          { id: '5', name: 'Y học' }
-        ]);
-        
-        setLibraries([
-          { id: '1', name: 'Thư viện chính' },
-          { id: '2', name: 'Thư viện khoa học' },
-          { id: '3', name: 'Thư viện y học' }
-        ]);
+        // Lấy danh mục từ API thật
+        const res = await fetch('http://localhost:8080/api/v1/categories');
+        const data = await res.json();
+        if (data.success && data.data && data.data.content) {
+          setCategories(data.data.content);
+        } else {
+          setCategories([]);
+        }
+        // TODO: Lấy libraries từ API nếu cần
       } catch (error) {
         showNotification('Không thể tải dữ liệu', 'error');
       }
     };
-
     fetchData();
   }, []);
 
@@ -126,17 +118,19 @@ const BookCreatePage = () => {
       showNotification('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
       return;
     }
-
+    if (!formData.categoryId) {
+      showNotification('Vui lòng chọn danh mục', 'warning');
+      return;
+    }
     if (formData.bookCopies.length === 0) {
       showNotification('Vui lòng thêm ít nhất một bản sách', 'warning');
       return;
     }
 
     try {
-      // Transform book copies to match backend structure
       const copies = formData.bookCopies.map(copy => ({
         libraryId: copy.libraryId,
-        quantity: 1, // Each copy represents quantity 1
+        quantity: 1, 
         location: copy.shelfLocation
       }));
 
@@ -146,7 +140,7 @@ const BookCreatePage = () => {
         publisher: formData.publisher,
         publishYear: formData.publicationYear ? parseInt(formData.publicationYear) : null,
         isbn: formData.isbn,
-        categoryId: formData.categoryId || null,
+        categoryId: formData.categoryId,
         copies: copies
       };
 
@@ -300,17 +294,18 @@ const BookCreatePage = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                      Danh mục
+                      Danh mục *
                     </label>
                     <select
                       name="categoryId"
                       value={formData.categoryId}
                       onChange={handleInputChange}
                       className="input-primary"
+                      required
                     >
                       <option value="">Chọn danh mục</option>
                       {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
+                        <option key={category.categoryId} value={category.categoryId}>
                           {category.name}
                         </option>
                       ))}

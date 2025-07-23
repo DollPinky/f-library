@@ -29,7 +29,6 @@ public class LibraryController {
     
     private final LibraryFacade libraryFacade;
     
-    // Query Endpoints
     @GetMapping("/{libraryId}")
     @Operation(summary = "Get library by ID", description = "Retrieve a specific library by its ID")
     public ResponseEntity<StandardResponse<LibraryResponse>> getLibraryById(
@@ -67,7 +66,7 @@ public class LibraryController {
         try {
             log.info(LibraryConstants.API_GET_BY_CAMPUS, campusId);
             List<LibraryResponse> response = libraryFacade.getLibrariesByCampusId(campusId);
-            return ResponseEntity.ok(StandardResponse.success(response, LibraryConstants.SUCCESS_LIBRARIES_RETRIEVED));
+            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_LIBRARIES_RETRIEVED, response));
         } catch (Exception e) {
             log.error("Error getting libraries by campus ID: {} - {}", campusId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -82,7 +81,7 @@ public class LibraryController {
         try {
             log.info(LibraryConstants.API_GET_BY_CODE, code);
             LibraryResponse response = libraryFacade.getLibraryByCode(code);
-            return ResponseEntity.ok(StandardResponse.success(response, LibraryConstants.SUCCESS_LIBRARY_RETRIEVED));
+            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_LIBRARY_RETRIEVED, response));
         } catch (Exception e) {
             log.error("Error getting library by code: {} - {}", code, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -95,7 +94,7 @@ public class LibraryController {
     public ResponseEntity<StandardResponse<List<LibraryResponse>>> getAllLibraries() {
         try {
             List<LibraryResponse> response = libraryFacade.getAllLibraries();
-            return ResponseEntity.ok(StandardResponse.success(response, LibraryConstants.SUCCESS_LIBRARIES_RETRIEVED));
+            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_LIBRARIES_RETRIEVED, response));
         } catch (Exception e) {
             log.error("Error getting all libraries: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -103,7 +102,6 @@ public class LibraryController {
         }
     }
     
-    // Command Endpoints
     @PostMapping
     @Operation(summary = "Create library", description = "Create a new library")
     public ResponseEntity<StandardResponse<LibraryResponse>> createLibrary(
@@ -112,7 +110,7 @@ public class LibraryController {
             log.info(LibraryConstants.API_CREATE_LIBRARY, command.getCode());
             LibraryResponse response = libraryFacade.createLibrary(command);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(StandardResponse.success(response, LibraryConstants.SUCCESS_LIBRARY_CREATED));
+                    .body(StandardResponse.success(LibraryConstants.SUCCESS_LIBRARY_CREATED, response));
         } catch (Exception e) {
             log.error(LibraryConstants.ERROR_LOG_CREATE_LIBRARY, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -128,7 +126,7 @@ public class LibraryController {
         try {
             log.info(LibraryConstants.API_UPDATE_LIBRARY, libraryId);
             LibraryResponse response = libraryFacade.updateLibrary(libraryId, command);
-            return ResponseEntity.ok(StandardResponse.success(response, LibraryConstants.SUCCESS_LIBRARY_UPDATED));
+            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_LIBRARY_UPDATED, response));
         } catch (Exception e) {
             log.error(LibraryConstants.ERROR_LOG_UPDATE_LIBRARY, libraryId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -151,7 +149,6 @@ public class LibraryController {
         }
     }
     
-    // Cache Endpoints
     @DeleteMapping("/{libraryId}/cache")
     @Operation(summary = "Clear library cache", description = "Clear cache for a specific library")
     public ResponseEntity<StandardResponse<LibraryCacheStatus>> clearLibraryCache(
@@ -162,7 +159,7 @@ public class LibraryController {
             libraryFacade.clearLibraryCache(libraryId);
             
             LibraryCacheStatus status = new LibraryCacheStatus(libraryId, wasCached, false);
-            return ResponseEntity.ok(StandardResponse.success(status, LibraryConstants.SUCCESS_CACHE_CLEARED));
+            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_CACHE_CLEARED, status));
         } catch (Exception e) {
             log.error(LibraryConstants.ERROR_LOG_CLEAR_CACHE, libraryId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -176,7 +173,7 @@ public class LibraryController {
         try {
             log.info(LibraryConstants.API_CLEAR_SEARCH_CACHE);
             libraryFacade.clearSearchCache();
-            return ResponseEntity.ok(StandardResponse.success(null, LibraryConstants.SUCCESS_CACHE_CLEARED));
+            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_CACHE_CLEARED, null));
         } catch (Exception e) {
             log.error(LibraryConstants.ERROR_LOG_CLEAR_SEARCH_CACHE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -190,7 +187,7 @@ public class LibraryController {
         try {
             log.info(LibraryConstants.API_CLEAR_ALL_CACHE);
             libraryFacade.clearAllCache();
-            return ResponseEntity.ok(StandardResponse.success(null, LibraryConstants.SUCCESS_CACHE_CLEARED));
+            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_CACHE_CLEARED, null));
         } catch (Exception e) {
             log.error(LibraryConstants.ERROR_LOG_CLEAR_ALL_CACHE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -205,8 +202,7 @@ public class LibraryController {
         try {
             log.info(LibraryConstants.API_BULK_CLEAR_CACHE, libraryIds.size());
             libraryFacade.clearLibrariesCache(libraryIds);
-            return ResponseEntity.ok(StandardResponse.success(null, 
-                    String.format(LibraryConstants.SUCCESS_CACHE_BULK_CLEARED, libraryIds.size())));
+            return ResponseEntity.ok(StandardResponse.success(String.format(LibraryConstants.SUCCESS_CACHE_BULK_CLEARED, libraryIds.size()), null));
         } catch (Exception e) {
             log.error(LibraryConstants.ERROR_LOG_BULK_CLEAR_CACHE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -224,7 +220,7 @@ public class LibraryController {
             Long ttl = libraryFacade.getLibraryCacheTtl(libraryId);
             
             LibraryCacheStatus status = new LibraryCacheStatus(libraryId, isCached, ttl);
-            return ResponseEntity.ok(StandardResponse.success(status, LibraryConstants.SUCCESS_CACHE_STATUS_RETRIEVED));
+            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_CACHE_STATUS_RETRIEVED, status));
         } catch (Exception e) {
             log.error(LibraryConstants.ERROR_LOG_CACHE_STATUS, libraryId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -232,7 +228,6 @@ public class LibraryController {
         }
     }
     
-    // Health Check Endpoint
     @GetMapping("/health")
     @Operation(summary = "Health check", description = "Check the health of the library service")
     public ResponseEntity<StandardResponse<HealthStatus>> healthCheck() {
@@ -243,16 +238,15 @@ public class LibraryController {
             HealthStatus status = new HealthStatus(isHealthy, LibraryConstants.SERVICE_NAME);
             String message = isHealthy ? LibraryConstants.SUCCESS_SERVICE_HEALTHY : LibraryConstants.ERROR_SERVICE_UNHEALTHY;
             
-            return ResponseEntity.ok(StandardResponse.success(status, message));
+            return ResponseEntity.ok(StandardResponse.success(message, status));
         } catch (Exception e) {
             log.error(LibraryConstants.ERROR_LOG_HEALTH_CHECK, e.getMessage());
             HealthStatus status = new HealthStatus(false, LibraryConstants.SERVICE_NAME);
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(StandardResponse.error(status, LibraryConstants.ERROR_SERVICE_UNHEALTHY));
+                    .body(StandardResponse.error(LibraryConstants.ERROR_SERVICE_UNHEALTHY, status));
         }
     }
     
-    // Inner classes for response data
     public static class LibraryCacheStatus {
         private final UUID libraryId;
         private final boolean isCached;

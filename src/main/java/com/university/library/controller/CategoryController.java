@@ -54,7 +54,13 @@ public class CategoryController {
     public ResponseEntity<StandardResponse<PagedResponse<CategoryResponse>>> searchCategories(
             @Parameter(description = "Search parameters")
             @ModelAttribute CategorySearchParams params) {
-        
+
+        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
+        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
+        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
+        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
+        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
+        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
         log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
         
         try {

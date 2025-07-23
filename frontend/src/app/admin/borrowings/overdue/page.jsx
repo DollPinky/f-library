@@ -164,10 +164,9 @@ const OverdueBooksPage = () => {
 
   const calculateFine = (dueDate) => {
     const overdueDays = calculateOverdueDays(dueDate);
-    return overdueDays * 10000; // 10,000 VNĐ per day
+    return overdueDays * 10000; 
   };
 
-  // Table columns configuration
   const columns = [
     {
       key: 'bookCopy',

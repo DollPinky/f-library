@@ -16,7 +16,6 @@ const ProfilePage = () => {
   const [formData, setFormData] = useState({});
 
   useEffect(() => {
-    // Lấy thông tin user từ localStorage
     const userData = localStorage.getItem('user');
     if (!userData) {
       router.push('/login');
@@ -61,7 +60,6 @@ const ProfilePage = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Cập nhật thông tin user trong localStorage
         const updatedUser = { ...user, ...formData };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);

@@ -28,7 +28,6 @@ const BookDetailsPage = () => {
 
   const handleBorrowBook = async () => {
     try {
-      // Check if user is logged in
       const token = localStorage.getItem('token');
       if (!token) {
         showNotification('Vui lòng đăng nhập để mượn sách', 'warning');
@@ -36,14 +35,12 @@ const BookDetailsPage = () => {
         return;
       }
 
-      // Check if book is available
       const availableCopies = book.bookCopies?.filter(copy => copy.status === 'AVAILABLE') || [];
       if (availableCopies.length === 0) {
         showNotification('Sách này hiện không có bản sẵn', 'warning');
         return;
       }
 
-      // TODO: Implement borrowing API call
       showNotification('Tính năng mượn sách đang được phát triển', 'info');
       
     } catch (error) {

@@ -13,15 +13,12 @@ const CreateStaffPage = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   
   const [formData, setFormData] = useState({
-    // Account information
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
     fullName: '',
     phone: '',
-    
-    // Staff information
     employeeId: '',
     staffRole: '',
     libraryId: '',
@@ -82,7 +79,6 @@ const CreateStaffPage = () => {
   const validateForm = () => {
     const errors = [];
 
-    // Account validation
     if (!formData.username.trim()) {
       errors.push('Tên đăng nhập là bắt buộc');
     }
@@ -107,7 +103,6 @@ const CreateStaffPage = () => {
       errors.push('Họ tên là bắt buộc');
     }
 
-    // Staff validation
     if (!formData.employeeId.trim()) {
       errors.push('Mã nhân viên là bắt buộc');
     }

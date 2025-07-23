@@ -1,405 +1,223 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useBooks } from '../../hooks/useBooksApi';
-import ActionButton from '../../components/ui/ActionButton';
-import StatisticCard from '../../components/ui/StatisticCard';
+import { useAuth } from '../../contexts/AuthContext';
+import ProtectedRoute from '../../components/auth/ProtectedRoute';
 import ChartCard from '../../components/ui/ChartCard';
-import { 
-  BookOpenIcon, 
-  UserGroupIcon, 
-  ChartBarIcon, 
-  ClockIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  PlusIcon,
-  MagnifyingGlassIcon,
-  CogIcon,
-  BuildingLibraryIcon,
-  QrCodeIcon,
-  ArrowUpTrayIcon,
-  UserIcon
-} from '@heroicons/react/24/outline';
+import NotificationToast from '../../components/ui/NotificationToast';
+import LoadingSkeleton from '../../components/ui/LoadingSkeleton';
+import dashboardService from '../../services/dashboardService';
 
 const AdminDashboard = () => {
-  const router = useRouter();
-  const { books, loading } = useBooks();
-
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     totalBooks: 0,
-    availableBooks: 0,
-    borrowedBooks: 0,
     totalReaders: 0,
-    totalStaff: 0,
-    overdueBooks: 0
+    activeBorrowings: 0,
+    totalCategories: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
+
+  // Chart data - will be populated from API
+  const [chartData, setChartData] = useState({
+    borrowingTrend: {
+      labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+      datasets: [
+        {
+          label: 'Sách mượn',
+          data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          borderColor: 'rgb(75, 192, 192)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        },
+        {
+          label: 'Sách trả',
+          data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          borderColor: 'rgb(255, 99, 132)',
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        }
+      ]
+    },
+    categoryDistribution: {
+      labels: ['Văn học', 'Khoa học', 'Lịch sử', 'Kinh tế', 'Công nghệ'],
+      datasets: [
+        {
+          data: [0, 0, 0, 0, 0],
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 205, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+          ],
+        }
+      ]
+    }
   });
 
   useEffect(() => {
-    if (books.length > 0) {
-      const totalBooks = books.length;
-      const availableBooks = books.filter(book => 
-        book.bookCopies?.some(copy => copy.status === 'AVAILABLE')
-      ).length;
-      const borrowedBooks = books.filter(book => 
-        book.bookCopies?.some(copy => copy.status === 'BORROWED')
-      ).length;
+    fetchDashboardData();
+  }, []);
 
-      setStats({
-        totalBooks,
-        availableBooks,
-        borrowedBooks,
-        totalReaders: 1250, 
-        totalStaff: 45, 
-        overdueBooks: 23 
-      });
-    } else {
-      // Mock data khi không có books
-      setStats({
-        totalBooks: 15420,
-        availableBooks: 12350,
-        borrowedBooks: 3070,
-        totalReaders: 1250, 
-        totalStaff: 45, 
-        overdueBooks: 23 
-      });
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all dashboard data using dashboard service
+      const response = await dashboardService.getAllDashboardData();
+      
+      if (response.success) {
+        const { stats: dashboardStats, borrowingTrend, categoryDistribution } = response.data;
+        
+        setStats({
+          totalBooks: dashboardStats.totalBooks,
+          totalReaders: dashboardStats.totalReaders,
+          activeBorrowings: dashboardStats.activeBorrowings,
+          totalCategories: dashboardStats.totalCategories
+        });
+
+        setChartData({
+          borrowingTrend,
+          categoryDistribution
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      showNotification('Không thể tải dữ liệu dashboard: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
     }
-  }, [books]);
-
-  const quickActions = [
-    {
-      title: 'Thêm sách mới',
-      description: 'Thêm sách và bản sách vào hệ thống',
-      icon: PlusIcon,
-      color: 'sage',
-      href: '/admin/books/create'
-    },
-    {
-      title: 'Quản lý sách',
-      description: 'Xem và chỉnh sửa thông tin sách',
-      icon: BookOpenIcon,
-      color: 'blue',
-      href: '/admin/books'
-    },
-    {
-      title: 'Quản lý mượn trả',
-      description: 'Theo dõi hoạt động mượn trả sách',
-      icon: UserGroupIcon,
-      color: 'emerald',
-      href: '/admin/borrowings'
-    },
-    {
-      title: 'Quản lý độc giả',
-      description: 'Quản lý thông tin độc giả',
-      icon: UserIcon,
-      color: 'amber',
-      href: '/admin/readers'
-    },
-    {
-      title: 'Quản lý nhân viên',
-      description: 'Quản lý tài khoản nhân viên',
-      icon: UserGroupIcon,
-      color: 'purple',
-      href: '/admin/staff'
-    },
-    {
-      title: 'Scanner QR',
-      description: 'Quét mã QR để mượn/trả sách',
-      icon: QrCodeIcon,
-      color: 'indigo',
-      href: '/admin/scanner'
-    }
-  ];
-
-  const recentActivities = [
-    {
-      type: 'borrow',
-      title: 'Nguyễn Văn A mượn sách "Clean Code"',
-      time: '2 phút trước',
-      icon: BookOpenIcon,
-      color: 'emerald'
-    },
-    {
-      type: 'return',
-      title: 'Trần Thị B trả sách "Design Patterns"',
-      time: '15 phút trước',
-      icon: CheckCircleIcon,
-      color: 'blue'
-    },
-    {
-      type: 'overdue',
-      title: 'Lê Văn C quá hạn trả sách "Refactoring"',
-      time: '1 giờ trước',
-      icon: ExclamationTriangleIcon,
-      color: 'red'
-    },
-    {
-      type: 'add',
-      title: 'Thêm 5 bản sách mới "System Design"',
-      time: '2 giờ trước',
-      icon: PlusIcon,
-      color: 'sage'
-    }
-  ];
-
-  const getColorClasses = (color) => {
-    const colors = {
-      sage: 'bg-sage-100 text-sage-600 dark:bg-sage-900 dark:text-sage-400',
-      blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400',
-      emerald: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-400',
-      amber: 'bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-400',
-      purple: 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-400',
-      indigo: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-400',
-      red: 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400'
-    };
-    return colors[color] || colors.sage;
   };
 
-  // Chart data
-  const monthlyBorrowData = {
-    labels: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6'],
-    datasets: [
-      {
-        label: 'Sách mượn',
-        data: [120, 150, 180, 200, 170, 220],
-        borderColor: '#5a735a',
-        backgroundColor: 'rgba(90, 115, 90, 0.1)',
-        borderWidth: 3,
-        fill: true,
-        tension: 0.4
-      }
-    ]
-  };
-
-  const categoryDistributionData = {
-    labels: ['Khoa học máy tính', 'Văn học', 'Lịch sử', 'Kinh tế', 'Y học'],
-    datasets: [
-      {
-        data: [300, 250, 180, 200, 150],
-        backgroundColor: [
-          '#5a735a',
-          '#7a907a',
-          '#a3b3a3',
-          '#c7d0c7',
-          '#e3e7e3'
-        ],
-        borderWidth: 2,
-        borderColor: '#ffffff'
-      }
-    ]
+  const showNotification = (message, type = 'info') => {
+    setNotification({ show: true, message, type });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
-        <div className="p-4 sm:p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="animate-pulse space-y-8">
-              {/* Header Skeleton */}
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-sage-200 dark:bg-sage-700 rounded-xl"></div>
-                <div className="space-y-2">
-                  <div className="h-8 bg-sage-200 dark:bg-sage-700 rounded w-48"></div>
-                  <div className="h-4 bg-sage-200 dark:bg-sage-700 rounded w-64"></div>
-                </div>
+      <ProtectedRoute requiredRole="STAFF">
+        <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
+          <div className="p-4 sm:p-6 lg:p-6">
+            <div className="max-w-none mx-auto">
+              <LoadingSkeleton type="card" count={1} className="mb-8" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+                <LoadingSkeleton type="stat" count={4} />
               </div>
-              
-              {/* Stats Cards Skeleton */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-white dark:bg-neutral-900 rounded-xl p-4 sm:p-6 border border-sage-200 dark:border-sage-700">
-                    <div className="space-y-3">
-                      <div className="h-4 bg-sage-200 dark:bg-sage-700 rounded w-24"></div>
-                      <div className="h-8 bg-sage-200 dark:bg-sage-700 rounded w-16"></div>
-                    </div>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <LoadingSkeleton type="chart" count={2} />
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </ProtectedRoute>
     );
   }
 
   return (
-    <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Page Header */}
-          <div className="mb-6 sm:mb-8">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-sage-500 to-sage-600 rounded-xl flex items-center justify-center shadow-soft">
-                <CogIcon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-sage-900 dark:text-sage-100">
-                  Admin Dashboard
-                </h1>
-                <p className="text-sm sm:text-base text-sage-600 dark:text-sage-400">
-                  Quản lý hệ thống thư viện Sage-Librarian
-                </p>
+    <ProtectedRoute requiredRole="STAFF">
+      <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
+        <div className="p-4 sm:p-6 lg:p-6">
+          <div className="max-w-none mx-auto">
+            {/* Page Header */}
+            <div className="mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-sage-900 dark:text-sage-100 mb-2">
+                    Dashboard
+                  </h1>
+                  <p className="text-sm sm:text-base text-sage-600 dark:text-sage-400">
+                    Chào mừng trở lại, {user?.fullName || 'Admin'}!
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <StatisticCard
-              title="Tổng số sách"
-              value={stats.totalBooks}
-              icon={<BookOpenIcon className="w-6 h-6" />}
-              color="sage"
-              trend="+12%"
-              changeType="up"
-            />
-            <StatisticCard
-              title="Sách có sẵn"
-              value={stats.availableBooks}
-              icon={<CheckCircleIcon className="w-6 h-6" />}
-              color="emerald"
-              trend="+5%"
-              changeType="up"
-            />
-            <StatisticCard
-              title="Sách đã mượn"
-              value={stats.borrowedBooks}
-              icon={<UserGroupIcon className="w-6 h-6" />}
-              color="amber"
-              trend="-2%"
-              changeType="down"
-            />
-            <StatisticCard
-              title="Sách quá hạn"
-              value={stats.overdueBooks}
-              icon={<ExclamationTriangleIcon className="w-6 h-6" />}
-              color="red"
-              trend="+8%"
-              changeType="up"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            {/* Quick Actions */}
-            <div className="lg:col-span-2">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
               <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-4 sm:p-6">
-                <h2 className="text-lg sm:text-xl font-serif font-semibold text-sage-900 dark:text-sage-100 mb-4 sm:mb-6">
-                  Thao tác nhanh
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {quickActions.map((action, index) => (
-                    <div
-                      key={index}
-                      onClick={() => router.push(action.href)}
-                      className="p-3 sm:p-4 bg-sage-50 dark:bg-sage-900/30 rounded-xl border border-sage-200 dark:border-sage-700 cursor-pointer hover:shadow-medium transition-all duration-300 group"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${getColorClasses(action.color)} group-hover:scale-110 transition-transform duration-200`}>
-                          <action.icon className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-sage-900 dark:text-sage-100 group-hover:text-sage-600 dark:group-hover:text-sage-400 transition-colors duration-200 text-sm sm:text-base">
-                            {action.title}
-                          </h3>
-                          <p className="text-xs sm:text-sm text-sage-600 dark:text-sage-400 line-clamp-1">
-                            {action.description}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-xl">
+                    <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-sage-600 dark:text-sage-400">Tổng sách</p>
+                    <p className="text-2xl font-bold text-sage-900 dark:text-sage-100">{stats.totalBooks.toLocaleString()}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Recent Activities */}
-            <div className="lg:col-span-1">
               <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-4 sm:p-6">
-                <h2 className="text-lg sm:text-xl font-serif font-semibold text-sage-900 dark:text-sage-100 mb-4 sm:mb-6">
-                  Hoạt động gần đây
-                </h2>
-                <div className="space-y-3 sm:space-y-4">
-                  {recentActivities.map((activity, index) => (
-                    <div key={index} className="flex items-start space-x-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${getColorClasses(activity.color)}`}>
-                        <activity.icon className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-sage-900 dark:text-sage-100 line-clamp-2">
-                          {activity.title}
-                        </p>
-                        <p className="text-xs text-sage-500 dark:text-sage-400 mt-1">
-                          {activity.time}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-100 dark:bg-green-900 rounded-xl">
+                    <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-sage-600 dark:text-sage-400">Độc giả</p>
+                    <p className="text-2xl font-bold text-sage-900 dark:text-sage-100">{stats.totalReaders.toLocaleString()}</p>
+                  </div>
                 </div>
-                <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-sage-200 dark:border-sage-700">
-                  <ActionButton
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.push('/admin/activities')}
-                    className="w-full min-h-[40px]"
-                  >
-                    Xem tất cả hoạt động
-                  </ActionButton>
+              </div>
+
+              <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-xl">
+                    <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-sage-600 dark:text-sage-400">Đang mượn</p>
+                    <p className="text-2xl font-bold text-sage-900 dark:text-sage-100">{stats.activeBorrowings.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-xl">
+                    <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-sage-600 dark:text-sage-400">Danh mục</p>
+                    <p className="text-2xl font-bold text-sage-900 dark:text-sage-100">{stats.totalCategories}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mt-6 sm:mt-8">
-            <ChartCard
-              title="Thống kê mượn sách theo tháng"
-              description="Biểu đồ thể hiện số lượng sách được mượn trong 6 tháng gần đây"
-              chartType="line"
-              data={monthlyBorrowData}
-            />
-            
-            <ChartCard
-              title="Phân bố sách theo danh mục"
-              description="Biểu đồ thể hiện số lượng sách theo từng danh mục"
-              chartType="doughnut"
-              data={categoryDistributionData}
-            />
-          </div>
-
-          {/* System Status */}
-          <div className="mt-6 sm:mt-8">
-            <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-serif font-semibold text-sage-900 dark:text-sage-100 mb-4 sm:mb-6">
-                Trạng thái hệ thống
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium text-sage-900 dark:text-sage-100 text-sm sm:text-base">Database</p>
-                    <p className="text-xs sm:text-sm text-sage-600 dark:text-sage-400">Hoạt động bình thường</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium text-sage-900 dark:text-sage-100 text-sm sm:text-base">Cache</p>
-                    <p className="text-xs sm:text-sm text-sage-600 dark:text-sage-400">Hoạt động bình thường</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium text-sage-900 dark:text-sage-100 text-sm sm:text-base">API</p>
-                    <p className="text-xs sm:text-sm text-sage-600 dark:text-sage-400">Hoạt động bình thường</p>
-                  </div>
-                </div>
-              </div>
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ChartCard
+                title="Xu hướng mượn trả sách"
+                type="line"
+                data={chartData.borrowingTrend}
+                className="bg-white dark:bg-neutral-900"
+              />
+              <ChartCard
+                title="Phân bố danh mục sách"
+                type="doughnut"
+                data={chartData.categoryDistribution}
+                className="bg-white dark:bg-neutral-900"
+              />
             </div>
           </div>
         </div>
+
+        {/* Notification Toast */}
+        <NotificationToast
+          message={notification.message}
+          type={notification.type}
+          isVisible={notification.show}
+          onClose={() => setNotification({ ...notification, show: false })}
+        />
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 

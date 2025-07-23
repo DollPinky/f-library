@@ -181,7 +181,6 @@ const ReaderDetailsPage = () => {
     }
   };
 
-  // Borrowing history columns
   const borrowingColumns = [
     {
       key: 'bookCopy',

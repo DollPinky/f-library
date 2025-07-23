@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import SearchCard from '../../../components/ui/SearchCard';
 import TableView from '../../../components/ui/TableView';
 import ActionButton from '../../../components/ui/ActionButton';
 import NotificationToast from '../../../components/ui/NotificationToast';
 import DarkModeToggle from '../../../components/ui/DarkModeToggle';
+import { CogIcon } from '@heroicons/react/24/outline';
 
 const AdminStaffPage = () => {
   const router = useRouter();
@@ -201,7 +203,6 @@ const AdminStaffPage = () => {
     }
   };
 
-  // Table columns configuration
   const columns = [
     {
       key: 'account',
@@ -320,73 +321,44 @@ const AdminStaffPage = () => {
 
   return (
     <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
-      {/* Header */}
-      <div className="bg-white dark:bg-neutral-900 border-b border-sage-200 dark:border-sage-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="flex items-center">
-                  <div className="p-2 bg-sage-100 dark:bg-sage-800 rounded-xl mr-3">
-                    <svg className="w-6 h-6 text-sage-600 dark:text-sage-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-xl font-serif font-bold text-sage-900 dark:text-sage-100">
-                    Admin Dashboard
-                  </span>
-                </div>
+      <div className="p-4 sm:p-6 lg:p-6">
+        <div className="max-w-none mx-auto">
+          {/* Page Header */}
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-sage-900 dark:text-sage-100 mb-2">
+                  Quản lý nhân viên
+                </h1>
+                <p className="text-sm sm:text-base text-sage-600 dark:text-sage-400">
+                  Quản lý tài khoản nhân viên trong hệ thống
+                </p>
               </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <DarkModeToggle />
-              <Link href="/admin">
-                <ActionButton variant="outline" size="sm">
-                  Dashboard
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <ActionButton
+                  variant="outline"
+                  onClick={() => router.push('/admin/staff/roles')}
+                  className="group min-h-[40px]"
+                >
+                  <CogIcon className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Quản lý vai trò</span>
+                  <span className="sm:hidden">Vai trò</span>
                 </ActionButton>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-serif font-bold text-sage-900 dark:text-sage-100 mb-2">
-                Quản lý nhân viên
-              </h1>
-              <p className="text-sage-600 dark:text-sage-400">
-                Tổng cộng {pagination.totalElements} nhân viên
-              </p>
-            </div>
-            
-            <div className="flex space-x-3">
-              <Link href="/admin/staff/create">
-                <ActionButton variant="primary">
-                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Thêm nhân viên mới
+                <ActionButton
+                  variant="primary"
+                  onClick={() => router.push('/admin/staff/create')}
+                  className="group min-h-[40px]"
+                >
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Thêm nhân viên</span>
+                  <span className="sm:hidden">Thêm</span>
                 </ActionButton>
-              </Link>
-              <Link href="/admin/staff/roles">
-                <ActionButton variant="outline">
-                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  Quản lý vai trò
-                </ActionButton>
-              </Link>
+              </div>
             </div>
           </div>
 
           {/* Search and Filters */}
-          <div className="mb-6">
+          <div className="mb-6 sm:mb-8">
             <SearchCard
               onSearch={handleSearch}
               filters={[
@@ -431,16 +403,17 @@ const AdminStaffPage = () => {
           </div>
 
           {/* Staff Table */}
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft overflow-hidden">
+          <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft overflow-hidden">
             <TableView
               data={staff}
               columns={columns}
               loading={loading}
               pagination={{
-                currentPage: pagination.currentPage,
+                currentPage: pagination.currentPage + 1,
                 totalPages: pagination.totalPages,
-                totalElements: pagination.totalElements,
-                size: pagination.size
+                total: pagination.totalElements,
+                from: pagination.currentPage * pagination.size + 1,
+                to: Math.min((pagination.currentPage + 1) * pagination.size, pagination.totalElements)
               }}
               onPageChange={handlePageChange}
             />

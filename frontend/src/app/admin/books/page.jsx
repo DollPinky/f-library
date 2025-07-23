@@ -243,8 +243,8 @@ const AdminBooksPage = () => {
 
   return (
     <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-6">
+        <div className="max-w-none mx-auto">
           {/* Page Header */}
           <div className="mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

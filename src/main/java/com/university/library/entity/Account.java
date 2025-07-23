@@ -20,7 +20,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Account extends BaseEntity implements UserDetails {
+public class Account extends BaseEntity implements UserDetails, java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -154,7 +155,8 @@ public class Account extends BaseEntity implements UserDetails {
     }
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + userType.name()));
+        // Đảm bảo luôn trả về đúng role khi deserialize từ session
+        return List.of(new SimpleGrantedAuthority("ROLE_" + (userType != null ? userType.name() : "READER")));
     }
 
     @Override

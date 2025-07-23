@@ -1,46 +1,17 @@
 import { useState, useEffect } from 'react';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
-
-class ApiError extends Error {
-  constructor(message, status, data) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.data = data;
-  }
-}
-
-const handleResponse = async (response) => {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new ApiError(
-      errorData.message || `HTTP error! status: ${response.status}`,
-      response.status,
-      errorData
-    );
-  }
-  return response.json();
-};
+import bookService from '../services/bookService';
 
 export const useBooksApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const apiCall = async (endpoint, options = {}) => {
+  const apiCall = async (apiFunction, ...args) => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      });
-      
-      return await handleResponse(response);
+      const response = await apiFunction(...args);
+      return response;
     } catch (err) {
       setError(err.message);
       throw err;
@@ -49,140 +20,60 @@ export const useBooksApi = () => {
     }
   };
 
-  // ==================== QUERY ENDPOINTS ====================
-
   const getBookById = async (bookId) => {
-    const response = await apiCall(`/books/${bookId}`);
+    const response = await apiCall(bookService.getBookById, bookId);
     return response.data;
   };
 
   const searchBooks = async (params = {}) => {
-    const searchParams = new URLSearchParams();
-    
-    // Map frontend parameters to API parameters
-    const apiParams = {
-      query: params.search || params.query,
-      categoryId: params.categoryId,
-      libraryId: params.libraryId,
-      status: params.status,
-      page: params.page || 0,
-      size: params.size || 10,
-      sortBy: params.sortBy || 'title',
-      sortDirection: params.sortDirection || 'ASC'
-    };
-    
-    Object.entries(apiParams).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        searchParams.append(key, value);
-      }
-    });
-    
-    const queryString = searchParams.toString();
-    const endpoint = queryString ? `/books?${queryString}` : '/books';
-    
-    const response = await apiCall(endpoint);
+    const response = await apiCall(bookService.getBooks, params);
     return response.data;
   };
 
-  // ==================== COMMAND ENDPOINTS ====================
-
   const createBook = async (bookData) => {
-    const response = await apiCall('/books', {
-      method: 'POST',
-      body: JSON.stringify(bookData),
-    });
+    const response = await apiCall(bookService.createBook, bookData);
     return response.data;
   };
 
   const updateBook = async (bookId, bookData) => {
-    const response = await apiCall(`/books/${bookId}`, {
-      method: 'PUT',
-      body: JSON.stringify(bookData),
-    });
+    const response = await apiCall(bookService.updateBook, bookId, bookData);
     return response.data;
   };
 
   const deleteBook = async (bookId) => {
-    const response = await apiCall(`/books/${bookId}`, {
-      method: 'DELETE',
-    });
+    const response = await apiCall(bookService.deleteBook, bookId);
     return response.data;
   };
-
-  // ==================== CACHE MANAGEMENT ENDPOINTS ====================
 
   const clearBookCache = async (bookId) => {
-    const response = await apiCall(`/books/${bookId}/cache`, {
-      method: 'DELETE',
-    });
+    const response = await apiCall(bookService.clearBookCache, bookId);
     return response.data;
   };
-
-  const clearSearchCache = async () => {
-    const response = await apiCall('/books/cache/search', {
-      method: 'DELETE',
-    });
-    return response.data;
-  };
-
-  const clearAllCache = async () => {
-    const response = await apiCall('/books/cache', {
-      method: 'DELETE',
-    });
-    return response.data;
-  };
-
-  const clearBooksCache = async (bookIds) => {
-    const response = await apiCall('/books/cache/bulk-clear', {
-      method: 'POST',
-      body: JSON.stringify(bookIds),
-    });
-    return response.data;
-  };
-
-  // ==================== CACHE INFORMATION ENDPOINTS ====================
 
   const getBookCacheStatus = async (bookId) => {
-    const response = await apiCall(`/books/${bookId}/cache/status`);
+    const response = await apiCall(bookService.getBookCacheStatus, bookId);
     return response.data;
   };
 
-  const getCacheStatistics = async () => {
-    const response = await apiCall('/books/cache/statistics');
-    return response.data;
-  };
-
-  // ==================== HEALTH CHECK ENDPOINT ====================
-
-  const healthCheck = async () => {
-    const response = await apiCall('/books/health');
+  const getBookHealth = async () => {
+    const response = await apiCall(bookService.getBookHealth);
     return response.data;
   };
 
   return {
     loading,
     error,
-    // Query methods
     getBookById,
     searchBooks,
-    // Command methods
     createBook,
     updateBook,
     deleteBook,
-    // Cache management
     clearBookCache,
-    clearSearchCache,
-    clearAllCache,
-    clearBooksCache,
-    // Cache information
     getBookCacheStatus,
-    getCacheStatistics,
-    // Health check
-    healthCheck,
+    getBookHealth,
   };
 };
 
-// Hook for managing books state
 export const useBooks = () => {
   const [books, setBooks] = useState([]);
   const [pagination, setPagination] = useState({
@@ -234,7 +125,6 @@ export const useBooks = () => {
   };
 };
 
-// Hook for managing a single book
 export const useBook = (bookId) => {
   const [book, setBook] = useState(null);
   const api = useBooksApi();

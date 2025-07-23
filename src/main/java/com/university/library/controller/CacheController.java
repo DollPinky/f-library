@@ -80,7 +80,6 @@ public class CacheController {
             Map<String, Object> info = new HashMap<>();
             
             if (key != null) {
-                // Thông tin về key cụ thể
                 Object caffeineValue = cacheService.getFromCaffeine(cacheName, key);
                 Object redisValue = cacheService.getFromRedis(key);
                 boolean existsInRedis = cacheService.existsInRedis(key);
@@ -93,7 +92,6 @@ public class CacheController {
                 info.put("caffeineValue", caffeineValue);
                 info.put("redisValue", redisValue);
             } else {
-                // Thông tin tổng quan về cache
                 info.put("cacheName", cacheName);
                 info.put("description", "Cache information for: " + cacheName);
             }
@@ -118,7 +116,6 @@ public class CacheController {
         log.info("Clearing all caches");
         
         try {
-            // Xóa các cache chính
             String[] cacheNames = {"books", "categories", "libraries", "readers", "staff"};
             for (String cacheName : cacheNames) {
                 cacheService.clearAllCaches(cacheName);

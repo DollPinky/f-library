@@ -18,7 +18,6 @@ const RealTimeSearch = ({
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target) &&
@@ -32,7 +31,6 @@ const RealTimeSearch = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle search input changes
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
@@ -47,7 +45,6 @@ const RealTimeSearch = ({
     }
   };
 
-  // Handle keyboard navigation
   const handleKeyDown = (e) => {
     if (!isDropdownOpen || searchResults.length === 0) return;
 
@@ -69,7 +66,6 @@ const RealTimeSearch = ({
         if (selectedIndex >= 0 && selectedIndex < searchResults.length) {
           handleResultClick(searchResults[selectedIndex]);
         } else if (searchTerm.trim()) {
-          // Navigate to books page with search term
           router.push(`/books?search=${encodeURIComponent(searchTerm.trim())}`);
           setIsDropdownOpen(false);
         }
@@ -81,7 +77,6 @@ const RealTimeSearch = ({
     }
   };
 
-  // Handle result click
   const handleResultClick = (book) => {
     router.push(`/books/${book.bookId}`);
     setIsDropdownOpen(false);
@@ -89,7 +84,6 @@ const RealTimeSearch = ({
     setSelectedIndex(-1);
   };
 
-  // Handle search button click
   const handleSearchClick = () => {
     if (searchTerm.trim()) {
       router.push(`/books?search=${encodeURIComponent(searchTerm.trim())}`);

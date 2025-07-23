@@ -30,7 +30,6 @@ const CreateBorrowingPage = () => {
 
   const fetchData = async () => {
     try {
-      // Fetch available book copies
       const bookCopiesResponse = await fetch('/api/v1/book-copies?status=AVAILABLE', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -42,7 +41,6 @@ const CreateBorrowingPage = () => {
         setBookCopies(bookCopiesData.data.content || []);
       }
 
-      // Fetch active readers
       const readersResponse = await fetch('/api/v1/readers?isActive=true', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -65,7 +63,6 @@ const CreateBorrowingPage = () => {
       [name]: value
     }));
 
-    // Update selected book copy or reader when selection changes
     if (name === 'bookCopyId') {
       const bookCopy = bookCopies.find(copy => copy.bookCopyId === value);
       setSelectedBookCopy(bookCopy);
@@ -76,7 +73,6 @@ const CreateBorrowingPage = () => {
   };
 
   const calculateDueDate = () => {
-    // Default borrowing period: 14 days
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 14);
     return dueDate.toISOString().split('T')[0];

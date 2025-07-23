@@ -15,11 +15,8 @@ const EditStaffPage = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   
   const [formData, setFormData] = useState({
-    // Account information
     fullName: '',
     phone: '',
-    
-    // Staff information
     employeeId: '',
     staffRole: '',
     libraryId: '',

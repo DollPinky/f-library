@@ -19,7 +19,6 @@ const useDashboardData = () => {
     try {
       setLoading(true);
       
-      // Mock data
       const mockStats = {
         totalBooks: 15420,
         totalReaders: 3247,

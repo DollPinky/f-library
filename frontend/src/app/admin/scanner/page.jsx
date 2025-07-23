@@ -15,16 +15,15 @@ const QRScannerPage = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [scannedData, setScannedData] = useState(null);
   const [scanHistory, setScanHistory] = useState([]);
-  const [selectedMode, setSelectedMode] = useState('book'); // book, reader, staff
+  const [selectedMode, setSelectedMode] = useState('book');
   
-  // Mock scan history
   const mockScanHistory = [
     {
       id: 1,
       type: 'book',
       code: 'BK001234',
       title: 'Lập trình Python',
-      timestamp: new Date(Date.now() - 300000), // 5 minutes ago
+      timestamp: new Date(Date.now() - 300000), 
       action: 'Mượn sách'
     },
     {
@@ -32,7 +31,7 @@ const QRScannerPage = () => {
       type: 'reader',
       code: 'RD567890',
       name: 'Nguyễn Văn A',
-      timestamp: new Date(Date.now() - 600000), // 10 minutes ago
+      timestamp: new Date(Date.now() - 600000), 
       action: 'Xem thông tin'
     },
     {
@@ -40,7 +39,7 @@ const QRScannerPage = () => {
       type: 'book',
       code: 'BK001235',
       title: 'Toán học cao cấp',
-      timestamp: new Date(Date.now() - 900000), // 15 minutes ago
+      timestamp: new Date(Date.now() - 900000), 
       action: 'Trả sách'
     }
   ];
@@ -54,10 +53,8 @@ const QRScannerPage = () => {
       setScanning(true);
       setLoading(true);
       
-      // Mock camera access
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Simulate scanning
       setTimeout(() => {
         const mockScannedCode = selectedMode === 'book' ? 'BK001236' : 'RD567891';
         handleScannedCode(mockScannedCode);
@@ -79,7 +76,6 @@ const QRScannerPage = () => {
   const handleScannedCode = (code) => {
     setScanning(false);
     
-    // Mock data based on scanned code
     let mockData = null;
     
     if (selectedMode === 'book') {
@@ -117,7 +113,6 @@ const QRScannerPage = () => {
     
     setScannedData(mockData);
     
-    // Add to scan history
     const newScan = {
       id: Date.now(),
       type: mockData.type,
@@ -127,7 +122,7 @@ const QRScannerPage = () => {
       action: getActionForType(mockData.type)
     };
     
-    setScanHistory(prev => [newScan, ...prev.slice(0, 9)]); // Keep only 10 most recent
+    setScanHistory(prev => [newScan, ...prev.slice(0, 9)]); 
     
     showNotification(`Đã quét thành công: ${mockData.title || mockData.name}`, 'success');
   };
@@ -149,7 +144,6 @@ const QRScannerPage = () => {
     
     showNotification(`Đang thực hiện: ${action}`, 'info');
     
-    // Mock action processing
     setTimeout(() => {
       showNotification(`Đã thực hiện thành công: ${action}`, 'success');
     }, 2000);

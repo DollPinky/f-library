@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '../../contexts/AuthContext';
 import ActionButton from '../../components/ui/ActionButton';
 import NotificationToast from '../../components/ui/NotificationToast';
 import DarkModeToggle from '../../components/ui/DarkModeToggle';
 
 const RegisterPage = () => {
   const router = useRouter();
+  const { register, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -19,12 +21,38 @@ const RegisterPage = () => {
     studentId: '',
     faculty: '',
     major: '',
-    year: '',
-    role: 'READER',
-    isActive: true
+    academicYear: '',
+    userType: 'READER',
+    campusId: ''
   });
+  const [campuses, setCampuses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
+
+  // Fetch campus list on mount
+  useEffect(() => {
+    const fetchCampuses = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/v1/campuses/all');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setCampuses(data.data);
+        } else {
+          setCampuses([]);
+        }
+      } catch (err) {
+        setCampuses([]);
+      }
+    };
+    fetchCampuses();
+  }, []);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -35,6 +63,10 @@ const RegisterPage = () => {
   };
 
   const validateForm = () => {
+    if (!formData.campusId) {
+      showNotification('Vui lòng chọn cơ sở (campus)', 'error');
+      return false;
+    }
     if (formData.password !== formData.confirmPassword) {
       showNotification('Mật khẩu xác nhận không khớp', 'error');
       return false;
@@ -48,34 +80,18 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
     setLoading(true);
-
     try {
-      // Loại bỏ confirmPassword trước khi gửi
       const { confirmPassword, ...registerData } = formData;
-      
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(registerData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
+      const result = await register(registerData);
+      if (result.success) {
         showNotification('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
-        
-        // Chuyển hướng đến trang login sau 2 giây
         setTimeout(() => {
           router.push('/login');
         }, 2000);
       } else {
-        showNotification(data.message || 'Đăng ký thất bại', 'error');
+        showNotification(result.message, 'error');
       }
     } catch (error) {
       showNotification('Không thể kết nối đến máy chủ', 'error');
@@ -144,6 +160,28 @@ const RegisterPage = () => {
                   placeholder="Nhập email"
                 />
               </div>
+            </div>
+
+            {/* Campus Dropdown */}
+            <div>
+              <label htmlFor="campusId" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                Cơ sở (Campus) *
+              </label>
+              <select
+                id="campusId"
+                name="campusId"
+                value={formData.campusId}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
+              >
+                <option value="">Chọn cơ sở</option>
+                {campuses.map((campus) => (
+                  <option key={campus.campusId} value={campus.campusId}>
+                    {campus.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Password */}
@@ -234,20 +272,19 @@ const RegisterPage = () => {
               </div>
 
               <div>
-                <label htmlFor="role" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                <label htmlFor="userType" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
                   Vai trò *
                 </label>
                 <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
+                  id="userType"
+                  name="userType"
+                  value={formData.userType}
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
                 >
                   <option value="READER">Độc giả</option>
-                  <option value="LIBRARIAN">Thủ thư</option>
-                  <option value="MANAGER">Quản lý</option>
+                  <option value="STAFF">Nhân viên</option>
                 </select>
               </div>
             </div>
@@ -284,14 +321,14 @@ const RegisterPage = () => {
               </div>
 
               <div>
-                <label htmlFor="year" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                <label htmlFor="academicYear" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
                   Năm học
                 </label>
                 <input
                   type="number"
-                  id="year"
-                  name="year"
-                  value={formData.year}
+                  id="academicYear"
+                  name="academicYear"
+                  value={formData.academicYear}
                   onChange={handleInputChange}
                   min="1"
                   max="10"

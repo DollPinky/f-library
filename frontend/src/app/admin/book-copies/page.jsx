@@ -296,8 +296,8 @@ const AdminBookCopiesPage = () => {
 
   return (
     <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-6">
+        <div className="max-w-none mx-auto">
           {/* Page Header */}
           <div className="mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -342,7 +342,7 @@ const AdminBookCopiesPage = () => {
           </div>
 
           {/* Book Copies Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
             {filteredCopies.map((copy) => {
               const statusInfo = getStatusInfo(copy.status);
               const conditionInfo = getConditionInfo(copy.condition);
@@ -360,8 +360,8 @@ const AdminBookCopiesPage = () => {
                   <div className="p-4 sm:p-6">
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 bg-sage-100 dark:bg-sage-800 rounded-xl flex items-center justify-center">
-                        <QrCodeIcon className="w-6 h-6 text-sage-600 dark:text-sage-400" />
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-sage-100 dark:bg-sage-800 rounded-xl flex items-center justify-center">
+                        <QrCodeIcon className="w-5 h-5 sm:w-6 sm:h-6 text-sage-600 dark:text-sage-400" />
                       </div>
                       <div className="flex items-center space-x-1">
                         <ActionButton
@@ -392,7 +392,7 @@ const AdminBookCopiesPage = () => {
                     {/* Content */}
                     <div className="space-y-3">
                       <div>
-                        <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-100 line-clamp-1">
+                        <h3 className="text-base sm:text-lg font-semibold text-sage-900 dark:text-sage-100 line-clamp-1">
                           {copy.book.title}
                         </h3>
                         <p className="text-sm text-sage-600 dark:text-sage-400 line-clamp-1">

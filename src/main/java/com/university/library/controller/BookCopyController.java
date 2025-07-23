@@ -29,7 +29,6 @@ public class BookCopyController {
     
     private final BookCopyFacade bookCopyFacade;
     
-    // Query Endpoints
     @GetMapping("/{bookCopyId}")
     @Operation(summary = "Get book copy by ID", description = "Retrieve a specific book copy by its ID")
     public ResponseEntity<StandardResponse<BookCopyResponse>> getBookCopyById(
@@ -37,7 +36,7 @@ public class BookCopyController {
         try {
             log.info(BookCopyConstants.API_GET_BOOK_COPY, bookCopyId);
             BookCopyResponse response = bookCopyFacade.getBookCopyById(bookCopyId);
-            return ResponseEntity.ok(StandardResponse.success(response, BookCopyConstants.SUCCESS_BOOK_COPY_RETRIEVED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_BOOK_COPY_RETRIEVED, response));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_GET_BOOK_COPY, bookCopyId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -52,7 +51,7 @@ public class BookCopyController {
         try {
             log.info(BookCopyConstants.API_SEARCH_BOOK_COPIES, params);
             PagedResponse<BookCopyResponse> response = bookCopyFacade.searchBookCopies(params);
-            return ResponseEntity.ok(StandardResponse.success(response, BookCopyConstants.SUCCESS_BOOK_COPIES_RETRIEVED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_BOOK_COPIES_RETRIEVED, response));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_SEARCH_BOOK_COPIES, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -67,7 +66,7 @@ public class BookCopyController {
         try {
             log.info(BookCopyConstants.API_GET_BY_BOOK, bookId);
             List<BookCopyResponse> response = bookCopyFacade.getBookCopiesByBookId(bookId);
-            return ResponseEntity.ok(StandardResponse.success(response, BookCopyConstants.SUCCESS_BOOK_COPIES_RETRIEVED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_BOOK_COPIES_RETRIEVED, response));
         } catch (Exception e) {
             log.error("Error getting book copies by book ID: {} - {}", bookId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -82,7 +81,7 @@ public class BookCopyController {
         try {
             log.info(BookCopyConstants.API_GET_BY_LIBRARY, libraryId);
             List<BookCopyResponse> response = bookCopyFacade.getBookCopiesByLibraryId(libraryId);
-            return ResponseEntity.ok(StandardResponse.success(response, BookCopyConstants.SUCCESS_BOOK_COPIES_RETRIEVED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_BOOK_COPIES_RETRIEVED, response));
         } catch (Exception e) {
             log.error("Error getting book copies by library ID: {} - {}", libraryId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -96,7 +95,7 @@ public class BookCopyController {
             @Parameter(description = "Book ID") @PathVariable UUID bookId) {
         try {
             List<BookCopyResponse> response = bookCopyFacade.getAvailableBookCopiesByBookId(bookId);
-            return ResponseEntity.ok(StandardResponse.success(response, BookCopyConstants.SUCCESS_BOOK_COPIES_RETRIEVED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_BOOK_COPIES_RETRIEVED, response));
         } catch (Exception e) {
             log.error("Error getting available book copies by book ID: {} - {}", bookId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -110,7 +109,7 @@ public class BookCopyController {
             @Parameter(description = "QR code") @PathVariable String qrCode) {
         try {
             BookCopyResponse response = bookCopyFacade.getBookCopyByQrCode(qrCode);
-            return ResponseEntity.ok(StandardResponse.success(response, BookCopyConstants.SUCCESS_BOOK_COPY_RETRIEVED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_BOOK_COPY_RETRIEVED, response));
         } catch (Exception e) {
             log.error("Error getting book copy by QR code: {} - {}", qrCode, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -118,7 +117,6 @@ public class BookCopyController {
         }
     }
     
-    // Command Endpoints
     @PostMapping
     @Operation(summary = "Create book copy", description = "Create a new book copy")
     public ResponseEntity<StandardResponse<BookCopyResponse>> createBookCopy(
@@ -127,7 +125,7 @@ public class BookCopyController {
             log.info(BookCopyConstants.API_CREATE_BOOK_COPY, command.getQrCode());
             BookCopyResponse response = bookCopyFacade.createBookCopy(command);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(StandardResponse.success(response, BookCopyConstants.SUCCESS_BOOK_COPY_CREATED));
+                    .body(StandardResponse.success(BookCopyConstants.SUCCESS_BOOK_COPY_CREATED, response));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_CREATE_BOOK_COPY, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -143,7 +141,7 @@ public class BookCopyController {
         try {
             log.info(BookCopyConstants.API_UPDATE_BOOK_COPY, bookCopyId);
             BookCopyResponse response = bookCopyFacade.updateBookCopy(bookCopyId, command);
-            return ResponseEntity.ok(StandardResponse.success(response, BookCopyConstants.SUCCESS_BOOK_COPY_UPDATED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_BOOK_COPY_UPDATED, response));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_UPDATE_BOOK_COPY, bookCopyId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -158,7 +156,7 @@ public class BookCopyController {
         try {
             log.info(BookCopyConstants.API_DELETE_BOOK_COPY, bookCopyId);
             bookCopyFacade.deleteBookCopy(bookCopyId);
-            return ResponseEntity.ok(StandardResponse.success(null, BookCopyConstants.SUCCESS_BOOK_COPY_DELETED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_BOOK_COPY_DELETED, null));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_DELETE_BOOK_COPY, bookCopyId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -174,7 +172,7 @@ public class BookCopyController {
         try {
             log.info(BookCopyConstants.API_CHANGE_STATUS, bookCopyId);
             BookCopyResponse response = bookCopyFacade.changeBookCopyStatus(bookCopyId, status);
-            return ResponseEntity.ok(StandardResponse.success(response, BookCopyConstants.SUCCESS_STATUS_CHANGED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_STATUS_CHANGED, response));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_CHANGE_STATUS, bookCopyId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -182,7 +180,6 @@ public class BookCopyController {
         }
     }
     
-    // Cache Endpoints
     @DeleteMapping("/{bookCopyId}/cache")
     @Operation(summary = "Clear book copy cache", description = "Clear cache for a specific book copy")
     public ResponseEntity<StandardResponse<BookCopyCacheStatus>> clearBookCopyCache(
@@ -193,7 +190,7 @@ public class BookCopyController {
             bookCopyFacade.clearBookCopyCache(bookCopyId);
             
             BookCopyCacheStatus status = new BookCopyCacheStatus(bookCopyId, wasCached, false);
-            return ResponseEntity.ok(StandardResponse.success(status, BookCopyConstants.SUCCESS_CACHE_CLEARED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_CACHE_CLEARED, status));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_CLEAR_CACHE, bookCopyId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -207,7 +204,7 @@ public class BookCopyController {
         try {
             log.info(BookCopyConstants.API_CLEAR_SEARCH_CACHE);
             bookCopyFacade.clearSearchCache();
-            return ResponseEntity.ok(StandardResponse.success(null, BookCopyConstants.SUCCESS_CACHE_CLEARED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_CACHE_CLEARED, null));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_CLEAR_SEARCH_CACHE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -221,7 +218,7 @@ public class BookCopyController {
         try {
             log.info(BookCopyConstants.API_CLEAR_ALL_CACHE);
             bookCopyFacade.clearAllCache();
-            return ResponseEntity.ok(StandardResponse.success(null, BookCopyConstants.SUCCESS_CACHE_CLEARED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_CACHE_CLEARED, null));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_CLEAR_ALL_CACHE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -236,8 +233,7 @@ public class BookCopyController {
         try {
             log.info(BookCopyConstants.API_BULK_CLEAR_CACHE, bookCopyIds.size());
             bookCopyFacade.clearBookCopiesCache(bookCopyIds);
-            return ResponseEntity.ok(StandardResponse.success(null, 
-                    String.format(BookCopyConstants.SUCCESS_CACHE_BULK_CLEARED, bookCopyIds.size())));
+            return ResponseEntity.ok(StandardResponse.success(String.format(BookCopyConstants.SUCCESS_CACHE_BULK_CLEARED, bookCopyIds.size()), null));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_BULK_CLEAR_CACHE, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -255,7 +251,7 @@ public class BookCopyController {
             Long ttl = bookCopyFacade.getBookCopyCacheTtl(bookCopyId);
             
             BookCopyCacheStatus status = new BookCopyCacheStatus(bookCopyId, isCached, ttl);
-            return ResponseEntity.ok(StandardResponse.success(status, BookCopyConstants.SUCCESS_CACHE_STATUS_RETRIEVED));
+            return ResponseEntity.ok(StandardResponse.success(BookCopyConstants.SUCCESS_CACHE_STATUS_RETRIEVED, status));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_CACHE_STATUS, bookCopyId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -263,7 +259,6 @@ public class BookCopyController {
         }
     }
     
-    // Health Check Endpoint
     @GetMapping("/health")
     @Operation(summary = "Health check", description = "Check the health of the book copy service")
     public ResponseEntity<StandardResponse<HealthStatus>> healthCheck() {
@@ -274,16 +269,15 @@ public class BookCopyController {
             HealthStatus status = new HealthStatus(isHealthy, BookCopyConstants.SERVICE_NAME);
             String message = isHealthy ? BookCopyConstants.SUCCESS_SERVICE_HEALTHY : BookCopyConstants.ERROR_SERVICE_UNHEALTHY;
             
-            return ResponseEntity.ok(StandardResponse.success(status, message));
+            return ResponseEntity.ok(StandardResponse.success(message, status));
         } catch (Exception e) {
             log.error(BookCopyConstants.ERROR_LOG_HEALTH_CHECK, e.getMessage());
             HealthStatus status = new HealthStatus(false, BookCopyConstants.SERVICE_NAME);
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(StandardResponse.error(status, BookCopyConstants.ERROR_SERVICE_UNHEALTHY));
+                    .body(StandardResponse.error(BookCopyConstants.ERROR_SERVICE_UNHEALTHY, status));
         }
     }
     
-    // Inner classes for response data
     public static class BookCopyCacheStatus {
         private final UUID bookCopyId;
         private final boolean isCached;

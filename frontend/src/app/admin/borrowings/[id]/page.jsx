@@ -145,7 +145,6 @@ const BorrowingDetailsPage = () => {
 
   const calculateFine = (dueDate) => {
     const overdueDays = calculateOverdueDays(dueDate);
-    // 10,000 VNĐ per day
     return overdueDays * 10000;
   };
 

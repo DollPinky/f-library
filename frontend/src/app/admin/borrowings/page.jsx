@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import SearchCard from '../../../components/ui/SearchCard';
 import TableView from '../../../components/ui/TableView';
 import ActionButton from '../../../components/ui/ActionButton';
@@ -154,7 +155,6 @@ const AdminBorrowingsPage = () => {
     return new Date(dueDate) < new Date();
   };
 
-  // Table columns configuration
   const columns = [
     {
       key: 'bookCopy',
@@ -267,125 +267,55 @@ const AdminBorrowingsPage = () => {
 
   return (
     <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
-      {/* Header */}
-      <div className="bg-white dark:bg-neutral-900 border-b border-sage-200 dark:border-sage-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="flex items-center">
-                  <div className="p-2 bg-sage-100 dark:bg-sage-800 rounded-xl mr-3">
-                    <svg className="w-6 h-6 text-sage-600 dark:text-sage-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  </div>
-                  <span className="text-xl font-serif font-bold text-sage-900 dark:text-sage-100">
-                    Admin Dashboard
-                  </span>
-                </div>
+      <div className="p-4 sm:p-6 lg:p-6">
+        <div className="max-w-none mx-auto">
+          {/* Page Header */}
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-sage-900 dark:text-sage-100 mb-2">
+                  Quản lý mượn trả
+                </h1>
+                <p className="text-sm sm:text-base text-sage-600 dark:text-sage-400">
+                  Quản lý và theo dõi hoạt động mượn trả sách
+                </p>
               </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <DarkModeToggle />
-              <Link href="/admin">
-                <ActionButton variant="outline" size="sm">
-                  Dashboard
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <ActionButton
+                  variant="primary"
+                  onClick={() => router.push('/admin/borrowings/create')}
+                  className="group min-h-[40px]"
+                >
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Tạo mượn sách</span>
+                  <span className="sm:hidden">Tạo</span>
                 </ActionButton>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-serif font-bold text-sage-900 dark:text-sage-100 mb-2">
-                Quản lý mượn trả sách
-              </h1>
-              <p className="text-sage-600 dark:text-sage-400">
-                Tổng cộng {pagination.totalElements} lượt mượn sách
-              </p>
-            </div>
-            
-            <div className="flex space-x-3">
-              <Link href="/admin/borrowings/create">
-                <ActionButton variant="primary">
-                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Mượn sách mới
-                </ActionButton>
-              </Link>
-              <Link href="/admin/borrowings/overdue">
-                <ActionButton variant="warning">
-                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                  Sách quá hạn
-                </ActionButton>
-              </Link>
+              </div>
             </div>
           </div>
 
           {/* Search and Filters */}
-          <div className="mb-6">
+          <div className="mb-6 sm:mb-8">
             <SearchCard
               onSearch={handleSearch}
-              filters={[
-                {
-                  key: 'status',
-                  label: 'Trạng thái',
-                  type: 'select',
-                  options: [
-                    { value: '', label: 'Tất cả trạng thái' },
-                    { value: 'BORROWED', label: 'Đang mượn' },
-                    { value: 'RETURNED', label: 'Đã trả' },
-                    { value: 'OVERDUE', label: 'Quá hạn' }
-                  ]
-                },
-                {
-                  key: 'library',
-                  label: 'Thư viện',
-                  type: 'select',
-                  options: [
-                    { value: '', label: 'Tất cả thư viện' },
-                    { value: 'main', label: 'Thư viện chính' },
-                    { value: 'branch1', label: 'Chi nhánh 1' },
-                    { value: 'branch2', label: 'Chi nhánh 2' }
-                  ]
-                },
-                {
-                  key: 'overdue',
-                  label: 'Quá hạn',
-                  type: 'select',
-                  options: [
-                    { value: '', label: 'Tất cả' },
-                    { value: 'true', label: 'Có quá hạn' },
-                    { value: 'false', label: 'Không quá hạn' }
-                  ]
-                }
-              ]}
               onFilterChange={handleFilterChange}
+              filters={searchParams}
               placeholder="Tìm kiếm theo tên sách, độc giả, QR code..."
             />
           </div>
 
           {/* Borrowings Table */}
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft overflow-hidden">
+          <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft overflow-hidden">
             <TableView
               data={borrowings}
               columns={columns}
               loading={loading}
               pagination={{
-                currentPage: pagination.currentPage,
+                currentPage: pagination.currentPage + 1,
                 totalPages: pagination.totalPages,
-                totalElements: pagination.totalElements,
-                size: pagination.size
+                total: pagination.totalElements,
+                from: pagination.currentPage * pagination.size + 1,
+                to: Math.min((pagination.currentPage + 1) * pagination.size, pagination.totalElements)
               }}
               onPageChange={handlePageChange}
             />

@@ -33,7 +33,6 @@ const CreateReaderPage = () => {
 
   const fetchData = async () => {
     try {
-      // Fetch faculties and campuses
       const [facultiesResponse, campusesResponse] = await Promise.all([
         fetch('/api/v1/faculties'),
         fetch('/api/v1/campuses')
@@ -60,9 +59,7 @@ const CreateReaderPage = () => {
       [name]: value
     }));
 
-    // Update majors when faculty changes
     if (name === 'faculty') {
-      // In a real app, you would fetch majors based on selected faculty
       setMajors([
         'Công nghệ thông tin',
         'Kỹ thuật phần mềm',

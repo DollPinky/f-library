@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   HomeIcon, 
   BookOpenIcon, 
@@ -23,9 +24,10 @@ import {
   DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
 
-const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
+const Navigation = ({ darkMode, onToggleDarkMode }) => {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, isAuthenticated, isStaff, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -48,35 +50,37 @@ const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
     { name: 'Hồ sơ', href: '/profile', icon: UserIcon },
   ];
 
-  const isAdmin = pathname.startsWith('/admin');
-  const navigation = isAdmin ? adminNavigation : userNavigation;
+  const navigation = isStaff() ? adminNavigation : userNavigation;
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
 
-  const handleLogout = () => {
-    onLogout();
+  const handleLogout = async () => {
+    await logout();
     closeMobileMenu();
   };
 
-  // Close mobile menu when route changes
   useEffect(() => {
     closeMobileMenu();
   }, [pathname]);
 
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <>
       {/* Desktop Sidebar Navigation */}
-      <div className="hidden lg:flex lg:flex-col lg:w-80 lg:fixed lg:inset-y-0 lg:z-50 lg:bg-white dark:lg:bg-neutral-900 lg:border-r lg:border-sage-200 dark:lg:border-sage-700">
+      <div className="hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 lg:z-50 lg:bg-white dark:lg:bg-neutral-900 lg:border-r lg:border-sage-200 dark:lg:border-sage-700">
         {/* Logo Section */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-sage-200 dark:border-sage-700">
-          <Link href={isAdmin ? '/admin' : '/'} className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center group-hover:bg-sage-700 dark:group-hover:bg-sage-400 transition-colors duration-200">
-              <BuildingLibraryIcon className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-between h-16 px-4 border-b border-sage-200 dark:border-sage-700">
+          <Link href={isStaff() ? '/admin' : '/'} className="flex items-center space-x-3 group">
+            <div className="w-9 h-9 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center group-hover:bg-sage-700 dark:group-hover:bg-sage-400 transition-colors duration-200">
+              <BuildingLibraryIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-sage-900 dark:text-sage-100 group-hover:text-sage-700 dark:group-hover:text-sage-300 transition-colors duration-200">
+              <h1 className="text-lg font-bold text-sage-900 dark:text-sage-100 group-hover:text-sage-700 dark:group-hover:text-sage-300 transition-colors duration-200">
                 Sage-Librarian
               </h1>
               <p className="text-xs text-sage-600 dark:text-sage-400">
@@ -87,7 +91,7 @@ const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           <div className="space-y-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
@@ -97,7 +101,7 @@ const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`group flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  className={`group flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? 'bg-sage-100 dark:bg-sage-800 text-sage-700 dark:text-sage-300 shadow-sm'
                       : 'text-sage-600 dark:text-sage-400 hover:bg-sage-50 dark:hover:bg-sage-800 hover:text-sage-700 dark:hover:text-sage-300'
@@ -108,7 +112,7 @@ const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
                   }`} />
                   <span className="flex-1">{item.name}</span>
                   {isActive && (
-                    <div className="w-1 h-6 bg-sage-600 dark:bg-sage-400 rounded-full"></div>
+                    <div className="w-1 h-5 bg-sage-600 dark:bg-sage-400 rounded-full"></div>
                   )}
                 </Link>
               );
@@ -117,10 +121,10 @@ const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
         </nav>
 
         {/* User Profile Section */}
-        <div className="p-4 border-t border-sage-200 dark:border-sage-700">
-          <div className="flex items-center space-x-3 p-3 rounded-xl bg-sage-50 dark:bg-sage-800">
-            <div className="w-10 h-10 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center">
-              <UserIcon className="w-5 h-5 text-white" />
+        <div className="p-3 border-t border-sage-200 dark:border-sage-700">
+          <div className="flex items-center space-x-3 p-2.5 rounded-xl bg-sage-50 dark:bg-sage-800">
+            <div className="w-9 h-9 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center">
+              <UserIcon className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-sage-900 dark:text-sage-100 truncate">
@@ -133,19 +137,19 @@ const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
           </div>
           
           {/* Action Buttons */}
-          <div className="flex items-center justify-between mt-3 space-x-2">
+          <div className="flex items-center justify-between mt-2 space-x-1">
             <button
               onClick={onToggleDarkMode}
-              className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 text-sm font-medium text-sage-600 dark:text-sage-400 hover:bg-sage-100 dark:hover:bg-sage-800 rounded-xl transition-colors duration-200"
+              className="flex-1 flex items-center justify-center space-x-1.5 px-2 py-1.5 text-xs font-medium text-sage-600 dark:text-sage-400 hover:bg-sage-100 dark:hover:bg-sage-800 rounded-lg transition-colors duration-200"
             >
               {darkMode ? (
                 <>
-                  <SunIcon className="w-4 h-4" />
+                  <SunIcon className="w-3.5 h-3.5" />
                   <span>Sáng</span>
                 </>
               ) : (
                 <>
-                  <MoonIcon className="w-4 h-4" />
+                  <MoonIcon className="w-3.5 h-3.5" />
                   <span>Tối</span>
                 </>
               )}
@@ -153,9 +157,9 @@ const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
             
             <button
               onClick={handleLogout}
-              className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors duration-200"
+              className="flex-1 flex items-center justify-center space-x-1.5 px-2 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
             >
-              <ArrowRightOnRectangleIcon className="w-4 h-4" />
+              <ArrowRightOnRectangleIcon className="w-3.5 h-3.5" />
               <span>Đăng xuất</span>
             </button>
           </div>
@@ -166,7 +170,7 @@ const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white dark:bg-neutral-900 border-b border-sage-200 dark:border-sage-700">
         <div className="flex items-center justify-between h-16 px-4">
           {/* Logo */}
-          <Link href={isAdmin ? '/admin' : '/'} className="flex items-center space-x-3">
+          <Link href={isStaff() ? '/admin' : '/'} className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center">
               <BuildingLibraryIcon className="w-5 h-5 text-white" />
             </div>
@@ -206,7 +210,7 @@ const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
           />
           
           {/* Mobile Menu */}
-          <div className="fixed right-0 top-0 h-full w-80 max-w-[85vw] bg-white dark:bg-neutral-900 shadow-strong transform transition-transform duration-300 ease-in-out">
+          <div className="fixed right-0 top-0 h-full w-72 max-w-[85vw] bg-white dark:bg-neutral-900 shadow-strong transform transition-transform duration-300 ease-in-out">
             {/* Mobile Header */}
             <div className="mobile-header">
               <h2 className="mobile-header-title">Menu</h2>
@@ -219,7 +223,7 @@ const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
             </div>
 
             {/* Mobile Navigation */}
-            <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
               <div className="space-y-1">
                 {navigation.map((item) => {
                   const isActive = pathname === item.href;
@@ -268,11 +272,8 @@ const Navigation = ({ user, onLogout, darkMode, onToggleDarkMode }) => {
         </div>
       )}
 
-      {/* Main Content Padding for Desktop */}
-      <div className="lg:pl-80">
-        {/* Mobile Top Spacing */}
-        <div className="lg:hidden h-16"></div>
-      </div>
+      {/* Mobile Top Spacing */}
+      <div className="lg:hidden h-16"></div>
     </>
   );
 };

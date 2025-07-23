@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { PlusIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import SearchCard from '../../../components/ui/SearchCard';
 import TableView from '../../../components/ui/TableView';
 import ActionButton from '../../../components/ui/ActionButton';
@@ -180,7 +181,6 @@ const AdminReadersPage = () => {
     return isActive ? 'Hoạt động' : 'Không hoạt động';
   };
 
-  // Table columns configuration
   const columns = [
     {
       key: 'name',
@@ -304,73 +304,44 @@ const AdminReadersPage = () => {
 
   return (
     <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
-      {/* Header */}
-      <div className="bg-white dark:bg-neutral-900 border-b border-sage-200 dark:border-sage-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="flex items-center">
-                  <div className="p-2 bg-sage-100 dark:bg-sage-800 rounded-xl mr-3">
-                    <svg className="w-6 h-6 text-sage-600 dark:text-sage-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-xl font-serif font-bold text-sage-900 dark:text-sage-100">
-                    Admin Dashboard
-                  </span>
-                </div>
+      <div className="p-4 sm:p-6 lg:p-6">
+        <div className="max-w-none mx-auto">
+          {/* Page Header */}
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-sage-900 dark:text-sage-100 mb-2">
+                  Quản lý độc giả
+                </h1>
+                <p className="text-sm sm:text-base text-sage-600 dark:text-sage-400">
+                  Quản lý thông tin độc giả trong hệ thống
+                </p>
               </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <DarkModeToggle />
-              <Link href="/admin">
-                <ActionButton variant="outline" size="sm">
-                  Dashboard
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <ActionButton
+                  variant="outline"
+                  onClick={() => router.push('/admin/readers/import')}
+                  className="group min-h-[40px]"
+                >
+                  <ArrowUpTrayIcon className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Import Excel</span>
+                  <span className="sm:hidden">Import</span>
                 </ActionButton>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-serif font-bold text-sage-900 dark:text-sage-100 mb-2">
-                Quản lý độc giả
-              </h1>
-              <p className="text-sage-600 dark:text-sage-400">
-                Tổng cộng {pagination.totalElements} độc giả
-              </p>
-            </div>
-            
-            <div className="flex space-x-3">
-              <Link href="/admin/readers/create">
-                <ActionButton variant="primary">
-                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Thêm độc giả mới
+                <ActionButton
+                  variant="primary"
+                  onClick={() => router.push('/admin/readers/create')}
+                  className="group min-h-[40px]"
+                >
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Thêm độc giả</span>
+                  <span className="sm:hidden">Thêm</span>
                 </ActionButton>
-              </Link>
-              <Link href="/admin/readers/import">
-                <ActionButton variant="outline">
-                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                  </svg>
-                  Import Excel
-                </ActionButton>
-              </Link>
+              </div>
             </div>
           </div>
 
           {/* Search and Filters */}
-          <div className="mb-6">
+          <div className="mb-6 sm:mb-8">
             <SearchCard
               onSearch={handleSearch}
               filters={[
@@ -410,21 +381,22 @@ const AdminReadersPage = () => {
                 }
               ]}
               onFilterChange={handleFilterChange}
-              placeholder="Tìm kiếm theo tên, MSSV, email..."
+              placeholder="Tìm kiếm theo tên, email, mã số sinh viên..."
             />
           </div>
 
           {/* Readers Table */}
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft overflow-hidden">
+          <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft overflow-hidden">
             <TableView
               data={readers}
               columns={columns}
               loading={loading}
               pagination={{
-                currentPage: pagination.currentPage,
+                currentPage: pagination.currentPage + 1,
                 totalPages: pagination.totalPages,
-                totalElements: pagination.totalElements,
-                size: pagination.size
+                total: pagination.totalElements,
+                from: pagination.currentPage * pagination.size + 1,
+                to: Math.min((pagination.currentPage + 1) * pagination.size, pagination.totalElements)
               }}
               onPageChange={handlePageChange}
             />

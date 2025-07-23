@@ -29,7 +29,6 @@ const BookEditPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch book data
         const bookData = await getBookById(params.id);
         setBook(bookData);
         setFormData({
@@ -41,7 +40,6 @@ const BookEditPage = () => {
           categoryId: bookData.category?.categoryId || ''
         });
 
-        // Fetch categories and libraries
         const [categoriesResponse, librariesResponse] = await Promise.all([
           fetch('/api/v1/categories'),
           fetch('/api/v1/libraries')

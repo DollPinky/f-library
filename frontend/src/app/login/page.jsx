@@ -1,14 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '../../contexts/AuthContext';
 import ActionButton from '../../components/ui/ActionButton';
 import NotificationToast from '../../components/ui/NotificationToast';
 import DarkModeToggle from '../../components/ui/DarkModeToggle';
 
 const LoginPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login, isAuthenticated, isStaff } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -16,6 +19,32 @@ const LoginPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (isStaff()) {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
+    }
+  }, [isAuthenticated, isStaff, router]);
+
+  // Show error message from URL params
+  useEffect(() => {
+    const error = searchParams.get('error');
+    const logout = searchParams.get('logout');
+    const expired = searchParams.get('expired');
+    
+    if (error) {
+      showNotification('Tên đăng nhập hoặc mật khẩu không đúng', 'error');
+    } else if (logout) {
+      showNotification('Đăng xuất thành công', 'success');
+    } else if (expired) {
+      showNotification('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại', 'warning');
+    }
+  }, [searchParams]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -30,29 +59,13 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Lưu token vào localStorage
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
-        
-        showNotification('Đăng nhập thành công!', 'success');
-        
-        // Chuyển hướng sau 1 giây
-        setTimeout(() => {
-          router.push('/');
-        }, 1000);
+      const result = await login(formData);
+      
+      if (result.success) {
+        showNotification(result.message, 'success');
+        // Redirect will be handled by AuthContext
       } else {
-        showNotification(data.message || 'Đăng nhập thất bại', 'error');
+        showNotification(result.message, 'error');
       }
     } catch (error) {
       showNotification('Không thể kết nối đến máy chủ', 'error');

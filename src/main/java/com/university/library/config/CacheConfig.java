@@ -61,12 +61,10 @@ public class CacheConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // Cấu hình serializer cho key
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
         template.setKeySerializer(stringSerializer);
         template.setHashKeySerializer(stringSerializer);
 
-        // Cấu hình serializer cho value với type info
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.activateDefaultTyping(
             LaissezFaireSubTypeValidator.instance,

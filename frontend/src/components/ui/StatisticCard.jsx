@@ -70,7 +70,6 @@ const StatisticCard = ({
     }
   };
 
-  // Format value with proper number formatting
   const formatValue = (val) => {
     if (typeof val === 'number') {
       return val.toLocaleString('vi-VN');

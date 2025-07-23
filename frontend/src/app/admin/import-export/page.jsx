@@ -13,11 +13,10 @@ const ImportExportPage = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [selectedFile, setSelectedFile] = useState(null);
   const [importProgress, setImportProgress] = useState(0);
-  const [importStatus, setImportStatus] = useState('idle'); // idle, importing, success, error
+  const [importStatus, setImportStatus] = useState('idle'); 
   const [selectedDataType, setSelectedDataType] = useState('books');
   const [exportFormat, setExportFormat] = useState('excel');
   
-  // Mock data cho import/export history
   const [history, setHistory] = useState([
     {
       id: 1,
@@ -26,7 +25,7 @@ const ImportExportPage = () => {
       filename: 'books_import.xlsx',
       status: 'success',
       records: 150,
-      timestamp: new Date(Date.now() - 3600000), // 1 hour ago
+      timestamp: new Date(Date.now() - 3600000), 
       user: 'Admin'
     },
     {
@@ -36,7 +35,7 @@ const ImportExportPage = () => {
       filename: 'readers_export.xlsx',
       status: 'success',
       records: 3247,
-      timestamp: new Date(Date.now() - 7200000), // 2 hours ago
+      timestamp: new Date(Date.now() - 7200000), 
       user: 'Admin'
     },
     {
@@ -46,7 +45,7 @@ const ImportExportPage = () => {
       filename: 'staff_import.csv',
       status: 'error',
       records: 0,
-      timestamp: new Date(Date.now() - 10800000), // 3 hours ago
+      timestamp: new Date(Date.now() - 10800000), 
       user: 'Admin',
       error: 'Invalid file format'
     }
@@ -71,7 +70,6 @@ const ImportExportPage = () => {
       setImportStatus('importing');
       setImportProgress(0);
 
-      // Mock import process
       const interval = setInterval(() => {
         setImportProgress(prev => {
           if (prev >= 100) {
@@ -79,7 +77,6 @@ const ImportExportPage = () => {
             setImportStatus('success');
             setLoading(false);
             
-            // Add to history
             const newImport = {
               id: Date.now(),
               type: 'import',
@@ -111,7 +108,6 @@ const ImportExportPage = () => {
       setLoading(true);
       showNotification(`Đang xuất dữ liệu ${dataType}...`, 'info');
 
-      // Mock export process
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const mockRecords = {
@@ -121,7 +117,6 @@ const ImportExportPage = () => {
         borrowings: 45678
       };
 
-      // Add to history
       const newExport = {
         id: Date.now(),
         type: 'export',

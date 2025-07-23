@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useBooks } from '../../hooks/useBooksApi';
+import { useBooksApi } from '../../hooks/useBooksApi';
 import RealTimeSearch from '../../components/ui/RealTimeSearch';
 import BookCard from '../../components/ui/BookCard';
 import DetailDrawer from '../../components/ui/DetailDrawer';
@@ -15,8 +16,9 @@ import {
   BookmarkIcon,
   FunnelIcon
 } from '@heroicons/react/24/outline';
+import ProtectedRoute from '../../components/auth/ProtectedRoute';
 
-const BooksPage = () => {
+const BooksPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -32,6 +34,8 @@ const BooksPage = () => {
     getCacheStatistics,
     healthCheck
   } = useBooks();
+
+  const api = useBooksApi();
 
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [selectedBook, setSelectedBook] = useState(null);
@@ -114,12 +118,10 @@ const BooksPage = () => {
     
     const loadSystemInfo = async () => {
       try {
-        const [stats, health] = await Promise.all([
-          getCacheStatistics(),
-          healthCheck()
-        ]);
-        setCacheStats(stats);
+        const health = await api.getBookHealth();
         setServiceHealth(health.healthy);
+        // Nếu muốn lấy cache status cho một book cụ thể, cần truyền bookId
+        // setCacheStats(await api.getBookCacheStatus(bookId));
       } catch (error) {
         console.error('Error loading system info:', error);
         setServiceHealth(false);
@@ -541,6 +543,16 @@ const BooksPage = () => {
         onClose={() => setNotification({ ...notification, show: false })}
       />
     </div>
+  );
+};
+
+const BooksPage = () => {
+  return (
+    <ProtectedRoute>
+      <Suspense fallback={<div>Loading...</div>}>
+        <BooksPageContent />
+      </Suspense>
+    </ProtectedRoute>
   );
 };
 
