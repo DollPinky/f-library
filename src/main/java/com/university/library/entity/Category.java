@@ -28,6 +28,9 @@ public class Category extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     
+    @Column(name = "color", length = 7, nullable = false)
+    private String color = "#5a735a"; // Default sage color
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_category_id")
     private Category parentCategory;

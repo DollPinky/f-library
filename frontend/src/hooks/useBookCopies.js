@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { bookCopyService } from '../services/bookCopyService';
 
 export const useBookCopies = () => {
@@ -12,7 +12,7 @@ export const useBookCopies = () => {
     totalPages: 0
   });
 
-  // ==================== SEARCH AND FETCH ====================
+  // ==================== SEARCH OPERATIONS ====================
 
   const searchBookCopies = useCallback(async (params = {}) => {
     setLoading(true);
@@ -20,32 +20,29 @@ export const useBookCopies = () => {
     
     try {
       const response = await bookCopyService.searchBookCopies({
-        page: pagination.page,
-        size: pagination.size,
-        ...params
+        ...params,
+        page: params.page ?? pagination.page,
+        size: params.size ?? pagination.size
       });
       
       if (response.success) {
         setBookCopies(response.data.content || []);
         setPagination({
-          page: response.data.page || 0,
-          size: response.data.size || 20,
+          page: response.data.pageable?.pageNumber || 0,
+          size: response.data.pageable?.pageSize || 20,
           totalElements: response.data.totalElements || 0,
           totalPages: response.data.totalPages || 0
         });
       } else {
-        setError(response.message || 'Có lỗi xảy ra khi tải dữ liệu');
+        setError(response.message || 'Có lỗi xảy ra khi tải danh sách bản sách');
       }
     } catch (err) {
-      setError(err.message || 'Có lỗi xảy ra khi tải dữ liệu');
+      console.error('Error searching book copies:', err);
+      setError(err.response?.data?.message || 'Có lỗi xảy ra khi tải danh sách bản sách');
     } finally {
       setLoading(false);
     }
   }, [pagination.page, pagination.size]);
-
-  const fetchBookCopies = useCallback(() => {
-    return searchBookCopies();
-  }, [searchBookCopies]);
 
   // ==================== CRUD OPERATIONS ====================
 
@@ -57,21 +54,22 @@ export const useBookCopies = () => {
       const response = await bookCopyService.createBookCopy(bookCopyData);
       
       if (response.success) {
-        // Refresh the list
-        await fetchBookCopies();
+        // Refresh the list after creating
+        await searchBookCopies();
         return { success: true, data: response.data };
       } else {
         setError(response.message || 'Có lỗi xảy ra khi tạo bản sách');
         return { success: false, message: response.message };
       }
     } catch (err) {
-      const errorMessage = err.message || 'Có lỗi xảy ra khi tạo bản sách';
+      console.error('Error creating book copy:', err);
+      const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi tạo bản sách';
       setError(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
-  }, [fetchBookCopies]);
+  }, [searchBookCopies]);
 
   const updateBookCopy = useCallback(async (bookCopyId, bookCopyData) => {
     setLoading(true);
@@ -81,27 +79,22 @@ export const useBookCopies = () => {
       const response = await bookCopyService.updateBookCopy(bookCopyId, bookCopyData);
       
       if (response.success) {
-        // Update the book copy in the list
-        setBookCopies(prev => 
-          prev.map(copy => 
-            copy.bookCopyId === bookCopyId 
-              ? response.data 
-              : copy
-          )
-        );
+        // Refresh the list after updating
+        await searchBookCopies();
         return { success: true, data: response.data };
       } else {
         setError(response.message || 'Có lỗi xảy ra khi cập nhật bản sách');
         return { success: false, message: response.message };
       }
     } catch (err) {
-      const errorMessage = err.message || 'Có lỗi xảy ra khi cập nhật bản sách';
+      console.error('Error updating book copy:', err);
+      const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật bản sách';
       setError(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [searchBookCopies]);
 
   const deleteBookCopy = useCallback(async (bookCopyId) => {
     setLoading(true);
@@ -111,21 +104,22 @@ export const useBookCopies = () => {
       const response = await bookCopyService.deleteBookCopy(bookCopyId);
       
       if (response.success) {
-        // Remove the book copy from the list
-        setBookCopies(prev => prev.filter(copy => copy.bookCopyId !== bookCopyId));
+        // Refresh the list after deleting
+        await searchBookCopies();
         return { success: true };
       } else {
         setError(response.message || 'Có lỗi xảy ra khi xóa bản sách');
         return { success: false, message: response.message };
       }
     } catch (err) {
-      const errorMessage = err.message || 'Có lỗi xảy ra khi xóa bản sách';
+      console.error('Error deleting book copy:', err);
+      const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi xóa bản sách';
       setError(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [searchBookCopies]);
 
   const changeBookCopyStatus = useCallback(async (bookCopyId, status) => {
     setLoading(true);
@@ -135,46 +129,45 @@ export const useBookCopies = () => {
       const response = await bookCopyService.changeBookCopyStatus(bookCopyId, status);
       
       if (response.success) {
-        // Update the book copy status in the list
-        setBookCopies(prev => 
-          prev.map(copy => 
-            copy.bookCopyId === bookCopyId 
-              ? { ...copy, status: response.data.status }
-              : copy
-          )
-        );
+        // Refresh the list after changing status
+        await searchBookCopies();
         return { success: true, data: response.data };
       } else {
-        setError(response.message || 'Có lỗi xảy ra khi thay đổi trạng thái');
+        setError(response.message || 'Có lỗi xảy ra khi thay đổi trạng thái bản sách');
         return { success: false, message: response.message };
       }
     } catch (err) {
-      const errorMessage = err.message || 'Có lỗi xảy ra khi thay đổi trạng thái';
+      console.error('Error changing book copy status:', err);
+      const errorMessage = err.response?.data?.message || 'Có lỗi xảy ra khi thay đổi trạng thái bản sách';
       setError(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [searchBookCopies]);
 
-  // ==================== PAGINATION ====================
+  // ==================== PAGINATION OPERATIONS ====================
 
   const goToPage = useCallback((page) => {
-    setPagination(prev => ({ ...prev, page }));
-  }, []);
+    searchBookCopies({ page });
+  }, [searchBookCopies]);
 
   const changePageSize = useCallback((size) => {
-    setPagination(prev => ({ ...prev, size, page: 0 }));
-  }, []);
+    searchBookCopies({ size, page: 0 });
+  }, [searchBookCopies]);
 
-  // ==================== UTILITY FUNCTIONS ====================
+  // ==================== UTILITY OPERATIONS ====================
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   const getBookCopyById = useCallback(async (bookCopyId) => {
     try {
       const response = await bookCopyService.getBookCopyById(bookCopyId);
       return response.success ? response.data : null;
     } catch (err) {
-      setError(err.message || 'Có lỗi xảy ra khi lấy thông tin bản sách');
+      console.error('Error getting book copy by ID:', err);
       return null;
     }
   }, []);
@@ -184,22 +177,10 @@ export const useBookCopies = () => {
       const response = await bookCopyService.getBookCopyByQrCode(qrCode);
       return response.success ? response.data : null;
     } catch (err) {
-      setError(err.message || 'Có lỗi xảy ra khi tìm bản sách theo QR code');
+      console.error('Error getting book copy by QR code:', err);
       return null;
     }
   }, []);
-
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
-
-  // ==================== EFFECTS ====================
-
-  useEffect(() => {
-    fetchBookCopies();
-  }, [fetchBookCopies]);
-
-  // ==================== RETURN VALUES ====================
 
   return {
     // State
@@ -208,21 +189,22 @@ export const useBookCopies = () => {
     error,
     pagination,
     
-    // Actions
+    // Search operations
     searchBookCopies,
-    fetchBookCopies,
+    
+    // CRUD operations
     createBookCopy,
     updateBookCopy,
     deleteBookCopy,
     changeBookCopyStatus,
-    getBookCopyById,
-    getBookCopyByQrCode,
     
-    // Pagination
+    // Pagination operations
     goToPage,
     changePageSize,
     
-    // Utilities
-    clearError
+    // Utility operations
+    clearError,
+    getBookCopyById,
+    getBookCopyByQrCode
   };
 }; 

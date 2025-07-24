@@ -44,7 +44,7 @@ public class BookController {
             BookResponse book = bookFacade.getBookById(bookId);
             return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOK_RETRIEVED, book));
         } catch (Exception e) {
-            log.error(BookConstants.ERROR_LOG_GET_BOOK, bookId, e.getMessage());
+            log.error("Error getting book by ID: {} - {}", bookId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(StandardResponse.error(BookConstants.ERROR_BOOK_NOT_FOUND + bookId));
         }
@@ -62,7 +62,7 @@ public class BookController {
             PagedResponse<BookResponse> result = bookFacade.searchBooks(params);
             return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOKS_RETRIEVED, result));
         } catch (Exception e) {
-            log.error(BookConstants.ERROR_LOG_SEARCH_BOOKS, e.getMessage());
+            log.error("Error searching books: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(StandardResponse.error(BookConstants.ERROR_SEARCH_FAILED));
         }
@@ -83,11 +83,11 @@ public class BookController {
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(StandardResponse.success(BookConstants.SUCCESS_BOOK_CREATED, createdBook));
         } catch (RuntimeException e) {
-            log.error(BookConstants.ERROR_LOG_CREATE_BOOK, e.getMessage());
+            log.error("Error creating book: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(StandardResponse.error(e.getMessage()));
         } catch (Exception e) {
-            log.error(BookConstants.ERROR_LOG_UNEXPECTED_CREATE, e.getMessage());
+            log.error("Unexpected error creating book: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(StandardResponse.error(BookConstants.ERROR_INVALID_BOOK_DATA));
         }
@@ -107,11 +107,11 @@ public class BookController {
             BookResponse updatedBook = bookFacade.updateBook(bookId, command);
             return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOK_UPDATED, updatedBook));
         } catch (RuntimeException e) {
-            log.error(BookConstants.ERROR_LOG_UPDATE_BOOK, bookId, e.getMessage());
+            log.error("Error updating book: {} - {}", bookId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(StandardResponse.error(e.getMessage()));
         } catch (Exception e) {
-            log.error(BookConstants.ERROR_LOG_UNEXPECTED_UPDATE, bookId, e.getMessage());
+            log.error("Unexpected error updating book: {} - {}", bookId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(StandardResponse.error(BookConstants.ERROR_INVALID_BOOK_DATA));
         }

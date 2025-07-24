@@ -6,6 +6,7 @@ import ActionButton from '../../../components/ui/ActionButton';
 import NotificationToast from '../../../components/ui/NotificationToast';
 import LoadingSkeleton from '../../../components/ui/LoadingSkeleton';
 import DetailDrawer from '../../../components/ui/DetailDrawer';
+import { useCategories } from '../../../hooks/useCategories';
 import { 
   PlusIcon,
   PencilIcon,
@@ -20,55 +21,20 @@ import {
 const AdminCategoriesPage = () => {
   const router = useRouter();
   
-  const [categories, setCategories] = useState([
-    {
-      id: 1,
-      name: 'Khoa học máy tính',
-      description: 'Sách về lập trình, thuật toán, cơ sở dữ liệu',
-      color: '#5a735a',
-      bookCount: 45,
-      createdAt: '2024-01-15',
-      updatedAt: '2024-01-20'
-    },
-    {
-      id: 2,
-      name: 'Văn học',
-      description: 'Tiểu thuyết, truyện ngắn, thơ ca',
-      color: '#7a907a',
-      bookCount: 32,
-      createdAt: '2024-01-10',
-      updatedAt: '2024-01-18'
-    },
-    {
-      id: 3,
-      name: 'Lịch sử',
-      description: 'Sách về lịch sử Việt Nam và thế giới',
-      color: '#a3b3a3',
-      bookCount: 28,
-      createdAt: '2024-01-05',
-      updatedAt: '2024-01-15'
-    },
-    {
-      id: 4,
-      name: 'Kinh tế',
-      description: 'Sách về kinh tế học, quản lý, marketing',
-      color: '#c7d0c7',
-      bookCount: 23,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-01-12'
-    },
-    {
-      id: 5,
-      name: 'Y học',
-      description: 'Sách về y học, sức khỏe, dinh dưỡng',
-      color: '#e3e7e3',
-      bookCount: 19,
-      createdAt: '2024-01-08',
-      updatedAt: '2024-01-16'
-    }
-  ]);
+  // Hooks
+  const {
+    categories,
+    loading,
+    error,
+    pagination,
+    searchCategories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    clearError
+  } = useCategories();
 
-  const [loading, setLoading] = useState(false);
+  // Local state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -83,72 +49,112 @@ const AdminCategoriesPage = () => {
     color: '#5a735a'
   });
 
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // ==================== EFFECTS ====================
 
-  const handleCreateCategory = () => {
+  useEffect(() => {
+    // Load initial data
+    searchCategories();
+  }, [searchCategories]);
+
+  useEffect(() => {
+    if (error) {
+      showNotification(error, 'error');
+      clearError();
+    }
+  }, [error, clearError]);
+
+  // ==================== SEARCH AND FILTER ====================
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    searchCategories({
+      query: term
+    });
+  };
+
+  // ==================== CRUD OPERATIONS ====================
+
+  const handleCreateCategory = async () => {
     if (!formData.name.trim()) {
       showNotification('Tên danh mục không được để trống', 'error');
       return;
     }
 
-    const newCategory = {
-      id: Date.now(),
-      ...formData,
-      bookCount: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0]
-    };
-
-    setCategories([...categories, newCategory]);
-    setFormData({ name: '', description: '', color: '#5a735a' });
-    setIsCreateModalOpen(false);
-    showNotification('Tạo danh mục thành công', 'success');
+    const result = await createCategory(formData);
+    
+    if (result.success) {
+      setIsCreateModalOpen(false);
+      resetForm();
+      showNotification('Tạo danh mục thành công', 'success');
+    } else {
+      showNotification(result.message || 'Có lỗi xảy ra khi tạo danh mục', 'error');
+    }
   };
 
-  const handleEditCategory = () => {
+  const handleEditCategory = async () => {
     if (!formData.name.trim()) {
       showNotification('Tên danh mục không được để trống', 'error');
       return;
     }
 
-    const updatedCategories = categories.map(cat =>
-      cat.id === selectedCategory.id
-        ? { ...cat, ...formData, updatedAt: new Date().toISOString().split('T')[0] }
-        : cat
-    );
-
-    setCategories(updatedCategories);
-    setFormData({ name: '', description: '', color: '#5a735a' });
-    setIsEditModalOpen(false);
-    setSelectedCategory(null);
-    showNotification('Cập nhật danh mục thành công', 'success');
+    const result = await updateCategory(selectedCategory.categoryId, formData);
+    
+    if (result.success) {
+      setIsEditModalOpen(false);
+      setSelectedCategory(null);
+      resetForm();
+      showNotification('Cập nhật danh mục thành công', 'success');
+    } else {
+      showNotification(result.message || 'Có lỗi xảy ra khi cập nhật danh mục', 'error');
+    }
   };
 
-  const handleDeleteCategory = (category) => {
+  const handleDeleteCategory = async (category) => {
     if (category.bookCount > 0) {
       showNotification('Không thể xóa danh mục có sách', 'error');
       return;
     }
 
     if (window.confirm(`Bạn có chắc chắn muốn xóa danh mục "${category.name}"?`)) {
-      const updatedCategories = categories.filter(cat => cat.id !== category.id);
-      setCategories(updatedCategories);
-      showNotification('Xóa danh mục thành công', 'success');
+      const result = await deleteCategory(category.categoryId);
+      
+      if (result.success) {
+        showNotification('Xóa danh mục thành công', 'success');
+      } else {
+        showNotification(result.message || 'Có lỗi xảy ra khi xóa danh mục', 'error');
+      }
     }
   };
+
+  // ==================== MODAL HANDLERS ====================
 
   const openEditModal = (category) => {
     setSelectedCategory(category);
     setFormData({
       name: category.name,
-      description: category.description,
-      color: category.color
+      description: category.description || '',
+      color: category.color || '#5a735a'
     });
     setIsEditModalOpen(true);
   };
+
+  const openCreateModal = () => {
+    resetForm();
+    setIsCreateModalOpen(true);
+  };
+
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+    resetForm();
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedCategory(null);
+    resetForm();
+  };
+
+  // ==================== UTILITY FUNCTIONS ====================
 
   const showNotification = (message, type = 'info') => {
     setNotification({ show: true, message, type });
@@ -159,7 +165,16 @@ const AdminCategoriesPage = () => {
     setSelectedCategory(null);
   };
 
-  if (loading) {
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('vi-VN');
+  };
+
+  const navigateToBooksWithCategory = (categoryId, categoryName) => {
+    router.push(`/admin/books?categoryId=${categoryId}&categoryName=${encodeURIComponent(categoryName)}`);
+  };
+
+  if (loading && categories.length === 0) {
     return (
       <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
         <div className="p-4 sm:p-6">
@@ -190,7 +205,7 @@ const AdminCategoriesPage = () => {
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <ActionButton
                   variant="primary"
-                  onClick={() => setIsCreateModalOpen(true)}
+                  onClick={openCreateModal}
                   className="group min-h-[40px]"
                 >
                   <PlusIcon className="w-4 h-4 mr-2" />
@@ -211,7 +226,7 @@ const AdminCategoriesPage = () => {
                 <input
                   type="text"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="Tìm kiếm danh mục..."
                 />
@@ -221,9 +236,9 @@ const AdminCategoriesPage = () => {
 
           {/* Categories Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
-            {filteredCategories.map((category) => (
+            {categories.map((category) => (
               <div
-                key={category.id}
+                key={category.categoryId}
                 className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft hover:shadow-medium transition-all duration-300 group cursor-pointer"
                 onClick={() => {
                   setSelectedCategory(category);
@@ -235,7 +250,7 @@ const AdminCategoriesPage = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div 
                       className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: category.color }}
+                      style={{ backgroundColor: category.color || '#5a735a' }}
                     >
                       <TagIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
@@ -271,7 +286,7 @@ const AdminCategoriesPage = () => {
                       {category.name}
                     </h3>
                     <p className="text-sm text-sage-600 dark:text-sage-400 line-clamp-2">
-                      {category.description}
+                      {category.description || 'Không có mô tả'}
                     </p>
                     
                     {/* Stats */}
@@ -279,13 +294,27 @@ const AdminCategoriesPage = () => {
                       <div className="flex items-center space-x-2">
                         <BookOpenIcon className="w-4 h-4 text-sage-500 dark:text-sage-400" />
                         <span className="text-sm text-sage-600 dark:text-sage-400">
-                          {category.bookCount} sách
+                          {category.bookCount || 0} sách
                         </span>
                       </div>
                       <span className="text-xs text-sage-500 dark:text-sage-400">
-                        {new Date(category.updatedAt).toLocaleDateString('vi-VN')}
+                        {formatDate(category.updatedAt)}
                       </span>
                     </div>
+
+                    {/* View Books Button */}
+                    <ActionButton
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigateToBooksWithCategory(category.categoryId, category.name);
+                      }}
+                      className="w-full min-h-[32px] text-sage-600 dark:text-sage-400 hover:bg-sage-50 dark:hover:bg-sage-900/20"
+                    >
+                      <BookOpenIcon className="w-4 h-4 mr-2" />
+                      Xem sách
+                    </ActionButton>
                   </div>
                 </div>
               </div>
@@ -293,7 +322,7 @@ const AdminCategoriesPage = () => {
           </div>
 
           {/* Empty State */}
-          {filteredCategories.length === 0 && (
+          {categories.length === 0 && !loading && (
             <div className="text-center py-12">
               <TagIcon className="w-16 h-16 text-sage-300 dark:text-sage-600 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-sage-900 dark:text-sage-100 mb-2">
@@ -305,7 +334,7 @@ const AdminCategoriesPage = () => {
               {!searchTerm && (
                 <ActionButton
                   variant="primary"
-                  onClick={() => setIsCreateModalOpen(true)}
+                  onClick={openCreateModal}
                 >
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Thêm danh mục đầu tiên
@@ -320,14 +349,14 @@ const AdminCategoriesPage = () => {
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity bg-black/50 backdrop-blur-sm" onClick={() => setIsCreateModalOpen(false)} />
+            <div className="fixed inset-0 transition-opacity bg-black/50 backdrop-blur-sm" onClick={closeCreateModal} />
             <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-neutral-900 shadow-soft rounded-2xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-100">
                   Thêm danh mục mới
                 </h3>
                 <button
-                  onClick={() => setIsCreateModalOpen(false)}
+                  onClick={closeCreateModal}
                   className="p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200"
                 >
                   <XMarkIcon className="w-5 h-5" />
@@ -377,18 +406,16 @@ const AdminCategoriesPage = () => {
               <div className="flex items-center justify-end space-x-3 mt-6">
                 <ActionButton
                   variant="outline"
-                  onClick={() => {
-                    setIsCreateModalOpen(false);
-                    resetForm();
-                  }}
+                  onClick={closeCreateModal}
                 >
                   Hủy
                 </ActionButton>
                 <ActionButton
                   variant="primary"
                   onClick={handleCreateCategory}
+                  disabled={loading}
                 >
-                  Tạo danh mục
+                  {loading ? 'Đang tạo...' : 'Tạo danh mục'}
                 </ActionButton>
               </div>
             </div>
@@ -400,14 +427,14 @@ const AdminCategoriesPage = () => {
       {isEditModalOpen && selectedCategory && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity bg-black/50 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
+            <div className="fixed inset-0 transition-opacity bg-black/50 backdrop-blur-sm" onClick={closeEditModal} />
             <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-neutral-900 shadow-soft rounded-2xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-100">
                   Chỉnh sửa danh mục
                 </h3>
                 <button
-                  onClick={() => setIsEditModalOpen(false)}
+                  onClick={closeEditModal}
                   className="p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200"
                 >
                   <XMarkIcon className="w-5 h-5" />
@@ -457,18 +484,16 @@ const AdminCategoriesPage = () => {
               <div className="flex items-center justify-end space-x-3 mt-6">
                 <ActionButton
                   variant="outline"
-                  onClick={() => {
-                    setIsEditModalOpen(false);
-                    resetForm();
-                  }}
+                  onClick={closeEditModal}
                 >
                   Hủy
                 </ActionButton>
                 <ActionButton
                   variant="primary"
                   onClick={handleEditCategory}
+                  disabled={loading}
                 >
-                  Cập nhật
+                  {loading ? 'Đang cập nhật...' : 'Cập nhật'}
                 </ActionButton>
               </div>
             </div>
@@ -488,18 +513,15 @@ const AdminCategoriesPage = () => {
             {/* Category Info */}
             <div>
               <div className="flex items-start space-x-4 mb-6">
-                <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: selectedCategory.color }}
-                >
-                  <TagIcon className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 bg-sage-100 dark:bg-sage-800 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <TagIcon className="w-8 h-8 text-sage-600 dark:text-sage-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-xl sm:text-2xl font-serif font-semibold text-sage-900 dark:text-sage-100 mb-2 line-clamp-2">
                     {selectedCategory.name}
                   </h3>
                   <p className="text-sage-600 dark:text-sage-400 line-clamp-2">
-                    {selectedCategory.description}
+                    {selectedCategory.description || 'Không có mô tả'}
                   </p>
                 </div>
               </div>
@@ -512,16 +534,16 @@ const AdminCategoriesPage = () => {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Mô tả</label>
-                    <p className="text-sage-900 dark:text-sage-100 line-clamp-3">{selectedCategory.description}</p>
+                    <p className="text-sage-900 dark:text-sage-100 line-clamp-3">{selectedCategory.description || 'Không có mô tả'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Màu sắc</label>
                     <div className="flex items-center space-x-2">
                       <div 
                         className="w-6 h-6 rounded border border-sage-200 dark:border-sage-700"
-                        style={{ backgroundColor: selectedCategory.color }}
+                        style={{ backgroundColor: selectedCategory.color || '#5a735a' }}
                       />
-                      <span className="text-sage-900 dark:text-sage-100 font-mono text-sm">{selectedCategory.color}</span>
+                      <span className="text-sage-900 dark:text-sage-100 font-mono text-sm">{selectedCategory.color || '#5a735a'}</span>
                     </div>
                   </div>
                 </div>
@@ -529,18 +551,18 @@ const AdminCategoriesPage = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Số lượng sách</label>
-                    <p className="text-sage-900 dark:text-sage-100 font-medium">{selectedCategory.bookCount} sách</p>
+                    <p className="text-sage-900 dark:text-sage-100 font-medium">{selectedCategory.bookCount || 0} sách</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Ngày tạo</label>
                     <p className="text-sage-900 dark:text-sage-100">
-                      {new Date(selectedCategory.createdAt).toLocaleDateString('vi-VN')}
+                      {formatDate(selectedCategory.createdAt)}
                     </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Cập nhật lần cuối</label>
                     <p className="text-sage-900 dark:text-sage-100">
-                      {new Date(selectedCategory.updatedAt).toLocaleDateString('vi-VN')}
+                      {formatDate(selectedCategory.updatedAt)}
                     </p>
                   </div>
                 </div>
@@ -549,6 +571,17 @@ const AdminCategoriesPage = () => {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-sage-200 dark:border-sage-700">
+              <ActionButton
+                variant="outline"
+                onClick={() => {
+                  setIsDrawerOpen(false);
+                  navigateToBooksWithCategory(selectedCategory.categoryId, selectedCategory.name);
+                }}
+                className="group min-h-[40px]"
+              >
+                <BookOpenIcon className="w-4 h-4 mr-2 group-hover:text-sage-600 dark:group-hover:text-sage-400" />
+                <span>Xem sách</span>
+              </ActionButton>
               <ActionButton
                 variant="outline"
                 onClick={() => {

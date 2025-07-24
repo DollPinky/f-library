@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import './globals.css';
 import Navigation from '../components/ui/Navigation';
-import { AuthProvider } from '../contexts/AuthContext';
+import { AccountAuthProvider } from '../contexts/AccountAuthContext';
 
 export default function RootLayout({ children }) {
   const [darkMode, setDarkMode] = useState(false);
@@ -54,17 +54,15 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </head>
       <body className="h-full bg-sage-50 dark:bg-neutral-950 font-sans antialiased safe-area-top safe-area-bottom">
-        <AuthProvider>
-          <div className="min-h-screen flex flex-col">
-            <Navigation 
-              darkMode={darkMode}
-              onToggleDarkMode={toggleDarkMode}
-            />
-            <main className="flex-1 w-full lg:pl-72">
-              {children}
-            </main>
-          </div>
-        </AuthProvider>
+        <AccountAuthProvider>
+          <Navigation 
+            darkMode={darkMode}
+            onToggleDarkMode={toggleDarkMode}
+          />
+          <main className="flex-1 w-full lg:pl-72">
+            {children}
+          </main>
+        </AccountAuthProvider>
       </body>
     </html>
   );

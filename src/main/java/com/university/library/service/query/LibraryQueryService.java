@@ -1,19 +1,17 @@
 package com.university.library.service.query;
 
 import com.university.library.base.PagedResponse;
-import com.university.library.constants.LibraryConstants;
 import com.university.library.dto.LibraryResponse;
 import com.university.library.dto.LibrarySearchParams;
 import com.university.library.entity.Library;
 import com.university.library.repository.LibraryRepository;
-// 
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,18 +27,10 @@ public class LibraryQueryService {
     public LibraryResponse getLibraryById(UUID libraryId) {
         log.info("Getting library by ID: {}", libraryId);
         
-        String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_LIBRARY + libraryId;
-        LibraryResponse cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Library found in cache: {}", libraryId);
-            return cached;
-        }
-        
         Library library = libraryRepository.findById(libraryId)
                 .orElseThrow(() -> new RuntimeException("Library not found with ID: " + libraryId));
         
         LibraryResponse response = LibraryResponse.fromEntity(library);
-        cacheLibrary(response);
         
         log.info("Library retrieved successfully: {}", libraryId);
         return response;
@@ -48,14 +38,6 @@ public class LibraryQueryService {
     
     public PagedResponse<LibraryResponse> searchLibraries(LibrarySearchParams params) {
         log.info("Searching libraries with params: {}", params);
-        
-        // TEMPORARILY DISABLE CACHE
-        // String cacheKey = buildSearchCacheKey(params);
-        // PagedResponse<LibraryResponse> cached = Optional.empty().orElse(null);
-        // if (cached != null) {
-        //     log.debug("Search results found in cache for key: {}", cacheKey);
-        //     return cached;
-        // }
         
         Specification<Library> spec = createSearchSpecification(params);
         
@@ -78,9 +60,6 @@ public class LibraryQueryService {
                 libraryPage.getTotalElements()
         );
         
-        // TEMPORARILY DISABLE CACHE
-        // // CACHE DISABLED, Duration.ofMinutes(LibraryConstants.CACHE_TTL_LOCAL));
-        
         log.info("Library search completed. Found {} results", libraryPage.getTotalElements());
         return response;
     }
@@ -88,19 +67,12 @@ public class LibraryQueryService {
     public List<LibraryResponse> getLibrariesByCampusId(UUID campusId) {
         log.info("Getting libraries by campus ID: {}", campusId);
         
-        String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_CAMPUS + campusId;
-        List<LibraryResponse> cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Libraries found in cache for campus: {}", campusId);
-            return cached;
-        }
-        
         List<Library> libraries = libraryRepository.findByCampusCampusId(campusId);
         List<LibraryResponse> responses = libraries.stream()
                 .map(LibraryResponse::fromEntity)
                 .collect(Collectors.toList());
         
-        // CACHE DISABLED, Duration.ofMinutes(LibraryConstants.CACHE_TTL_LOCAL));
+
         
         log.info("Retrieved {} libraries for campus: {}", responses.size(), campusId);
         return responses;
@@ -109,20 +81,12 @@ public class LibraryQueryService {
     public LibraryResponse getLibraryByCode(String code) {
         log.info("Getting library by code: {}", code);
         
-        String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_CODE + code;
-        LibraryResponse cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Library found in cache by code: {}", code);
-            return cached;
-        }
-        
         Library library = libraryRepository.findByCode(code);
         if (library == null) {
             throw new RuntimeException("Library not found with code: " + code);
         }
         
         LibraryResponse response = LibraryResponse.fromEntity(library);
-        cacheLibrary(response);
         
         log.info("Library retrieved successfully by code: {}", code);
         return response;
@@ -131,59 +95,13 @@ public class LibraryQueryService {
     public List<LibraryResponse> getAllLibraries() {
         log.info("Getting all libraries");
         
-        String cacheKey = "all";
-        List<LibraryResponse> cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("All libraries found in cache");
-            return cached;
-        }
-        
         List<Library> libraries = libraryRepository.findAll();
         List<LibraryResponse> responses = libraries.stream()
                 .map(LibraryResponse::fromEntity)
                 .collect(Collectors.toList());
         
-        // CACHE DISABLED, Duration.ofMinutes(LibraryConstants.CACHE_TTL_LOCAL));
-        
         log.info("Retrieved {} libraries", responses.size());
         return responses;
-    }
-    
-    public boolean isLibraryCached(UUID libraryId) {
-        String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_LIBRARY + libraryId;
-        return false;
-    }
-    
-    public Long getLibraryCacheTtl(UUID libraryId) {
-        String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_LIBRARY + libraryId;
-        return null;
-    }
-    
-    public void clearLibraryCache(UUID libraryId) {
-        log.info("Clearing cache for library: {}", libraryId);
-        String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_LIBRARY + libraryId;
-        // CACHE DISABLED;
-    }
-    
-    public void clearLibrariesCache(List<UUID> libraryIds) {
-        log.info("Clearing cache for {} libraries", libraryIds.size());
-        libraryIds.forEach(this::clearLibraryCache);
-    }
-    
-    public void clearSearchCache() {
-        log.info("Clearing all library search cache");
-        // CACHE DISABLED;
-    }
-    
-    public void clearSearchCache(LibrarySearchParams params) {
-        log.info("Clearing library search cache for params: {}", params);
-        String cacheKey = buildSearchCacheKey(params);
-        // CACHE DISABLED;
-    }
-    
-    private void cacheLibrary(LibraryResponse libraryResponse) {
-        String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_LIBRARY + libraryResponse.getLibraryId();
-        // CACHE DISABLED, Duration.ofMinutes(LibraryConstants.CACHE_TTL_LOCAL));
     }
     
     private Specification<Library> createSearchSpecification(LibrarySearchParams params) {
@@ -218,17 +136,6 @@ public class LibraryQueryService {
         };
     }
     
-    private String buildSearchCacheKey(LibrarySearchParams params) {
-        return String.format("search:%s:%s:%s:%s:%s:%s:%s:%s",
-                params.getQuery() != null ? params.getQuery() : "",
-                params.getCampusId() != null ? params.getCampusId() : "",
-                params.getHasBookCopies() != null ? params.getHasBookCopies() : "",
-                params.getHasStaff() != null ? params.getHasStaff() : "",
-                params.getPage(),
-                params.getSize(),
-                params.getSortBy(),
-                params.getSortDirection()
-        );
-    }
+
 } 
 

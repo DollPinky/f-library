@@ -69,11 +69,6 @@ public class BookCommandService {
         
         BookResponse bookResponse = BookResponse.fromEntity(savedBook);
         
-        // TEMPORARILY DISABLE KAFKA & CACHE
-        // publishBookCreatedEvent(savedBook);
-        // cacheBook(bookResponse);
-        // clearSearchCache();
-        
         log.info(BookConstants.LOG_BOOK_CREATED, savedBook.getBookId());
         return bookResponse;
     }
@@ -111,11 +106,6 @@ public class BookCommandService {
         Book updatedBook = bookRepository.save(existingBook);
         
         BookResponse bookResponse = BookResponse.fromEntity(updatedBook);
-        
-        // TEMPORARILY DISABLE KAFKA & CACHE
-        // publishBookUpdatedEvent(updatedBook);
-        // cacheBook(bookResponse);
-        // clearSearchCache();
         
         log.info(BookConstants.LOG_BOOK_UPDATED, updatedBook.getBookId());
         return bookResponse;
@@ -157,11 +147,6 @@ public class BookCommandService {
         
         BookResponse bookResponse = BookResponse.fromEntity(updatedBook);
         
-        // TEMPORARILY DISABLE KAFKA & CACHE
-        // publishBookUpdatedEvent(updatedBook);
-        // cacheBook(bookResponse);
-        // clearSearchCache();
-        
         log.info(BookConstants.LOG_BOOK_UPDATED, bookId);
         return bookResponse;
     }
@@ -182,15 +167,8 @@ public class BookCommandService {
             throw new RuntimeException(BookConstants.ERROR_BOOK_IN_USE);
         }
         
-        // TEMPORARILY DISABLE KAFKA & CACHE
-        // publishBookDeletedEvent(book);
-        
         // Delete from database
         bookRepository.deleteById(bookId);
-        
-        // TEMPORARILY DISABLE CACHE
-        // clearBookCache(bookId);
-        // clearSearchCache();
         
         log.info(BookConstants.LOG_BOOK_DELETED, bookId);
     }

@@ -36,7 +36,7 @@ public class BookCopyResponse {
             .qrCode(bookCopy.getQrCode())
             .status(convertBookStatus(bookCopy.getStatus()))
             .shelfLocation(bookCopy.getShelfLocation())
-            .borrowingCount(bookCopy.getBorrowings() != null ? (long) bookCopy.getBorrowings().size() : 0L)
+            .borrowingCount(0L) // Avoid lazy loading of borrowings
             .createdAt(bookCopy.getCreatedAt())
             .updatedAt(bookCopy.getUpdatedAt())
             .build();
@@ -55,7 +55,7 @@ public class BookCopyResponse {
             .qrCode(bookCopy.getQrCode())
             .status(convertBookStatus(bookCopy.getStatus()))
             .shelfLocation(bookCopy.getShelfLocation())
-            .borrowingCount(bookCopy.getBorrowings() != null ? (long) bookCopy.getBorrowings().size() : 0L)
+            .borrowingCount(0L) // Avoid lazy loading of borrowings
             .createdAt(bookCopy.getCreatedAt())
             .updatedAt(bookCopy.getUpdatedAt())
             .build();

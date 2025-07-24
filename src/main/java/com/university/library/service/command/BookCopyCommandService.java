@@ -13,11 +13,9 @@ import com.university.library.repository.LibraryRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,13 +29,10 @@ public class BookCopyCommandService {
     private final BookRepository bookRepository;
     private final LibraryRepository libraryRepository;
     
-    private final KafkaTemplate<String, Object> kafkaTemplate;
-    
     @Transactional
     public BookCopyResponse createBookCopy(CreateBookCopyCommand command) {
         log.info("Creating new book copy with QR code: {}", command.getQrCode());
         
-        // Validate QR code uniqueness
         if (bookCopyRepository.existsByQrCode(command.getQrCode())) {
             throw new RuntimeException(BookCopyConstants.ERROR_QR_CODE_ALREADY_EXISTS + command.getQrCode());
         }
@@ -48,18 +43,8 @@ public class BookCopyCommandService {
                 .status(convertBookStatus(command.getStatus()))
                 .build();
         
-        // Set book and library relationships (assuming they exist)
-        // This would typically involve fetching the book and library entities
-        // For now, we'll assume they're set via the entity relationships
-        
         BookCopy savedBookCopy = bookCopyRepository.save(bookCopy);
         BookCopyResponse response = BookCopyResponse.fromEntity(savedBookCopy);
-        
-        // Cache the new book copy
-        cacheBookCopy(response);
-        
-        // Publish event
-        publishBookCopyCreatedEvent(savedBookCopy);
         
         log.info(BookCopyConstants.LOG_BOOK_COPY_CREATED, savedBookCopy.getBookCopyId());
         return response;
@@ -72,25 +57,17 @@ public class BookCopyCommandService {
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
                 .orElseThrow(() -> new RuntimeException(BookCopyConstants.ERROR_BOOK_COPY_NOT_FOUND + bookCopyId));
         
-        // Check QR code uniqueness if it's being changed
         if (!bookCopy.getQrCode().equals(command.getQrCode()) && 
             bookCopyRepository.existsByQrCode(command.getQrCode())) {
             throw new RuntimeException(BookCopyConstants.ERROR_QR_CODE_ALREADY_EXISTS + command.getQrCode());
         }
         
-        // Update fields
         bookCopy.setQrCode(command.getQrCode());
         bookCopy.setShelfLocation(command.getShelfLocation());
         bookCopy.setStatus(convertBookStatus(command.getStatus()));
         
         BookCopy updatedBookCopy = bookCopyRepository.save(bookCopy);
         BookCopyResponse response = BookCopyResponse.fromEntity(updatedBookCopy);
-        
-        // Update cache
-        cacheBookCopy(response);
-        
-        // Publish event
-        publishBookCopyUpdatedEvent(updatedBookCopy);
         
         log.info(BookCopyConstants.LOG_BOOK_COPY_UPDATED, bookCopyId);
         return response;
@@ -103,18 +80,12 @@ public class BookCopyCommandService {
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
                 .orElseThrow(() -> new RuntimeException(BookCopyConstants.ERROR_BOOK_COPY_NOT_FOUND + bookCopyId));
         
-        // Check if book copy can be deleted (not currently borrowed)
         if (bookCopy.getStatus() == BookCopy.BookStatus.BORROWED) {
             throw new RuntimeException(BookCopyConstants.ERROR_BOOK_COPY_IN_USE);
         }
         
         bookCopyRepository.delete(bookCopy);
         
-        // Clear cache
-        clearBookCopyCache(bookCopyId);
-        
-        // Publish event
-        publishBookCopyDeletedEvent(bookCopy);
         
         log.info(BookCopyConstants.LOG_BOOK_COPY_DELETED, bookCopyId);
     }
@@ -131,36 +102,28 @@ public class BookCopyCommandService {
         
         BookCopy updatedBookCopy = bookCopyRepository.save(bookCopy);
         BookCopyResponse response = BookCopyResponse.fromEntity(updatedBookCopy);
-        
-        // Update cache
-        cacheBookCopy(response);
-        
-        // Publish status change event
-        publishBookCopyStatusChangedEvent(updatedBookCopy, oldStatus);
+ 
         
         log.info(BookCopyConstants.LOG_STATUS_CHANGED, oldStatus, newStatus);
         return response;
     }
     
     /**
-     * Tạo book copies cho một book đã tồn tại
+     * Tạo book copies cho một book
      */
     @Transactional
     public void createBookCopiesFromBook(CreateBookCopyFromBookCommand command) {
         log.info("Creating {} book copies for book: {}", command.getCopies().size(), command.getBookId());
         
-        // Validate book exists
         Book book = bookRepository.findById(command.getBookId())
             .orElseThrow(() -> new RuntimeException("Book not found with ID: " + command.getBookId()));
         
         List<BookCopy> bookCopies = new ArrayList<>();
         
         for (CreateBookCopyFromBookCommand.BookCopyInfo copyInfo : command.getCopies()) {
-            // Validate library exists
             Library library = libraryRepository.findById(copyInfo.getLibraryId())
                 .orElseThrow(() -> new RuntimeException("Library not found with ID: " + copyInfo.getLibraryId()));
             
-            // Create multiple copies based on quantity
             for (int i = 0; i < copyInfo.getQuantity(); i++) {
                 String qrCode = generateUniqueQrCode(book.getIsbn(), library.getCode(), i + 1);
                 
@@ -176,19 +139,17 @@ public class BookCopyCommandService {
             }
         }
         
-        // Save all book copies
         bookCopyRepository.saveAll(bookCopies);
         
         log.info("Successfully created {} book copies for book: {}", bookCopies.size(), command.getBookId());
     }
     
     /**
-     * Generate unique QR code for book copy
+     * Generate unique QR code
      */
     private String generateUniqueQrCode(String isbn, String libraryCode, int copyNumber) {
         String baseQrCode = String.format("BK_%s_%s_%03d", isbn, libraryCode, copyNumber);
         
-        // Check if QR code already exists and generate a new one if needed
         int attempt = 0;
         String qrCode = baseQrCode;
         while (bookCopyRepository.existsByQrCode(qrCode)) {
@@ -197,72 +158,6 @@ public class BookCopyCommandService {
         }
         
         return qrCode;
-    }
-    
-    public void clearBookCopyCache(UUID bookCopyId) {
-        log.info("Clearing cache for book copy: {}", bookCopyId);
-        String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK_COPY + bookCopyId;
-        // CACHE DISABLED;
-    }
-    
-    public void clearBookCopiesCache(List<UUID> bookCopyIds) {
-        log.info("Clearing cache for {} book copies", bookCopyIds.size());
-        bookCopyIds.forEach(this::clearBookCopyCache);
-    }
-    
-    public void clearSearchCache() {
-        log.info("Clearing all book copy search cache");
-        // CACHE DISABLED;
-    }
-    
-    private void publishBookCopyCreatedEvent(BookCopy bookCopy) {
-        try {
-            kafkaTemplate.send(BookCopyConstants.TOPIC_BOOK_COPY_CREATED, bookCopy.getBookCopyId().toString(), bookCopy);
-            log.info(BookCopyConstants.LOG_KAFKA_EVENT_SENT, BookCopyConstants.EVENT_BOOK_COPY_CREATED, bookCopy.getBookCopyId());
-        } catch (Exception e) {
-            log.error("Failed to publish book copy created event: {}", e.getMessage());
-        }
-    }
-    
-    private void publishBookCopyUpdatedEvent(BookCopy bookCopy) {
-        try {
-            kafkaTemplate.send(BookCopyConstants.TOPIC_BOOK_COPY_UPDATED, bookCopy.getBookCopyId().toString(), bookCopy);
-            log.info(BookCopyConstants.LOG_KAFKA_EVENT_SENT, BookCopyConstants.EVENT_BOOK_COPY_UPDATED, bookCopy.getBookCopyId());
-        } catch (Exception e) {
-            log.error("Failed to publish book copy updated event: {}", e.getMessage());
-        }
-    }
-    
-    private void publishBookCopyDeletedEvent(BookCopy bookCopy) {
-        try {
-            kafkaTemplate.send(BookCopyConstants.TOPIC_BOOK_COPY_DELETED, bookCopy.getBookCopyId().toString(), bookCopy);
-            log.info(BookCopyConstants.LOG_KAFKA_EVENT_SENT, BookCopyConstants.EVENT_BOOK_COPY_DELETED, bookCopy.getBookCopyId());
-        } catch (Exception e) {
-            log.error("Failed to publish book copy deleted event: {}", e.getMessage());
-        }
-    }
-    
-    private void publishBookCopyStatusChangedEvent(BookCopy bookCopy, BookCopy.BookStatus oldStatus) {
-        try {
-            var statusChangeEvent = new StatusChangeEvent(bookCopy.getBookCopyId(), oldStatus, bookCopy.getStatus());
-            kafkaTemplate.send(BookCopyConstants.TOPIC_BOOK_COPY_STATUS_CHANGED, bookCopy.getBookCopyId().toString(), statusChangeEvent);
-            log.info(BookCopyConstants.LOG_KAFKA_EVENT_SENT, BookCopyConstants.EVENT_BOOK_COPY_STATUS_CHANGED, bookCopy.getBookCopyId());
-        } catch (Exception e) {
-            log.error("Failed to publish book copy status changed event: {}", e.getMessage());
-        }
-    }
-    
-    public void publishCacheEvictEvent(UUID bookCopyId) {
-        try {
-            kafkaTemplate.send(BookCopyConstants.TOPIC_BOOK_COPY_CACHE_EVICT, bookCopyId.toString(), bookCopyId);
-            log.info(BookCopyConstants.LOG_KAFKA_EVENT_SENT, BookCopyConstants.EVENT_CACHE_EVICT, bookCopyId);
-        } catch (Exception e) {
-            log.error("Failed to publish cache evict event: {}", e.getMessage());
-        }
-    }
-    
-    private void cacheBookCopy(BookCopyResponse bookCopyResponse) {
-        // CACHE DISABLED
     }
     
     private BookCopy.BookStatus convertBookStatus(CreateBookCopyCommand.BookStatus status) {
@@ -286,7 +181,6 @@ public class BookCopyCommandService {
         }
     }
     
-    // Inner class for status change events
     public static class StatusChangeEvent {
         private final UUID bookCopyId;
         private final BookCopy.BookStatus oldStatus;

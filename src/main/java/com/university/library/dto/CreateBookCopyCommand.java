@@ -26,8 +26,8 @@ public class CreateBookCopyCommand {
     @JsonDeserialize(using = UUIDDeserializer.class)
     private UUID libraryId;
     
-    @NotBlank(message = "QR code không được để trống")
-    @Size(max = 255, message = "QR code không được vượt quá 255 ký tự")
+    @NotBlank(message = "QR Code không được để trống")
+    @Size(max = 255, message = "QR Code không được vượt quá 255 ký tự")
     private String qrCode;
     
     @Size(max = 100, message = "Vị trí kệ không được vượt quá 100 ký tự")

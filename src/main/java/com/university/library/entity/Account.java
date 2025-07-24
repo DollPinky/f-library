@@ -2,16 +2,13 @@ package com.university.library.entity;
 
 import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import java.time.Instant;
-import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "accounts")
@@ -20,143 +17,59 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Account extends BaseEntity implements UserDetails, java.io.Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class Account extends BaseEntity implements org.springframework.security.core.userdetails.UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "account_id")
     private UUID accountId;
 
-    @Column(name = "username", nullable = false, unique = true, length = 50)
-    private String username;
+    @Column(name = "full_name", nullable = false, length = 255)
+    private String fullName;
 
-    @Column(name = "email", nullable = false, unique = true, length = 100)
+    @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    @Column(name = "full_name", nullable = false, length = 100)
-    private String fullName;
-
-    @Column(name = "phone", length = 20)
+    @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    @Builder.Default
-    @Column(name = "user_type", nullable = false, length = 20)
-    private UserType userType = UserType.READER;
+    @Column(name = "role", nullable = false, length = 20)
+    private AccountRole role;
 
-    @Enumerated(EnumType.STRING)
+    @Column(name = "department", length = 255)
+    private String department;
 
-    @Column(name = "status", nullable = false, length = 20)
-    private AccountStatus status;
+    @Column(name = "position", length = 255)
+    private String position;
 
-    @Column(name = "last_login_at")
-    private Instant lastLoginAt;
+    @Column(name = "employee_code", nullable = false, unique = true, length = 50)
+    private String employeeCode;
 
-    @Column(name = "email_verified")
-    private Boolean emailVerified;
-
-    @Column(name = "phone_verified")
-    private Boolean phoneVerified;
+    @Column(name = "is_active")
+    private Boolean isActive;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "campus_id")
+    @JoinColumn(name = "campus_id", nullable = false)
     private Campus campus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "library_id")
-    private Library library;
+    @Column(name = "created_at")
+    private Instant createdAt;
 
-    @Column(name = "student_id", length = 20)
-    private String studentId;
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
-    @Column(name = "faculty", length = 100)
-    private String faculty;
-
-    @Column(name = "major", length = 100)
-    private String major;
-
-    @Column(name = "academic_year")
-    private Integer academicYear;
-
-    @Column(name = "max_borrow_limit")
-    private Integer maxBorrowLimit;
-
-    @Column(name = "current_borrow_count")
-    private Integer currentBorrowCount;
-
-    @Column(name = "total_borrow_count")
-    private Integer totalBorrowCount;
-
-    @Column(name = "overdue_count")
-    private Integer overdueCount;
-
-    @Column(name = "fine_amount")
-    private Double fineAmount;
-
-    public enum UserType {
-        STAFF,          // Nhân viên thư viện (có Staff entity riêng)
-        READER          // Độc giả (sinh viên/giảng viên)
+    public enum AccountRole {
+        ADMIN,
+        LIBRARIAN,
+        READER
     }
 
-    public enum AccountStatus {
-        ACTIVE,         // Tài khoản hoạt động
-        INACTIVE,       // Tài khoản không hoạt động
-        SUSPENDED,      // Tài khoản bị đình chỉ
-        PENDING,        // Tài khoản chờ xác thực
-        BLOCKED         // Tài khoản bị khóa
-    }
-
-    public boolean canBorrow() {
-        return userType == UserType.READER &&
-               status == AccountStatus.ACTIVE &&
-               currentBorrowCount < maxBorrowLimit &&
-               fineAmount <= 0;
-    }
-
-    public void incrementBorrowCount() {
-        if (userType == UserType.READER) {
-            this.currentBorrowCount++;
-            this.totalBorrowCount++;
-        }
-    }
-
-    public void decrementBorrowCount() {
-        if (userType == UserType.READER && this.currentBorrowCount > 0) {
-            this.currentBorrowCount--;
-        }
-    }
-
-    public void addFine(Double amount) {
-        if (userType == UserType.READER) {
-            this.fineAmount += amount;
-        }
-    }
-
-    public void clearFine() {
-        if (userType == UserType.READER) {
-            this.fineAmount = 0.0;
-        }
-    }
-
-    public void updateLastLogin() {
-        this.lastLoginAt = Instant.now();
-    }
-
-    public boolean isStaff() {
-        return userType == UserType.STAFF;
-    }
-
-    public boolean isReader() {
-        return userType == UserType.READER;
-    }
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Đảm bảo luôn trả về đúng role khi deserialize từ session
-        return List.of(new SimpleGrantedAuthority("ROLE_" + (userType != null ? userType.name() : "READER")));
+    public String getUsername() {
+        return email;
     }
 
     @Override
@@ -166,12 +79,12 @@ public class Account extends BaseEntity implements UserDetails, java.io.Serializ
 
     @Override
     public boolean isAccountNonExpired() {
-        return status != AccountStatus.INACTIVE;
+        return isActive != null ? isActive : true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return status != AccountStatus.BLOCKED;
+        return isActive != null ? isActive : true;
     }
 
     @Override
@@ -181,7 +94,11 @@ public class Account extends BaseEntity implements UserDetails, java.io.Serializ
 
     @Override
     public boolean isEnabled() {
-        return status == AccountStatus.ACTIVE;
+        return isActive != null ? isActive : true;
     }
-}
 
+    @Override
+    public java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> getAuthorities() {
+        return java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role.name()));
+    }
+} 

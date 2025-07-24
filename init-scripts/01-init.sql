@@ -1,210 +1,244 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- =====================================================
+-- LIBRARY MANAGEMENT SYSTEM - INITIALIZATION SCRIPT
+-- =====================================================
 
--- 1. campuses
+-- Drop existing tables if they exist (in reverse dependency order)
+DROP TABLE IF EXISTS borrowings CASCADE;
+DROP TABLE IF EXISTS book_copies CASCADE;
+DROP TABLE IF EXISTS books CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS accounts CASCADE;
+DROP TABLE IF EXISTS staff CASCADE;
+DROP TABLE IF EXISTS libraries CASCADE;
+DROP TABLE IF EXISTS campuses CASCADE;
+
+-- =====================================================
+-- CREATE TABLES
+-- =====================================================
+
+-- Campuses table
 CREATE TABLE campuses (
-                          campus_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                          name VARCHAR(255) NOT NULL,
-                          code VARCHAR(50) UNIQUE NOT NULL,
-                          address TEXT NOT NULL,
-    is_deleted BOOLEAN DEFAULT FALSE,
+    campus_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    address TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. libraries
+-- Libraries table
 CREATE TABLE libraries (
-                           library_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                           campus_id UUID NOT NULL REFERENCES campuses(campus_id),
-                           name VARCHAR(255) NOT NULL,
-                           code VARCHAR(50) UNIQUE NOT NULL,
-                           address TEXT NOT NULL,
-    is_deleted BOOLEAN DEFAULT FALSE,
+    library_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campus_id UUID NOT NULL REFERENCES campuses(campus_id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    address TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. accounts
-CREATE TABLE accounts (
-    account_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(100) NOT NULL,
-    phone VARCHAR(20),
-    user_type VARCHAR(20) NOT NULL CHECK (user_type IN ('STAFF', 'READER')),
-    status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'PENDING', 'BLOCKED')),
-    last_login_at TIMESTAMP,
-    email_verified BOOLEAN DEFAULT FALSE,
-    phone_verified BOOLEAN DEFAULT FALSE,
-    campus_id UUID REFERENCES campuses(campus_id),
-    library_id UUID REFERENCES libraries(library_id),
-    student_id VARCHAR(20),
-    faculty VARCHAR(100),
-    major VARCHAR(100),
-    academic_year INTEGER,
-    max_borrow_limit INTEGER DEFAULT 5,
-    current_borrow_count INTEGER DEFAULT 0,
-    total_borrow_count INTEGER DEFAULT 0,
-    overdue_count INTEGER DEFAULT 0,
-    fine_amount DECIMAL(10,2) DEFAULT 0.0,
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 4. staffs
-CREATE TABLE staffs (
-                       staff_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    account_id UUID NOT NULL REFERENCES accounts(account_id) UNIQUE,
-                       library_id UUID NOT NULL REFERENCES libraries(library_id),
-    employee_id VARCHAR(20) NOT NULL UNIQUE,
-    staff_role VARCHAR(50) NOT NULL CHECK (staff_role IN ('ADMIN', 'LIBRARIAN', 'MANAGER', 'ASSISTANT')),
-    department VARCHAR(100),
-    position VARCHAR(100),
-    hire_date TIMESTAMP,
-    work_schedule VARCHAR(255),
-    specialization VARCHAR(255),
-    is_active BOOLEAN DEFAULT TRUE,
-    last_activity_at TIMESTAMP,
-    can_manage_books BOOLEAN DEFAULT FALSE,
-    can_manage_users BOOLEAN DEFAULT FALSE,
-    can_manage_staff BOOLEAN DEFAULT FALSE,
-    can_view_reports BOOLEAN DEFAULT FALSE,
-        can_process_borrowings BOOLEAN DEFAULT TRUE,
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 5. categories
+-- Categories table
 CREATE TABLE categories (
-                            category_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                            name VARCHAR(255) NOT NULL,
-                            description TEXT,
-    parent_category_id UUID REFERENCES categories(category_id),
-    is_deleted BOOLEAN DEFAULT FALSE,
+    category_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    color VARCHAR(7) NOT NULL DEFAULT '#5a735a',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6. books
+-- Books table
 CREATE TABLE books (
-                       book_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                       title VARCHAR(255) NOT NULL,
-                       author VARCHAR(255),
-                       publisher VARCHAR(255),
+    book_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category_id UUID REFERENCES categories(category_id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(255),
+    publisher VARCHAR(255),
     year INTEGER,
-                       isbn VARCHAR(20),
-                       description TEXT,
-                       category_id UUID REFERENCES categories(category_id),
-    is_deleted BOOLEAN DEFAULT FALSE,
+    isbn VARCHAR(20) UNIQUE,
+    description TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 7. book_copies
+-- Book copies table
 CREATE TABLE book_copies (
-    book_copy_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                             book_id UUID REFERENCES books(book_id),
-                             library_id UUID REFERENCES libraries(library_id),
-                             qr_code VARCHAR(255) UNIQUE,
-                             status VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'BORROWED', 'RESERVED', 'LOST', 'DAMAGED')),
-                             shelf_location VARCHAR(100),
-    is_deleted BOOLEAN DEFAULT FALSE,
+    book_copy_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    book_id UUID NOT NULL REFERENCES books(book_id) ON DELETE CASCADE,
+    library_id UUID NOT NULL REFERENCES libraries(library_id) ON DELETE CASCADE,
+    qr_code VARCHAR(255) UNIQUE,
+    status VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE', -- AVAILABLE, BORROWED, RESERVED, LOST, DAMAGED
+    shelf_location VARCHAR(100),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 8. readers (legacy table - now replaced by accounts with user_type = 'READER')
-CREATE TABLE readers (
-                         reader_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                         campus_id UUID REFERENCES campuses(campus_id),
-                         name VARCHAR(255) NOT NULL,
-                         student_id VARCHAR(50) UNIQUE,
-                         email VARCHAR(255) UNIQUE NOT NULL,
-                             phone VARCHAR(50),
-    is_deleted BOOLEAN DEFAULT FALSE,
+-- Accounts table (for authentication and user management)
+CREATE TABLE accounts (
+    account_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    full_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(20) NOT NULL,
+    department VARCHAR(255),
+    position VARCHAR(255),
+    employee_code VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL, -- ADMIN, LIBRARIAN, READER
+    campus_id UUID NOT NULL REFERENCES campuses(campus_id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    registered_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                         is_active BOOLEAN DEFAULT TRUE
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 9. borrowings
+-- Staff table (for library staff management)
+CREATE TABLE staff (
+    staff_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    library_id UUID NOT NULL REFERENCES libraries(library_id) ON DELETE CASCADE,
+    account_id UUID NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+    hire_date DATE NOT NULL,
+    salary DECIMAL(10,2),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Borrowings table
 CREATE TABLE borrowings (
-                            borrow_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    copy_id UUID REFERENCES book_copies(book_copy_id),
-                            reader_id UUID REFERENCES readers(reader_id),
-                            borrowed_at TIMESTAMP NOT NULL,
-                            due_date DATE NOT NULL,
-                            returned_at DATE,
-                            status VARCHAR(50) DEFAULT 'BORROWED' CHECK (status IN ('BORROWED', 'RETURNED', 'OVERDUE')),
-                            fine_amount NUMERIC(10, 2) DEFAULT 0,
-    note TEXT,
-    is_deleted BOOLEAN DEFAULT FALSE,
+    borrowing_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    book_copy_id UUID NOT NULL REFERENCES book_copies(book_copy_id) ON DELETE CASCADE,
+    borrower_id UUID NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+    borrowed_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    due_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    returned_date TIMESTAMP WITH TIME ZONE,
+    status VARCHAR(50) NOT NULL DEFAULT 'BORROWED', -- RESERVED, BORROWED, RETURNED, OVERDUE, LOST, CANCELLED
+    fine_amount DECIMAL(10,2) DEFAULT 0.0,
+    notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert sample data
+-- =====================================================
+-- CREATE INDEXES
+-- =====================================================
 
---- Campuses
-INSERT INTO campuses (campus_id, name, code, address, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), 'Hà Nội', 'HN', 'Số 1 Đại Cồ Việt, Hai Bà Trưng, Hà Nội', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'TP. Hồ Chí Minh', 'HCM', '227 Nguyễn Văn Cừ, Q.5, TP.HCM', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Đà Nẵng', 'DN', '41 Lê Duẩn, Hải Châu, Đà Nẵng', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- Campus indexes
+CREATE INDEX idx_campuses_code ON campuses(code);
+CREATE INDEX idx_campuses_name ON campuses(name);
 
---- Libraries
-INSERT INTO libraries (library_id, campus_id, name, code, address, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HN'), 'Thư viện Hà Nội', 'LIB-HN-001', 'Số 1 Đại Cồ Việt, Hai Bà Trưng, Hà Nội', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Thư viện TP. Hồ Chí Minh', 'LIB-HCM-001', '227 Nguyễn Văn Cừ, Q.5, TP.HCM', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'Thư viện Đà Nẵng', 'LIB-DN-001', '41 Lê Duẩn, Hải Châu, Đà Nẵng', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- Library indexes
+CREATE INDEX idx_libraries_campus_id ON libraries(campus_id);
+CREATE INDEX idx_libraries_code ON libraries(code);
+CREATE INDEX idx_libraries_name ON libraries(name);
 
---- Categories
-INSERT INTO categories (category_id, name, description, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), 'Khoa học máy tính', 'Mô tả cho Khoa học máy tính', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Toán học', 'Mô tả cho Toán học', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Văn học', 'Mô tả cho Văn học', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Lịch sử', 'Mô tả cho Lịch sử', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Tâm lý học', 'Mô tả cho Tâm lý học', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- Category indexes
+CREATE INDEX idx_categories_name ON categories(name);
 
---- Books
-INSERT INTO books (book_id, title, author, publisher, year, isbn, description, category_id, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), 'Kitchen technology.', 'Amber Kidd', 'Novak and Sons', 2013, '978-1136505587', 'A comprehensive guide to modern kitchen technology and culinary innovations.', (SELECT category_id FROM categories WHERE name = 'Khoa học máy tính'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Image loss ten.', 'Carmen Smith', 'Baker-Bowers', 2006, '978-3585650756', 'Exploring the psychological aspects of image and identity loss in modern society.', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Expect recent room situation.', 'Katelyn Lee', 'Novak PLC', 2006, '978-2801823908', 'Historical analysis of room dynamics and spatial relationships throughout different eras.', (SELECT category_id FROM categories WHERE name = 'Lịch sử'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Article finish anyone live try.', 'Amy Romero', 'Jones Inc', 2018, '978-4733616459', 'Advanced mathematical concepts and their applications in real-world scenarios.', (SELECT category_id FROM categories WHERE name = 'Toán học'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Identify walk now.', 'Amanda Miller', 'Silva, Mills and Donovan', 2022, '978-7110082321', 'Contemporary literature exploring themes of identity and personal journey.', (SELECT category_id FROM categories WHERE name = 'Văn học'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- Book indexes
+CREATE INDEX idx_books_category_id ON books(category_id);
+CREATE INDEX idx_books_title ON books(title);
+CREATE INDEX idx_books_author ON books(author);
+CREATE INDEX idx_books_isbn ON books(isbn);
 
---- Book Copies
-INSERT INTO book_copies (book_copy_id, book_id, library_id, qr_code, status, shelf_location, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-1136505587'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-1-9317', 'AVAILABLE', 'S1R5', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-1136505587'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-1-4258', 'AVAILABLE', 'S2R6', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-3585650756'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-2-9689', 'AVAILABLE', 'S1R10', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-3585650756'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-2-1319', 'AVAILABLE', 'S1R6', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2801823908'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-3-1949', 'AVAILABLE', 'S2R10', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- Book copy indexes
+CREATE INDEX idx_book_copies_book_id ON book_copies(book_id);
+CREATE INDEX idx_book_copies_library_id ON book_copies(library_id);
+CREATE INDEX idx_book_copies_qr_code ON book_copies(qr_code);
+CREATE INDEX idx_book_copies_status ON book_copies(status);
 
---- Sample Accounts (Staff)
-INSERT INTO accounts (account_id, username, email, password_hash, full_name, phone, user_type, status, campus_id, library_id, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), 'admin1', 'admin1@library.edu.vn', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Admin User 1', '0123456789', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HN'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'librarian1', 'librarian1@library.edu.vn', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Librarian User 1', '0123456790', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HCM'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- Account indexes
+CREATE INDEX idx_accounts_email ON accounts(email);
+CREATE INDEX idx_accounts_employee_code ON accounts(employee_code);
+CREATE INDEX idx_accounts_campus_id ON accounts(campus_id);
+CREATE INDEX idx_accounts_role ON accounts(role);
 
---- Sample Staff
-INSERT INTO staffs (staff_id, account_id, library_id, employee_id, staff_role, department, position, is_active, can_manage_books, can_manage_users, can_manage_staff, can_view_reports, can_process_borrowings, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), (SELECT account_id FROM accounts WHERE username = 'admin1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'EMP001', 'ADMIN', 'IT Department', 'System Administrator', TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), (SELECT account_id FROM accounts WHERE username = 'librarian1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'EMP002', 'LIBRARIAN', 'Library Department', 'Senior Librarian', TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- Staff indexes
+CREATE INDEX idx_staff_library_id ON staff(library_id);
+CREATE INDEX idx_staff_account_id ON staff(account_id);
 
---- Sample Accounts (Readers)
-INSERT INTO accounts (account_id, username, email, password_hash, full_name, phone, user_type, status, campus_id, student_id, faculty, major, academic_year, max_borrow_limit, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), 'student1', 'student1@student.edu.vn', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Nguyễn Văn A', '0123456791', 'READER', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HN'), 'SV010001', 'Công nghệ thông tin', 'Kỹ thuật phần mềm', 2024, 5, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'student2', 'student2@student.edu.vn', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Trần Thị B', '0123456792', 'READER', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'SV020001', 'Kinh tế', 'Quản trị kinh doanh', 2024, 5, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- Borrowing indexes
+CREATE INDEX idx_borrowings_book_copy_id ON borrowings(book_copy_id);
+CREATE INDEX idx_borrowings_borrower_id ON borrowings(borrower_id);
+CREATE INDEX idx_borrowings_status ON borrowings(status);
+CREATE INDEX idx_borrowings_due_date ON borrowings(due_date);
 
---- Legacy Readers (for backward compatibility)
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, is_deleted, created_at, updated_at, registered_at, is_active) VALUES 
-(gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'James Lewis', 'SV030001', 'reader1@student.edu.vn', '564-641-7080x53100', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, TRUE),
-(gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Christina Smith', 'SV020002', 'reader2@student.edu.vn', '(327)193-7452', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, TRUE);
+-- =====================================================
+-- INSERT SAMPLE DATA
+-- =====================================================
 
---- Sample Borrowings
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), (SELECT book_copy_id FROM book_copies WHERE qr_code = 'QR-1-9317'), (SELECT reader_id FROM readers WHERE student_id = 'SV030001'), '2025-07-11 10:00:00', '2025-07-25', '2025-07-22 15:30:00', 'RETURNED', 0, NULL, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), (SELECT book_copy_id FROM book_copies WHERE qr_code = 'QR-2-9689'), (SELECT reader_id FROM readers WHERE student_id = 'SV020002'), '2025-07-15 14:00:00', '2025-07-29', NULL, 'BORROWED', 0, NULL, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- Insert campuses
+INSERT INTO campuses (campus_id, name, code, address) VALUES
+('550e8400-e29b-41d4-a716-446655440001', 'Chi nhánh Hà Nội', 'HN', '123 Đường Lê Lợi, Quận Hoàn Kiếm, Hà Nội'),
+('550e8400-e29b-41d4-a716-446655440002', 'Chi nhánh TP.HCM', 'HCM', '456 Đường Nguyễn Huệ, Quận 1, TP.HCM'),
+('550e8400-e29b-41d4-a716-446655440003', 'Chi nhánh Đà Nẵng', 'DN', '789 Đường Trần Phú, Quận Hải Châu, Đà Nẵng');
+
+-- Insert libraries
+INSERT INTO libraries (library_id, campus_id, name, code, address) VALUES
+('660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'Thư viện Hà Nội - Tầng 1', 'HN_LIB_1', 'Tầng 1, Tòa A, Chi nhánh Hà Nội'),
+('660e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440001', 'Thư viện Hà Nội - Tầng 2', 'HN_LIB_2', 'Tầng 2, Tòa A, Chi nhánh Hà Nội'),
+('660e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440002', 'Thư viện TP.HCM - Tầng 1', 'HCM_LIB_1', 'Tầng 1, Tòa B, Chi nhánh TP.HCM'),
+('660e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440002', 'Thư viện TP.HCM - Tầng 2', 'HCM_LIB_2', 'Tầng 2, Tòa B, Chi nhánh TP.HCM'),
+('660e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440003', 'Thư viện Đà Nẵng', 'DN_LIB_1', 'Tầng 1, Tòa C, Chi nhánh Đà Nẵng');
+
+-- Insert categories
+INSERT INTO categories (category_id, name, description, color) VALUES
+('770e8400-e29b-41d4-a716-446655440001', 'Văn học', 'Sách văn học Việt Nam và thế giới', '#5a735a'),
+('770e8400-e29b-41d4-a716-446655440002', 'Khoa học', 'Sách khoa học tự nhiên và xã hội', '#7a907a'),
+('770e8400-e29b-41d4-a716-446655440003', 'Công nghệ', 'Sách về công nghệ thông tin và kỹ thuật', '#a3b3a3'),
+('770e8400-e29b-41d4-a716-446655440004', 'Kinh tế', 'Sách về kinh tế, tài chính và quản lý', '#c7d0c7'),
+('770e8400-e29b-41d4-a716-446655440005', 'Lịch sử', 'Sách lịch sử Việt Nam và thế giới', '#e3e7e3');
+
+-- Insert sample accounts with hashed passwords (password: 12345678)
+INSERT INTO accounts (account_id, full_name, email, phone, department, position, employee_code, password_hash, role, campus_id) VALUES
+-- Admin accounts
+('880e8400-e29b-41d4-a716-446655440001', 'Nguyễn Văn Admin', 'admin@company.com', '0123456789', 'IT', 'System Administrator', 'EMP001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'ADMIN', '550e8400-e29b-41d4-a716-446655440001'),
+
+-- Librarian accounts
+('880e8400-e29b-41d4-a716-446655440002', 'Trần Thị Thủ thư HN', 'librarian.hn@company.com', '0123456790', 'Thư viện', 'Thủ thư', 'EMP002', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440003', 'Lê Văn Thủ thư HCM', 'librarian.hcm@company.com', '0123456791', 'Thư viện', 'Thủ thư', 'EMP003', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440002'),
+('880e8400-e29b-41d4-a716-446655440004', 'Phạm Thị Thủ thư DN', 'librarian.dn@company.com', '0123456792', 'Thư viện', 'Thủ thư', 'EMP004', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440003'),
+
+-- Reader accounts (employees)
+('880e8400-e29b-41d4-a716-446655440005', 'Hoàng Văn Nhân viên HN', 'employee.hn1@company.com', '0123456793', 'Marketing', 'Nhân viên Marketing', 'EMP005', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440006', 'Vũ Thị Nhân viên HN', 'employee.hn2@company.com', '0123456794', 'Sales', 'Nhân viên Sales', 'EMP006', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440007', 'Đỗ Văn Nhân viên HCM', 'employee.hcm1@company.com', '0123456795', 'IT', 'Lập trình viên', 'EMP007', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
+('880e8400-e29b-41d4-a716-446655440008', 'Ngô Thị Nhân viên HCM', 'employee.hcm2@company.com', '0123456796', 'HR', 'Nhân viên HR', 'EMP008', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
+('880e8400-e29b-41d4-a716-446655440009', 'Bùi Văn Nhân viên DN', 'employee.dn1@company.com', '0123456797', 'Finance', 'Kế toán', 'EMP009', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'READER', '550e8400-e29b-41d4-a716-446655440003');
+
+-- Insert staff records (linking accounts to libraries)
+INSERT INTO staff (staff_id, library_id, account_id, hire_date, salary) VALUES
+('990e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', '880e8400-e29b-41d4-a716-446655440002', '2023-01-15', 15000000),
+('990e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440003', '880e8400-e29b-41d4-a716-446655440003', '2023-02-20', 15000000),
+('990e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440005', '880e8400-e29b-41d4-a716-446655440004', '2023-03-10', 15000000);
+
+-- Insert sample books
+INSERT INTO books (book_id, category_id, title, author, publisher, year, isbn, description) VALUES
+('aa0e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440001', 'Truyện Kiều', 'Nguyễn Du', 'NXB Văn học', 1820, '978-604-0-00001-1', 'Tác phẩm văn học kinh điển của Việt Nam'),
+('aa0e8400-e29b-41d4-a716-446655440002', '770e8400-e29b-41d4-a716-446655440002', 'Vũ trụ trong lòng bàn tay', 'Neil deGrasse Tyson', 'NXB Khoa học', 2017, '978-604-0-00002-2', 'Khám phá vũ trụ qua góc nhìn khoa học'),
+('aa0e8400-e29b-41d4-a716-446655440003', '770e8400-e29b-41d4-a716-446655440003', 'Clean Code', 'Robert C. Martin', 'Prentice Hall', 2008, '978-604-0-00003-3', 'Hướng dẫn viết code sạch và dễ bảo trì'),
+('aa0e8400-e29b-41d4-a716-446655440004', '770e8400-e29b-41d4-a716-446655440004', 'Nghĩ giàu làm giàu', 'Napoleon Hill', 'NXB Tổng hợp', 1937, '978-604-0-00004-4', 'Sách về tư duy làm giàu'),
+('aa0e8400-e29b-41d4-a716-446655440005', '770e8400-e29b-41d4-a716-446655440005', 'Lịch sử Việt Nam', 'Trần Trọng Kim', 'NXB Văn hóa', 1920, '978-604-0-00005-5', 'Lịch sử Việt Nam từ thời cổ đại');
+
+-- Insert book copies with new QR code format: BK_ISBN_LIBRARYCODE_COPYNUMBER
+INSERT INTO book_copies (book_copy_id, book_id, library_id, qr_code, status, shelf_location) VALUES
+-- HN Library copies
+('bb0e8400-e29b-41d4-a716-446655440001', 'aa0e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', 'BK_9786040000011_HN_LIB_1_001', 'AVAILABLE', 'A1-R1-S1'),
+('bb0e8400-e29b-41d4-a716-446655440002', 'aa0e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440001', 'BK_9786040000022_HN_LIB_1_001', 'AVAILABLE', 'A2-R1-S1'),
+('bb0e8400-e29b-41d4-a716-446655440003', 'aa0e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440001', 'BK_9786040000033_HN_LIB_1_001', 'AVAILABLE', 'A3-R1-S1'),
+
+-- HCM Library copies
+('bb0e8400-e29b-41d4-a716-446655440004', 'aa0e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440003', 'BK_9786040000011_HCM_LIB_1_001', 'AVAILABLE', 'B1-R1-S1'),
+('bb0e8400-e29b-41d4-a716-446655440005', 'aa0e8400-e29b-41d4-a716-446655440004', '660e8400-e29b-41d4-a716-446655440003', 'BK_9786040000044_HCM_LIB_1_001', 'AVAILABLE', 'B2-R1-S1'),
+('bb0e8400-e29b-41d4-a716-446655440006', 'aa0e8400-e29b-41d4-a716-446655440005', '660e8400-e29b-41d4-a716-446655440003', 'BK_9786040000055_HCM_LIB_1_001', 'AVAILABLE', 'B3-R1-S1'),
+
+-- DN Library copies
+('bb0e8400-e29b-41d4-a716-446655440007', 'aa0e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440005', 'BK_9786040000022_DN_LIB_1_001', 'AVAILABLE', 'C1-R1-S1'),
+('bb0e8400-e29b-41d4-a716-446655440008', 'aa0e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440005', 'BK_9786040000033_DN_LIB_1_001', 'AVAILABLE', 'C2-R1-S1');
+
+-- Insert sample borrowings
+INSERT INTO borrowings (borrowing_id, book_copy_id, borrower_id, borrowed_date, due_date, status) VALUES
+('cc0e8400-e29b-41d4-a716-446655440001', 'bb0e8400-e29b-41d4-a716-446655440001', '880e8400-e29b-41d4-a716-446655440005', '2024-01-15 09:00:00+07', '2024-02-15 09:00:00+07', 'BORROWED'),
+('cc0e8400-e29b-41d4-a716-446655440002', 'bb0e8400-e29b-41d4-a716-446655440004', '880e8400-e29b-41d4-a716-446655440007', '2024-01-10 14:30:00+07', '2024-02-10 14:30:00+07', 'BORROWED'),
+('cc0e8400-e29b-41d4-a716-446655440003', 'bb0e8400-e29b-41d4-a716-446655440007', '880e8400-e29b-41d4-a716-446655440009', '2024-01-05 11:00:00+07', '2024-02-05 11:00:00+07', 'BORROWED');
+
+-- =====================================================
+-- COMMIT TRANSACTION
+-- =====================================================
+COMMIT;

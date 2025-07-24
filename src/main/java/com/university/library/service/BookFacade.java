@@ -44,20 +44,6 @@ public class BookFacade {
         return bookQueryService.searchBooks(params);
     }
 
-    /**
-     * Kiểm tra xem book có trong cache không
-     */
-    public boolean isBookCached(UUID bookId) {
-        return bookQueryService.isBookCached(bookId);
-    }
-
-    /**
-     * Lấy TTL của book trong cache
-     */
-    public Long getBookCacheTtl(UUID bookId) {
-        return bookQueryService.getBookCacheTtl(bookId);
-    }
-
     // ==================== COMMAND OPERATIONS ====================
 
     /**
@@ -92,48 +78,5 @@ public class BookFacade {
         bookCommandService.deleteBook(bookId);
     }
 
-
-
-    // ==================== CACHE MANAGEMENT ====================
-
-    /**
-     * Xóa cache cho nhiều books
-     */
-    public void clearBooksCache(List<UUID> bookIds) {
-        log.info("BookFacade: Clearing cache for {} books", bookIds.size());
-        bookQueryService.clearBooksCache(bookIds);
-    }
-
-    /**
-     * Xóa toàn bộ search cache
-     */
-    public void clearSearchCache() {
-        log.info("BookFacade: Clearing all search cache");
-        bookQueryService.clearSearchCache();
-    }
-
-    /**
-     * Xóa cache cho một tìm kiếm cụ thể
-     */
-    public void clearSearchCache(BookSearchParams params) {
-        log.info("BookFacade: Clearing search cache for specific params");
-        bookQueryService.clearSearchCache(params);
-    }
-
-    // ==================== HEALTH CHECK ====================
-
-    /**
-     * Health check cho Book service
-     */
-    public boolean isHealthy() {
-        try {
-            // Kiểm tra các dependencies
-            // Trong thực tế, bạn sẽ kiểm tra database, cache, kafka connections
-            return true;
-        } catch (Exception e) {
-            log.error("BookFacade health check failed: {}", e.getMessage());
-            return false;
-        }
-    }
 } 
 

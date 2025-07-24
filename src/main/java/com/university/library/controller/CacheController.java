@@ -116,7 +116,7 @@ public class CacheController {
         log.info("Clearing all caches");
         
         try {
-            String[] cacheNames = {"books", "categories", "libraries", "readers", "staff"};
+            String[] cacheNames = {"books", "categories", "libraries", "staff"};
             for (String cacheName : cacheNames) {
                 cacheService.clearAllCaches(cacheName);
             }

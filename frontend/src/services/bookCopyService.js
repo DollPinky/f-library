@@ -1,4 +1,4 @@
-import { api } from './api';
+import apiService from './api';
 
 export const bookCopyService = {
   // ==================== QUERY OPERATIONS ====================
@@ -20,48 +20,48 @@ export const bookCopyService = {
     if (params.sortBy) searchParams.append('sortBy', params.sortBy);
     if (params.sortDirection) searchParams.append('sortDirection', params.sortDirection);
 
-    const response = await api.get(`/api/v1/book-copies?${searchParams.toString()}`);
-    return response.data;
+    const response = await apiService.get(`/book-copies?${searchParams.toString()}`);
+    return response;
   },
 
   /**
    * Lấy book copy theo ID
    */
   async getBookCopyById(bookCopyId) {
-    const response = await api.get(`/api/v1/book-copies/${bookCopyId}`);
-    return response.data;
+    const response = await apiService.get(`/book-copies/${bookCopyId}`);
+    return response;
   },
 
   /**
    * Lấy book copies theo book ID
    */
   async getBookCopiesByBookId(bookId) {
-    const response = await api.get(`/api/v1/book-copies/book/${bookId}`);
-    return response.data;
+    const response = await apiService.get(`/book-copies/book/${bookId}`);
+    return response;
   },
 
   /**
    * Lấy available book copies theo book ID
    */
   async getAvailableBookCopiesByBookId(bookId) {
-    const response = await api.get(`/api/v1/book-copies/book/${bookId}/available`);
-    return response.data;
+    const response = await apiService.get(`/book-copies/book/${bookId}/available`);
+    return response;
   },
 
   /**
    * Lấy book copies theo library ID
    */
   async getBookCopiesByLibraryId(libraryId) {
-    const response = await api.get(`/api/v1/book-copies/library/${libraryId}`);
-    return response.data;
+    const response = await apiService.get(`/book-copies/library/${libraryId}`);
+    return response;
   },
 
   /**
    * Lấy book copy theo QR code
    */
   async getBookCopyByQrCode(qrCode) {
-    const response = await api.get(`/api/v1/book-copies/qr/${qrCode}`);
-    return response.data;
+    const response = await apiService.get(`/book-copies/qr/${qrCode}`);
+    return response;
   },
 
   // ==================== COMMAND OPERATIONS ====================
@@ -70,49 +70,39 @@ export const bookCopyService = {
    * Tạo book copy mới
    */
   async createBookCopy(bookCopyData) {
-    const response = await api.post('/api/v1/book-copies', bookCopyData);
-    return response.data;
+    const response = await apiService.post('/book-copies', bookCopyData);
+    return response;
   },
 
   /**
-   * Tạo nhiều book copies từ một book
+   * Tạo nhiều book copies từ book
    */
-  async createBookCopiesFromBook(bookCopyData) {
-    const response = await api.post('/api/v1/book-copies/from-book', bookCopyData);
-    return response.data;
+  async createBookCopiesFromBook(command) {
+    const response = await apiService.post('/book-copies/from-book', command);
+    return response;
   },
 
   /**
    * Cập nhật book copy
    */
   async updateBookCopy(bookCopyId, bookCopyData) {
-    const response = await api.put(`/api/v1/book-copies/${bookCopyId}`, bookCopyData);
-    return response.data;
+    const response = await apiService.put(`/book-copies/${bookCopyId}`, bookCopyData);
+    return response;
   },
 
   /**
    * Thay đổi trạng thái book copy
    */
   async changeBookCopyStatus(bookCopyId, status) {
-    const response = await api.put(`/api/v1/book-copies/${bookCopyId}/status?status=${status}`);
-    return response.data;
+    const response = await apiService.put(`/book-copies/${bookCopyId}/status?status=${status}`);
+    return response;
   },
 
   /**
    * Xóa book copy
    */
   async deleteBookCopy(bookCopyId) {
-    const response = await api.delete(`/api/v1/book-copies/${bookCopyId}`);
-    return response.data;
+    const response = await apiService.delete(`/book-copies/${bookCopyId}`);
+    return response;
   },
-
-  // ==================== HEALTH CHECK ====================
-
-  /**
-   * Kiểm tra sức khỏe service
-   */
-  async healthCheck() {
-    const response = await api.get('/api/v1/book-copies/health');
-    return response.data;
-  }
 }; 

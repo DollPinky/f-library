@@ -27,27 +27,13 @@ public class BookQueryService {
 
   private final BookRepository bookRepository;
 
-      public BookResponse getBookById(UUID bookId) {
-        log.info(BookConstants.LOG_GETTING_BOOK, bookId);
-        
-        // TEMPORARILY DISABLE CACHE
-        // String cacheKey = BookConstants.CACHE_KEY_PREFIX_BOOK + bookId;
-        // Optional<BookResponse> cachedResult = Optional.empty();
-        // if (cachedResult.isPresent()) {
-        //     log.debug(BookConstants.LOG_CACHE_HIT, bookId);
-        //     return cachedResult.get();
-        // }
-        // log.debug(BookConstants.LOG_CACHE_MISS, bookId);
-        
-        BookResponse result = performGetBookById(bookId);
-        
-        // TEMPORARILY DISABLE CACHE
-        // Duration localTtl = Duration.ofMinutes(BookConstants.CACHE_TTL_LOCAL);
-        // Duration distributedTtl = Duration.ofMinutes(BookConstants.CACHE_TTL_BOOK_DETAIL);
-        // // CACHE DISABLED;
-        
-        return result;
-    }
+  public BookResponse getBookById(UUID bookId) {
+    log.info(BookConstants.LOG_GETTING_BOOK, bookId);
+    
+    BookResponse result = performGetBookById(bookId);
+    
+    return result;
+  }
   
   private BookResponse performGetBookById(UUID bookId) {
     Book book = bookRepository.findById(bookId)
@@ -62,7 +48,6 @@ public class BookQueryService {
   public PagedResponse<BookResponse> searchBooks(BookSearchParams params) {
     log.info(BookConstants.LOG_SEARCHING_BOOKS, params);
     
-    // DISABLE CACHE - DIRECT DATABASE QUERY
     return performSearch(params);
   }
   
@@ -73,8 +58,10 @@ public class BookQueryService {
         Sort.by(BookConstants.DEFAULT_SORT_FIELD).descending()
     );
 
-    String keyword = params.getQuery() != null ? params.getQuery() : "";
-    Page<Book> bookPage = bookRepository.searchByKeyword(keyword, pageable);
+    // Create specification for filtering
+    Specification<Book> spec = createSearchSpecification(params);
+    
+    Page<Book> bookPage = bookRepository.findAll(spec, pageable);
     
     // Safe stream processing with null check
     List<BookResponse> bookResponses = bookPage.getContent() != null ? 
@@ -105,62 +92,31 @@ public class BookQueryService {
         bookPage.getTotalElements()
     );
   }
-  
-  private String generateCacheKey(BookSearchParams params) {
-    StringBuilder keyBuilder = new StringBuilder();
-    keyBuilder.append(BookConstants.CACHE_KEY_PREFIX_SEARCH);
-    keyBuilder.append(BookConstants.CACHE_KEY_PATTERN_PAGE).append(params.getPage() != null ? params.getPage() : BookConstants.DEFAULT_PAGE_NUMBER);
-    keyBuilder.append(BookConstants.CACHE_KEY_SEPARATOR).append(BookConstants.CACHE_KEY_PATTERN_SIZE).append(params.getSize() != null ? params.getSize() : BookConstants.DEFAULT_PAGE_SIZE);
-    keyBuilder.append(BookConstants.CACHE_KEY_SEPARATOR).append(BookConstants.CACHE_KEY_PATTERN_QUERY).append(params.getQuery() != null ? params.getQuery() : "");
-    return keyBuilder.toString();
-  }
-  
+
   /**
-   * Xóa cache cho tìm kiếm sách
+   * Create specification for search and filtering
    */
-  public void clearSearchCache() {
-    log.info(BookConstants.SUCCESS_CACHE_CLEARED);
-    // DISABLE CACHE - NO ACTION NEEDED
-  }
-  
-  /**
-   * Xóa cache cho một tìm kiếm cụ thể
-   */
-  public void clearSearchCache(BookSearchParams params) {
-    log.info(BookConstants.LOG_CLEARING_SEARCH_CACHE, params);
-    // DISABLE CACHE - NO ACTION NEEDED
-  }
-  
-  /**
-   * Xóa cache cho một book cụ thể
-   */
-  public void clearBookCache(UUID bookId) {
-    log.info(BookConstants.LOG_CACHE_EVICTED, bookId);
-    // DISABLE CACHE - NO ACTION NEEDED
-  }
-  
-  /**
-   * Xóa cache cho nhiều book
-   */
-  public void clearBooksCache(List<UUID> bookIds) {
-    log.info(BookConstants.LOG_CLEARING_CACHE, bookIds.size());
-    // DISABLE CACHE - NO ACTION NEEDED
-  }
-  
-  /**
-   * Kiểm tra xem book có trong cache không
-   */
-  public boolean isBookCached(UUID bookId) {
-    // DISABLE CACHE - ALWAYS RETURN FALSE
-    return false;
-  }
-  
-  /**
-   * Lấy TTL của book trong cache
-   */
-  public Long getBookCacheTtl(UUID bookId) {
-    // DISABLE CACHE - ALWAYS RETURN NULL
-    return null;
+  private Specification<Book> createSearchSpecification(BookSearchParams params) {
+    return (root, query, criteriaBuilder) -> {
+      var predicates = new ArrayList<jakarta.persistence.criteria.Predicate>();
+      
+      // Handle keyword search
+      if (params.getQuery() != null && !params.getQuery().trim().isEmpty()) {
+        String searchTerm = "%" + params.getQuery().toLowerCase() + "%";
+        predicates.add(criteriaBuilder.or(
+          criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), searchTerm),
+          criteriaBuilder.like(criteriaBuilder.lower(root.get("author")), searchTerm),
+          criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchTerm),
+          criteriaBuilder.like(criteriaBuilder.lower(root.get("isbn")), searchTerm)
+        ));
+      }
+      
+      if (params.getCategoryId() != null) {
+        predicates.add(criteriaBuilder.equal(root.get("category").get("categoryId"), params.getCategoryId()));
+      }
+      
+      return criteriaBuilder.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+    };
   }
 }
 

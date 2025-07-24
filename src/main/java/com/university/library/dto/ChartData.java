@@ -67,7 +67,6 @@ public class ChartData {
     public static class CampusStats {
         private String campusName;
         private long totalBooks;
-        private long totalReaders;
         private long activeBorrowings;
         private long overdueBooks;
     }
@@ -79,7 +78,6 @@ public class ChartData {
     public static class MonthlyStats {
         private String month;
         private long newBooks;
-        private long newReaders;
         private long totalBorrowings;
         private long totalReturns;
     }

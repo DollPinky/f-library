@@ -6,36 +6,6 @@ package com.university.library.constants;
  */
 public final class BookConstants {
     
-    // Cache Constants
-    public static final String CACHE_NAME = "books";
-    public static final String CACHE_KEY_PREFIX_BOOK = "book:";
-    public static final String CACHE_KEY_PREFIX_SEARCH = "search:";
-    public static final String CACHE_KEY_PREFIX_CATEGORY = "category:";
-    public static final String CACHE_KEY_PREFIX_AUTHOR = "author:";
-    public static final String CACHE_KEY_PREFIX_PUBLISHER = "publisher:";
-    
-    // Kafka Topics
-    public static final String TOPIC_BOOK_CREATED = "book.created";
-    public static final String TOPIC_BOOK_UPDATED = "book.updated";
-    public static final String TOPIC_BOOK_DELETED = "book.deleted";
-    public static final String TOPIC_BOOK_BORROWED = "book.borrowed";
-    public static final String TOPIC_BOOK_RETURNED = "book.returned";
-    public static final String TOPIC_BOOK_CACHE_EVICT = "book.cache.evict";
-    
-    // Event Types
-    public static final String EVENT_BOOK_CREATED = "BOOK_CREATED";
-    public static final String EVENT_BOOK_UPDATED = "BOOK_UPDATED";
-    public static final String EVENT_BOOK_DELETED = "BOOK_DELETED";
-    public static final String EVENT_BOOK_BORROWED = "BOOK_BORROWED";
-    public static final String EVENT_BOOK_RETURNED = "BOOK_RETURNED";
-    public static final String EVENT_CACHE_EVICT = "CACHE_EVICT";
-    
-    // Cache TTL (in minutes)
-    public static final int CACHE_TTL_BOOK_DETAIL = 15;
-    public static final int CACHE_TTL_BOOK_SEARCH = 10;
-    public static final int CACHE_TTL_BOOK_LIST = 20;
-    public static final int CACHE_TTL_LOCAL = 5;
-    
     // Error Messages
     public static final String ERROR_BOOK_NOT_FOUND = "Book not found with ID: ";
     public static final String ERROR_BOOK_ALREADY_EXISTS = "Book already exists with ISBN: ";

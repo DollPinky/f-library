@@ -34,11 +34,11 @@ public class LibraryController {
     public ResponseEntity<StandardResponse<LibraryResponse>> getLibraryById(
             @Parameter(description = "Library ID") @PathVariable UUID libraryId) {
         try {
-            log.info(LibraryConstants.API_GET_LIBRARY, libraryId);
+            log.info("Get library by ID: {}", libraryId);
             LibraryResponse response = libraryFacade.getLibraryById(libraryId);
-            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_LIBRARY_RETRIEVED, response));
+            return ResponseEntity.ok(StandardResponse.success("Lấy thư viện thành công", response));
         } catch (Exception e) {
-            log.error(LibraryConstants.ERROR_LOG_GET_LIBRARY, libraryId, e.getMessage());
+            log.error("Error getting library by ID: {} - {}", libraryId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(StandardResponse.error(LibraryConstants.ERROR_LIBRARY_NOT_FOUND + libraryId));
         }
@@ -49,11 +49,11 @@ public class LibraryController {
     public ResponseEntity<StandardResponse<PagedResponse<LibraryResponse>>> searchLibraries(
             @Parameter(description = "Search parameters") @ModelAttribute LibrarySearchParams params) {
         try {
-            log.info(LibraryConstants.API_SEARCH_LIBRARIES, params);
+            log.info("Search libraries with params: {}", params);
             PagedResponse<LibraryResponse> response = libraryFacade.searchLibraries(params);
-            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_LIBRARIES_RETRIEVED, response));
+            return ResponseEntity.ok(StandardResponse.success("Lấy danh sách thư viện thành công", response));
         } catch (Exception e) {
-            log.error(LibraryConstants.ERROR_LOG_SEARCH_LIBRARIES, e.getMessage());
+            log.error("Error searching libraries: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(StandardResponse.error(LibraryConstants.ERROR_SEARCH_FAILED));
         }
@@ -149,137 +149,6 @@ public class LibraryController {
         }
     }
     
-    @DeleteMapping("/{libraryId}/cache")
-    @Operation(summary = "Clear library cache", description = "Clear cache for a specific library")
-    public ResponseEntity<StandardResponse<LibraryCacheStatus>> clearLibraryCache(
-            @Parameter(description = "Library ID") @PathVariable UUID libraryId) {
-        try {
-            log.info(LibraryConstants.API_CLEAR_LIBRARY_CACHE, libraryId);
-            boolean wasCached = libraryFacade.isLibraryCached(libraryId);
-            libraryFacade.clearLibraryCache(libraryId);
-            
-            LibraryCacheStatus status = new LibraryCacheStatus(libraryId, wasCached, false);
-            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_CACHE_CLEARED, status));
-        } catch (Exception e) {
-            log.error(LibraryConstants.ERROR_LOG_CLEAR_CACHE, libraryId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(StandardResponse.error(LibraryConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-    
-    @DeleteMapping("/cache/search")
-    @Operation(summary = "Clear search cache", description = "Clear all library search cache")
-    public ResponseEntity<StandardResponse<Void>> clearSearchCache() {
-        try {
-            log.info(LibraryConstants.API_CLEAR_SEARCH_CACHE);
-            libraryFacade.clearSearchCache();
-            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_CACHE_CLEARED, null));
-        } catch (Exception e) {
-            log.error(LibraryConstants.ERROR_LOG_CLEAR_SEARCH_CACHE, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(StandardResponse.error(LibraryConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-    
-    @DeleteMapping("/cache")
-    @Operation(summary = "Clear all cache", description = "Clear all library cache")
-    public ResponseEntity<StandardResponse<Void>> clearAllCache() {
-        try {
-            log.info(LibraryConstants.API_CLEAR_ALL_CACHE);
-            libraryFacade.clearAllCache();
-            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_CACHE_CLEARED, null));
-        } catch (Exception e) {
-            log.error(LibraryConstants.ERROR_LOG_CLEAR_ALL_CACHE, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(StandardResponse.error(LibraryConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-    
-    @PostMapping("/cache/bulk-clear")
-    @Operation(summary = "Bulk clear cache", description = "Clear cache for multiple libraries")
-    public ResponseEntity<StandardResponse<Void>> bulkClearCache(
-            @Parameter(description = "List of library IDs") @RequestBody List<UUID> libraryIds) {
-        try {
-            log.info(LibraryConstants.API_BULK_CLEAR_CACHE, libraryIds.size());
-            libraryFacade.clearLibrariesCache(libraryIds);
-            return ResponseEntity.ok(StandardResponse.success(String.format(LibraryConstants.SUCCESS_CACHE_BULK_CLEARED, libraryIds.size()), null));
-        } catch (Exception e) {
-            log.error(LibraryConstants.ERROR_LOG_BULK_CLEAR_CACHE, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(StandardResponse.error(LibraryConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-    
-    @GetMapping("/{libraryId}/cache/status")
-    @Operation(summary = "Get cache status", description = "Get cache status for a specific library")
-    public ResponseEntity<StandardResponse<LibraryCacheStatus>> getCacheStatus(
-            @Parameter(description = "Library ID") @PathVariable UUID libraryId) {
-        try {
-            log.info(LibraryConstants.API_CACHE_STATUS, libraryId);
-            boolean isCached = libraryFacade.isLibraryCached(libraryId);
-            Long ttl = libraryFacade.getLibraryCacheTtl(libraryId);
-            
-            LibraryCacheStatus status = new LibraryCacheStatus(libraryId, isCached, ttl);
-            return ResponseEntity.ok(StandardResponse.success(LibraryConstants.SUCCESS_CACHE_STATUS_RETRIEVED, status));
-        } catch (Exception e) {
-            log.error(LibraryConstants.ERROR_LOG_CACHE_STATUS, libraryId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(StandardResponse.error(LibraryConstants.ERROR_CACHE_STATUS_FAILED));
-        }
-    }
-    
-    @GetMapping("/health")
-    @Operation(summary = "Health check", description = "Check the health of the library service")
-    public ResponseEntity<StandardResponse<HealthStatus>> healthCheck() {
-        try {
-            log.info(LibraryConstants.API_HEALTH_CHECK);
-            boolean isHealthy = libraryFacade.isHealthy();
-            
-            HealthStatus status = new HealthStatus(isHealthy, LibraryConstants.SERVICE_NAME);
-            String message = isHealthy ? LibraryConstants.SUCCESS_SERVICE_HEALTHY : LibraryConstants.ERROR_SERVICE_UNHEALTHY;
-            
-            return ResponseEntity.ok(StandardResponse.success(message, status));
-        } catch (Exception e) {
-            log.error(LibraryConstants.ERROR_LOG_HEALTH_CHECK, e.getMessage());
-            HealthStatus status = new HealthStatus(false, LibraryConstants.SERVICE_NAME);
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(StandardResponse.error(LibraryConstants.ERROR_SERVICE_UNHEALTHY, status));
-        }
-    }
-    
-    public static class LibraryCacheStatus {
-        private final UUID libraryId;
-        private final boolean isCached;
-        private final Long ttl;
-        
-        public LibraryCacheStatus(UUID libraryId, boolean isCached, Long ttl) {
-            this.libraryId = libraryId;
-            this.isCached = isCached;
-            this.ttl = ttl;
-        }
-        
-        public LibraryCacheStatus(UUID libraryId, boolean isCached, boolean wasCached) {
-            this.libraryId = libraryId;
-            this.isCached = isCached;
-            this.ttl = null;
-        }
-        
-        public UUID getLibraryId() { return libraryId; }
-        public boolean isCached() { return isCached; }
-        public Long getTtl() { return ttl; }
-    }
-    
-    public static class HealthStatus {
-        private final boolean healthy;
-        private final String serviceName;
-        
-        public HealthStatus(boolean healthy, String serviceName) {
-            this.healthy = healthy;
-            this.serviceName = serviceName;
-        }
-        
-        public boolean isHealthy() { return healthy; }
-        public String getServiceName() { return serviceName; }
-    }
+
 } 
 

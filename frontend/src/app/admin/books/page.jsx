@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBooks } from '../../../hooks/useBooksApi';
 import SearchCard from '../../../components/ui/SearchCard';
@@ -28,6 +28,7 @@ import {
 
 const AdminBooksPage = () => {
   const router = useRouter();
+  const urlParamsProcessed = useRef(false);
   
   const {
     books,
@@ -41,6 +42,11 @@ const AdminBooksPage = () => {
     updateBook
   } = useBooks();
 
+  // Memoize updateFilters to prevent infinite loop
+  const memoizedUpdateFilters = useCallback((filters) => {
+    updateFilters(filters);
+  }, [updateFilters]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -51,12 +57,7 @@ const AdminBooksPage = () => {
             sortBy: 'name', 
             sortDirection: 'ASC' 
           }),
-          libraryService.getLibraries({ 
-            page: 0, 
-            size: 100, 
-            sortBy: 'name', 
-            sortDirection: 'ASC' 
-          })
+          libraryService.getAllLibraries()
         ]);
 
         if (categoriesResponse.success) {
@@ -72,6 +73,38 @@ const AdminBooksPage = () => {
     };
     fetchData();
   }, []);
+
+  // Handle URL parameters for category filtering
+  useEffect(() => {
+    if (urlParamsProcessed.current) return; // Prevent re-processing
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryId = urlParams.get('categoryId');
+    const categoryName = urlParams.get('categoryName');
+    
+    if (categoryId) {
+      setFilters(prev => ({
+        ...prev,
+        category: categoryId
+      }));
+      
+      // Update search term to show category name
+      if (categoryName) {
+        setFilters(prev => ({
+          ...prev,
+          search: `Danh mục: ${decodeURIComponent(categoryName)}`
+        }));
+      }
+      
+      // Apply filters
+      memoizedUpdateFilters({
+        categoryId: categoryId,
+        search: categoryName ? `Danh mục: ${decodeURIComponent(categoryName)}` : ''
+      });
+      
+      urlParamsProcessed.current = true; // Mark as processed
+    }
+  }, [memoizedUpdateFilters]);
 
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [selectedBook, setSelectedBook] = useState(null);

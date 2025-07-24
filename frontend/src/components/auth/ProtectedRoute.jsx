@@ -2,10 +2,10 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAccountAuth } from '../../contexts/AccountAuthContext';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
-  const { isAuthenticated, loading, user, hasRole } = useAuth();
+  const { isAuthenticated, loading, user } = useAccountAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -14,17 +14,12 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
         router.push('/login');
         return;
       }
-
-      if (requiredRole && !hasRole(requiredRole)) {
-        if (hasRole('STAFF')) {
-          router.push('/admin');
-        } else {
-          router.push('/');
-        }
+      if (requiredRole && user?.role !== requiredRole) {
+        router.push('/');
         return;
       }
     }
-  }, [isAuthenticated, loading, requiredRole, hasRole, router]);
+  }, [isAuthenticated, loading, requiredRole, user, router]);
 
   if (loading) {
     return (
@@ -41,8 +36,8 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
     return null;
   }
 
-  if (requiredRole && !hasRole(requiredRole)) {
-    return null; 
+  if (requiredRole && user?.role !== requiredRole) {
+    return null;
   }
 
   return children;

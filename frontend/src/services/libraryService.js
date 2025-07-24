@@ -1,6 +1,6 @@
-import { api } from './api';
+import apiService from './api';
 
-export const libraryService = {
+const libraryService = {
   // ==================== QUERY OPERATIONS ====================
 
   /**
@@ -16,24 +16,32 @@ export const libraryService = {
     if (params.sortBy) searchParams.append('sortBy', params.sortBy);
     if (params.sortDirection) searchParams.append('sortDirection', params.sortDirection);
 
-    const response = await api.get(`/api/v1/libraries?${searchParams.toString()}`);
-    return response.data;
+    const response = await apiService.get(`/libraries?${searchParams.toString()}`);
+    return response;
   },
 
   /**
    * Lấy library theo ID
    */
   async getLibraryById(libraryId) {
-    const response = await api.get(`/api/v1/libraries/${libraryId}`);
-    return response.data;
+    const response = await apiService.get(`/libraries/${libraryId}`);
+    return response;
   },
 
   /**
    * Lấy libraries theo campus ID
    */
   async getLibrariesByCampusId(campusId) {
-    const response = await api.get(`/api/v1/libraries/campus/${campusId}`);
-    return response.data;
+    const response = await apiService.get(`/libraries/campus/${campusId}`);
+    return response;
+  },
+
+  /**
+   * Lấy tất cả libraries
+   */
+  async getAllLibraries() {
+    const response = await apiService.get('/libraries/all');
+    return response;
   },
 
   // ==================== COMMAND OPERATIONS ====================
@@ -42,33 +50,26 @@ export const libraryService = {
    * Tạo library mới
    */
   async createLibrary(libraryData) {
-    const response = await api.post('/api/v1/libraries', libraryData);
-    return response.data;
+    const response = await apiService.post('/libraries', libraryData);
+    return response;
   },
 
   /**
    * Cập nhật library
    */
   async updateLibrary(libraryId, libraryData) {
-    const response = await api.put(`/api/v1/libraries/${libraryId}`, libraryData);
-    return response.data;
+    const response = await apiService.put(`/libraries/${libraryId}`, libraryData);
+    return response;
   },
 
   /**
    * Xóa library
    */
   async deleteLibrary(libraryId) {
-    const response = await api.delete(`/api/v1/libraries/${libraryId}`);
-    return response.data;
+    const response = await apiService.delete(`/libraries/${libraryId}`);
+    return response;
   },
+};
 
-  // ==================== HEALTH CHECK ====================
-
-  /**
-   * Kiểm tra sức khỏe service
-   */
-  async healthCheck() {
-    const response = await api.get('/api/v1/libraries/health');
-    return response.data;
-  }
-}; 
+export default libraryService;
+export { libraryService }; 

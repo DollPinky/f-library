@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -17,13 +18,13 @@ public class BorrowingSearchParams {
     
     private String status;
     
-    private Long readerId;
+    private UUID accountId;
     
-    private Long bookId;
+    private UUID bookId;
     
-    private Long libraryId;
+    private UUID libraryId;
     
-    private Long campusId;
+    private UUID campusId;
     
     private LocalDate startDate;
     private LocalDate endDate;

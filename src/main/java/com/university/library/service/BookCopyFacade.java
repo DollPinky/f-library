@@ -76,21 +76,6 @@ public class BookCopyFacade {
         log.info("BookCopyFacade: Getting book copy by QR code: {}", qrCode);
         return bookCopyQueryService.getBookCopyByQrCode(qrCode);
     }
-
-    /**
-     * Kiểm tra xem book copy có trong cache không
-     */
-    public boolean isBookCopyCached(UUID bookCopyId) {
-        return bookCopyQueryService.isBookCopyCached(bookCopyId);
-    }
-
-    /**
-     * Lấy TTL của book copy trong cache
-     */
-    public Long getBookCopyCacheTtl(UUID bookCopyId) {
-        return bookCopyQueryService.getBookCopyCacheTtl(bookCopyId);
-    }
-
     // ==================== COMMAND OPERATIONS ====================
 
     /**
@@ -133,64 +118,5 @@ public class BookCopyFacade {
         return bookCopyCommandService.changeBookCopyStatus(bookCopyId, newStatus);
     }
 
-    // ==================== CACHE MANAGEMENT ====================
-
-    /**
-     * Xóa cache cho một book copy cụ thể
-     */
-    public void clearBookCopyCache(UUID bookCopyId) {
-        log.info("BookCopyFacade: Clearing cache for book copy: {}", bookCopyId);
-        bookCopyQueryService.clearBookCopyCache(bookCopyId);
-        bookCopyCommandService.clearBookCopyCache(bookCopyId);
-    }
-
-    /**
-     * Xóa cache cho nhiều book copies
-     */
-    public void clearBookCopiesCache(List<UUID> bookCopyIds) {
-        log.info("BookCopyFacade: Clearing cache for {} book copies", bookCopyIds.size());
-        bookCopyQueryService.clearBookCopiesCache(bookCopyIds);
-        bookCopyCommandService.clearBookCopiesCache(bookCopyIds);
-    }
-
-    /**
-     * Xóa toàn bộ search cache
-     */
-    public void clearSearchCache() {
-        log.info("BookCopyFacade: Clearing all search cache");
-        bookCopyQueryService.clearSearchCache();
-    }
-
-    /**
-     * Xóa cache cho một tìm kiếm cụ thể
-     */
-    public void clearSearchCache(BookCopySearchParams params) {
-        log.info("BookCopyFacade: Clearing search cache for specific params");
-        bookCopyQueryService.clearSearchCache(params);
-    }
-
-    /**
-     * Xóa toàn bộ cache
-     */
-    public void clearAllCache() {
-        log.info("BookCopyFacade: Clearing all book copy cache");
-        // CACHE DISABLED;
-    }
-
-    // ==================== HEALTH CHECK ====================
-
-    /**
-     * Health check cho BookCopy service
-     */
-    public boolean isHealthy() {
-        try {
-            // Kiểm tra các dependencies
-            // Trong thực tế, bạn sẽ kiểm tra database, cache, kafka connections
-            return true;
-        } catch (Exception e) {
-            log.error("BookCopyFacade health check failed: {}", e.getMessage());
-            return false;
-        }
-    }
 } 
 

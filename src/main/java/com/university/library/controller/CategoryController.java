@@ -41,9 +41,9 @@ public class CategoryController {
         
         try {
             CategoryResponse category = categoryFacade.getCategoryById(categoryId);
-            return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CATEGORY_RETRIEVED, category));
+            return ResponseEntity.ok(StandardResponse.success("Lấy danh mục thành công", category));
         } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_GET_CATEGORY, categoryId, e.getMessage());
+            log.error("Error getting category by ID: {} - {}", categoryId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(StandardResponse.error(CategoryConstants.ERROR_CATEGORY_NOT_FOUND + categoryId));
         }
@@ -59,9 +59,9 @@ public class CategoryController {
         
         try {
             PagedResponse<CategoryResponse> result = categoryFacade.searchCategories(params);
-            return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CATEGORIES_RETRIEVED, result));
+            return ResponseEntity.ok(StandardResponse.success("Lấy danh sách danh mục thành công", result));
         } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_SEARCH_CATEGORIES, e.getMessage());
+            log.error("Error searching categories: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(StandardResponse.error(CategoryConstants.ERROR_SEARCH_FAILED));
         }
@@ -112,17 +112,13 @@ public class CategoryController {
         log.info(CategoryConstants.API_CREATE_CATEGORY, command.getName());
         
         try {
-            CategoryResponse createdCategory = categoryFacade.createCategory(command);
+            CategoryResponse created = categoryFacade.createCategory(command);
             return ResponseEntity.status(HttpStatus.CREATED)
-                .body(StandardResponse.success(CategoryConstants.SUCCESS_CATEGORY_CREATED, createdCategory));
-        } catch (RuntimeException e) {
-            log.error(CategoryConstants.ERROR_LOG_CREATE_CATEGORY, e.getMessage());
+                .body(StandardResponse.success(CategoryConstants.SUCCESS_CATEGORY_CREATED, created));
+        } catch (Exception e) {
+            log.error("Error creating category: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(StandardResponse.error(e.getMessage()));
-        } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_UNEXPECTED_CREATE, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(CategoryConstants.ERROR_INVALID_CATEGORY_DATA));
         }
     }
 
@@ -137,16 +133,12 @@ public class CategoryController {
         log.info(CategoryConstants.API_UPDATE_CATEGORY, categoryId);
         
         try {
-            CategoryResponse updatedCategory = categoryFacade.updateCategory(categoryId, command);
-            return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CATEGORY_UPDATED, updatedCategory));
-        } catch (RuntimeException e) {
-            log.error(CategoryConstants.ERROR_LOG_UPDATE_CATEGORY, categoryId, e.getMessage());
+            CategoryResponse updated = categoryFacade.updateCategory(categoryId, command);
+            return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CATEGORY_UPDATED, updated));
+        } catch (Exception e) {
+            log.error("Error updating category: {} - {}", categoryId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(StandardResponse.error(e.getMessage()));
-        } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_UNEXPECTED_UPDATE, categoryId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(CategoryConstants.ERROR_INVALID_CATEGORY_DATA));
         }
     }
 
@@ -161,151 +153,12 @@ public class CategoryController {
         try {
             categoryFacade.deleteCategory(categoryId);
             return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CATEGORY_DELETED, null));
-        } catch (RuntimeException e) {
-            log.error(CategoryConstants.ERROR_LOG_DELETE_CATEGORY, categoryId, e.getMessage());
+        } catch (Exception e) {
+            log.error("Error deleting category: {} - {}", categoryId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(StandardResponse.error(e.getMessage()));
-        } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_UNEXPECTED_DELETE, categoryId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(CategoryConstants.ERROR_DELETE_FAILED));
         }
     }
-
-    // ==================== CACHE MANAGEMENT ENDPOINTS ====================
-
-    @DeleteMapping("/{categoryId}/cache")
-    @Operation(summary = "Clear category cache", description = "Clear cache for a specific category")
-    public ResponseEntity<StandardResponse<String>> clearCategoryCache(
-            @Parameter(description = "Category ID", required = true)
-            @PathVariable UUID categoryId) {
-        
-        log.info(CategoryConstants.API_CLEAR_CATEGORY_CACHE, categoryId);
-        
-        try {
-            categoryFacade.clearCategoryCache(categoryId);
-            return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CACHE_CLEARED, null));
-        } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_CLEAR_CACHE, categoryId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(CategoryConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-
-    @DeleteMapping("/cache/search")
-    @Operation(summary = "Clear search cache", description = "Clear all search cache")
-    public ResponseEntity<StandardResponse<String>> clearSearchCache() {
-        
-        log.info(CategoryConstants.API_CLEAR_SEARCH_CACHE);
-        
-        try {
-            categoryFacade.clearSearchCache();
-            return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CACHE_CLEARED, null));
-        } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_CLEAR_SEARCH_CACHE, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(CategoryConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-
-    @DeleteMapping("/cache")
-    @Operation(summary = "Clear all cache", description = "Clear all category-related cache")
-    public ResponseEntity<StandardResponse<String>> clearAllCache() {
-        
-        log.info(CategoryConstants.API_CLEAR_ALL_CACHE);
-        
-        try {
-            categoryFacade.clearAllCache();
-            return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CACHE_CLEARED, null));
-        } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_CLEAR_ALL_CACHE, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(CategoryConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-
-    @PostMapping("/cache/bulk-clear")
-    @Operation(summary = "Clear multiple categories cache", description = "Clear cache for multiple categories")
-    public ResponseEntity<StandardResponse<String>> clearCategoriesCache(
-            @Parameter(description = "List of category IDs", required = true)
-            @RequestBody List<UUID> categoryIds) {
-        
-        log.info(CategoryConstants.API_BULK_CLEAR_CACHE, categoryIds.size());
-        
-        try {
-            categoryFacade.clearCategoriesCache(categoryIds);
-            return ResponseEntity.ok(StandardResponse.success(String.format(CategoryConstants.SUCCESS_CACHE_BULK_CLEARED, categoryIds.size()), null));
-        } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_BULK_CLEAR_CACHE, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(CategoryConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-
-    // ==================== CACHE INFORMATION ENDPOINTS ====================
-
-    @GetMapping("/{categoryId}/cache/status")
-    @Operation(summary = "Get category cache status", description = "Check if a category is cached and get TTL")
-    public ResponseEntity<StandardResponse<CategoryCacheStatus>> getCategoryCacheStatus(
-            @Parameter(description = "Category ID", required = true)
-            @PathVariable UUID categoryId) {
-        
-        log.info(CategoryConstants.API_CACHE_STATUS, categoryId);
-        
-        try {
-            boolean isCached = categoryFacade.isCategoryCached(categoryId);
-            Long ttl = categoryFacade.getCategoryCacheTtl(categoryId);
-            
-            CategoryCacheStatus status = new CategoryCacheStatus(categoryId, isCached, ttl);
-            return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CACHE_STATUS_RETRIEVED, status));
-        } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_CACHE_STATUS, categoryId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(CategoryConstants.ERROR_CACHE_STATUS_FAILED));
-        }
-    }
-
-    @GetMapping("/cache/statistics")
-    @Operation(summary = "Get cache statistics", description = "Get cache performance statistics")
-    public ResponseEntity<StandardResponse<CategoryFacade.CacheStatistics>> getCacheStatistics() {
-        
-        log.info(CategoryConstants.API_CACHE_STATS);
-        
-        try {
-            CategoryFacade.CacheStatistics stats = categoryFacade.getCacheStatistics();
-            return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CACHE_STATS_RETRIEVED, stats));
-        } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_CACHE_STATS, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(CategoryConstants.ERROR_CACHE_STATS_FAILED));
-        }
-    }
-
-    // ==================== HEALTH CHECK ENDPOINT ====================
-
-    @GetMapping("/health")
-    @Operation(summary = "Health check", description = "Check the health status of the category service")
-    public ResponseEntity<StandardResponse<HealthStatus>> healthCheck() {
-        
-        log.info(CategoryConstants.API_HEALTH_CHECK);
-        
-        try {
-            boolean isHealthy = categoryFacade.isHealthy();
-            HealthStatus status = new HealthStatus(CategoryConstants.SERVICE_NAME, isHealthy, System.currentTimeMillis());
-            
-            if (isHealthy) {
-                return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_SERVICE_HEALTHY, status));
-            } else {
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(StandardResponse.error(CategoryConstants.ERROR_SERVICE_UNHEALTHY));
-            }
-        } catch (Exception e) {
-            log.error(CategoryConstants.ERROR_LOG_HEALTH_CHECK, e.getMessage());
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(StandardResponse.error(CategoryConstants.ERROR_HEALTH_CHECK_FAILED));
-        }
-    }
-
     // ==================== INNER CLASSES ====================
 
     public static class CategoryCacheStatus {

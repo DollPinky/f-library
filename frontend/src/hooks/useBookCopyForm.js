@@ -1,12 +1,9 @@
 import { useState, useCallback } from 'react';
-import { bookService } from '../services/bookService';
+import bookService from '../services/bookService';
 import { libraryService } from '../services/libraryService';
 
 export const useBookCopyForm = () => {
-  const [books, setBooks] = useState([]);
-  const [libraries, setLibraries] = useState([]);
-  const [loadingBooks, setLoadingBooks] = useState(false);
-  const [loadingLibraries, setLoadingLibraries] = useState(false);
+  // Form state
   const [formData, setFormData] = useState({
     bookId: '',
     libraryId: '',
@@ -14,58 +11,38 @@ export const useBookCopyForm = () => {
     shelfLocation: '',
     status: 'AVAILABLE'
   });
+
   const [errors, setErrors] = useState({});
 
-  // ==================== FETCH DATA ====================
+  // Data state
+  const [books, setBooks] = useState([]);
+  const [libraries, setLibraries] = useState([]);
+  const [loadingBooks, setLoadingBooks] = useState(false);
+  const [loadingLibraries, setLoadingLibraries] = useState(false);
 
-  const fetchBooks = useCallback(async () => {
-    setLoadingBooks(true);
-    try {
-      const response = await bookService.searchBooks({ size: 1000 });
-      if (response.success) {
-        setBooks(response.data.content || []);
-      }
-    } catch (error) {
-      console.error('Error fetching books:', error);
-    } finally {
-      setLoadingBooks(false);
-    }
-  }, []);
-
-  const fetchLibraries = useCallback(async () => {
-    setLoadingLibraries(true);
-    try {
-      const response = await libraryService.searchLibraries({ size: 1000 });
-      if (response.success) {
-        setLibraries(response.data.content || []);
-      }
-    } catch (error) {
-      console.error('Error fetching libraries:', error);
-    } finally {
-      setLoadingLibraries(false);
-    }
-  }, []);
-
-  // ==================== FORM MANAGEMENT ====================
+  // ==================== FORM OPERATIONS ====================
 
   const updateFormData = useCallback((field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error for this field when user starts typing
+    
+    // Clear error for this field
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   }, [errors]);
 
   const setFormDataFromBookCopy = useCallback((bookCopy) => {
-    if (bookCopy) {
-      setFormData({
-        bookId: bookCopy.book?.bookId || '',
-        libraryId: bookCopy.library?.libraryId || '',
-        qrCode: bookCopy.qrCode || '',
-        shelfLocation: bookCopy.shelfLocation || '',
-        status: bookCopy.status || 'AVAILABLE'
-      });
-    }
+    if (!bookCopy) return;
+    
+    setFormData({
+      bookId: bookCopy.book?.bookId || '',
+      libraryId: bookCopy.library?.libraryId || '',
+      qrCode: bookCopy.qrCode || '',
+      shelfLocation: bookCopy.shelfLocation || '',
+      status: bookCopy.status || 'AVAILABLE'
+    });
+    
+    setErrors({});
   }, []);
 
   const resetForm = useCallback(() => {
@@ -79,25 +56,27 @@ export const useBookCopyForm = () => {
     setErrors({});
   }, []);
 
-  // ==================== VALIDATION ====================
-
   const validateForm = useCallback(() => {
     const newErrors = {};
 
-    // Required fields
+    // Validate bookId
     if (!formData.bookId) {
       newErrors.bookId = 'Vui lòng chọn sách';
     }
+
+    // Validate libraryId
     if (!formData.libraryId) {
       newErrors.libraryId = 'Vui lòng chọn thư viện';
     }
+
+    // Validate qrCode
     if (!formData.qrCode.trim()) {
       newErrors.qrCode = 'QR code không được để trống';
     } else if (formData.qrCode.length > 255) {
       newErrors.qrCode = 'QR code không được vượt quá 255 ký tự';
     }
 
-    // Optional field validation
+    // Validate shelfLocation
     if (formData.shelfLocation && formData.shelfLocation.length > 100) {
       newErrors.shelfLocation = 'Vị trí kệ không được vượt quá 100 ký tự';
     }
@@ -111,10 +90,48 @@ export const useBookCopyForm = () => {
       bookId: formData.bookId,
       libraryId: formData.libraryId,
       qrCode: formData.qrCode.trim(),
-      shelfLocation: formData.shelfLocation.trim(),
+      shelfLocation: formData.shelfLocation.trim() || null,
       status: formData.status
     };
   }, [formData]);
+
+  // ==================== DATA FETCHING ====================
+
+  const fetchBooks = useCallback(async () => {
+    setLoadingBooks(true);
+    try {
+      const response = await bookService.searchBooks({ size: 1000 }); // Get all books
+      // The service returns response.data, which contains the StandardResponse structure
+      if (response.success) {
+        setBooks(response.data.content || []);
+      } else {
+        setBooks([]);
+      }
+    } catch (err) {
+      console.error('Error fetching books:', err);
+      setBooks([]);
+    } finally {
+      setLoadingBooks(false);
+    }
+  }, []);
+
+  const fetchLibraries = useCallback(async () => {
+    setLoadingLibraries(true);
+    try {
+      const response = await libraryService.searchLibraries({ size: 1000 }); // Get all libraries
+      // The service returns response.data, which contains the StandardResponse structure
+      if (response.success) {
+        setLibraries(response.data.content || []);
+      } else {
+        setLibraries([]);
+      }
+    } catch (err) {
+      console.error('Error fetching libraries:', err);
+      setLibraries([]);
+    } finally {
+      setLoadingLibraries(false);
+    }
+  }, []);
 
   // ==================== UTILITY FUNCTIONS ====================
 
@@ -129,7 +146,7 @@ export const useBookCopyForm = () => {
   const getStatusOptions = useCallback(() => {
     return [
       { value: 'AVAILABLE', label: 'Có sẵn' },
-      { value: 'BORROWED', label: 'Đã mượn' },
+      { value: 'BORROWED', label: 'Đang mượn' },
       { value: 'RESERVED', label: 'Đã đặt trước' },
       { value: 'LOST', label: 'Bị mất' },
       { value: 'DAMAGED', label: 'Bị hư hỏng' }
@@ -140,49 +157,52 @@ export const useBookCopyForm = () => {
     const statusMap = {
       'AVAILABLE': {
         text: 'Có sẵn',
-        color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
+        color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
       },
       'BORROWED': {
-        text: 'Đã mượn',
-        color: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+        text: 'Đang mượn',
+        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
       },
       'RESERVED': {
         text: 'Đã đặt trước',
-        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+        color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
       },
       'LOST': {
         text: 'Bị mất',
-        color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+        color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
       },
       'DAMAGED': {
         text: 'Bị hư hỏng',
-        color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+        color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
       }
     };
+
     return statusMap[status] || statusMap['AVAILABLE'];
   }, []);
 
   return {
-    // State
+    // Form state
     formData,
     errors,
+    
+    // Data state
     books,
     libraries,
     loadingBooks,
     loadingLibraries,
-
-    // Actions
+    
+    // Form operations
     updateFormData,
     setFormDataFromBookCopy,
     resetForm,
     validateForm,
     getFormDataForAPI,
-
+    
     // Data fetching
     fetchBooks,
     fetchLibraries,
-
-    // Utilities
+    
+    // Utility functions
     getBookById,
     getLibraryById,
     getStatusOptions,

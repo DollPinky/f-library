@@ -19,6 +19,7 @@ public class CategoryResponse {
     private UUID categoryId;
     private String name;
     private String description;
+    private String color;
     private CategoryResponse parentCategory;
     private List<CategoryResponse> subCategories;
     private Long bookCount;
@@ -34,6 +35,7 @@ public class CategoryResponse {
             .categoryId(category.getCategoryId())
             .name(category.getName())
             .description(category.getDescription())
+            .color(category.getColor())
             .parentCategory(category.getParentCategory() != null ? 
                 CategoryResponse.fromEntity(category.getParentCategory()) : null)
             .subCategories(category.getSubCategories() != null ? 
@@ -66,6 +68,7 @@ public class CategoryResponse {
             .categoryId(category.getCategoryId())
             .name(category.getName())
             .description(category.getDescription())
+            .color(category.getColor())
             .bookCount(0L) // Avoid lazy loading issues
             .createdAt(category.getCreatedAt())
             .updatedAt(category.getUpdatedAt())

@@ -10,6 +10,8 @@ import DetailDrawer from '../../components/ui/DetailDrawer';
 import ActionButton from '../../components/ui/ActionButton';
 import NotificationToast from '../../components/ui/NotificationToast';
 import Pagination from '../../components/ui/Pagination';
+import borrowingService from '../../services/borrowingService';
+import { useAccountAuth } from '../../contexts/AccountAuthContext';
 import { 
   MagnifyingGlassIcon, 
   BookOpenIcon, 
@@ -21,6 +23,7 @@ import ProtectedRoute from '../../components/auth/ProtectedRoute';
 const BooksPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAccountAuth();
   
   const {
     books,
@@ -102,10 +105,40 @@ const BooksPageContent = () => {
 
   const handleBorrowBook = async (book) => {
     try {
-      // Implement borrow logic here
-      showNotification(`Đã mượn sách: ${book.title}`, 'success');
+      if (!user) {
+        showNotification('Vui lòng đăng nhập để mượn sách', 'warning');
+        return;
+      }
+
+      // Tìm bản sách có sẵn
+      const availableCopy = book.bookCopies?.find(copy => copy.status === 'AVAILABLE');
+      if (!availableCopy) {
+        showNotification('Không có bản sách nào có sẵn', 'warning');
+        return;
+      }
+
+      // Tạo yêu cầu mượn sách
+      const borrowingData = {
+        bookCopyId: availableCopy.bookCopyId,
+        borrowerId: user.accountId,
+        borrowedDate: new Date().toISOString(),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        isReservation: false,
+        notes: `Mượn sách: ${book.title}`
+      };
+
+      const response = await borrowingService.createBorrowing(borrowingData);
+      
+      if (response.success) {
+        showNotification(`Đã mượn sách thành công: ${book.title}`, 'success');
+        // Refresh books list
+        refreshBooks();
+      } else {
+        showNotification(response.message || 'Có lỗi xảy ra khi mượn sách', 'error');
+      }
     } catch (error) {
-      showNotification('Có lỗi xảy ra khi mượn sách', 'error');
+      console.error('Borrow error:', error);
+      showNotification(error.message || 'Có lỗi xảy ra khi mượn sách', 'error');
     }
   };
 

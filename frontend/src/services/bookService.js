@@ -13,6 +13,18 @@ class BookService {
     }
   }
 
+  async searchBooks(params = {}) {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const endpoint = `/books?${queryString}`;
+      const response = await apiService.get(endpoint);
+      return response;
+    } catch (error) {
+      console.error('Search books failed:', error);
+      throw error;
+    }
+  }
+
   async getBookById(bookId) {
     try {
       const response = await apiService.get(`/books/${bookId}`);
@@ -69,16 +81,6 @@ class BookService {
       return response;
     } catch (error) {
       console.error('Clear book cache failed:', error);
-      throw error;
-    }
-  }
-
-  async getBookHealth() {
-    try {
-      const response = await apiService.get('/books/health');
-      return response;
-    } catch (error) {
-      console.error('Get book health failed:', error);
       throw error;
     }
   }

@@ -257,48 +257,5 @@ public class BookCopyController {
                 .body(StandardResponse.error("Failed to delete book copy"));
         }
     }
-
-    // ==================== HEALTH CHECK ENDPOINT ====================
-
-    @GetMapping("/health")
-    @Operation(summary = "Health check", description = "Check the health status of the book copy service")
-    public ResponseEntity<StandardResponse<HealthStatus>> healthCheck() {
-        
-        log.info("Book copy service health check");
-        
-        try {
-            boolean isHealthy = bookCopyFacade.isHealthy();
-            HealthStatus status = new HealthStatus("BookCopyService", isHealthy, System.currentTimeMillis());
-            
-            if (isHealthy) {
-                return ResponseEntity.ok(StandardResponse.success("Service is healthy", status));
-            } else {
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(StandardResponse.error("Service is unhealthy"));
-            }
-        } catch (Exception e) {
-            log.error("Health check failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(StandardResponse.error("Health check failed"));
-        }
-    }
-
-    // ==================== INNER CLASSES ====================
-
-    public static class HealthStatus {
-        private final String serviceName;
-        private final boolean healthy;
-        private final long timestamp;
-
-        public HealthStatus(String serviceName, boolean healthy, long timestamp) {
-            this.serviceName = serviceName;
-            this.healthy = healthy;
-            this.timestamp = timestamp;
-        }
-
-        public String getServiceName() { return serviceName; }
-        public boolean isHealthy() { return healthy; }
-        public long getTimestamp() { return timestamp; }
-    }
 } 
 

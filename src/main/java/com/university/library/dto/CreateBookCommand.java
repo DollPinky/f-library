@@ -54,12 +54,11 @@ public class CreateBookCommand {
         
         private String location;
         
-        // Custom validation
         public boolean isValid() {
             if (libraryId != null && quantity != null) {
                 return quantity > 0;
             }
-            return true; // Allow null values for update operations
+            return true; 
         }
     }
 } 

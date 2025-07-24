@@ -1,13 +1,11 @@
 package com.university.library.entity;
 
+import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -17,41 +15,69 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Borrowing {
+public class Borrowing extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "borrow_id")
-    private UUID borrowId;
+    @Column(name = "borrowing_id")
+    private UUID borrowingId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "copy_id")
+    @JoinColumn(name = "book_copy_id", nullable = false)
     private BookCopy bookCopy;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reader_id")
-    private Reader reader;
-    
-    @Column(name = "borrowed_at", nullable = false)
-    private Instant borrowedAt;
-    
+    @JoinColumn(name = "borrower_id", nullable = false)
+    private Account borrower;
+
+    @Column(name = "borrowed_date", nullable = false)
+    private Instant borrowedDate;
+
     @Column(name = "due_date", nullable = false)
-    private LocalDate dueDate;
-    
-    @Column(name = "returned_at")
-    private LocalDate returnedAt;
-    
+    private Instant dueDate;
+
+    @Column(name = "returned_date")
+    private Instant returnedDate;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
-    private BorrowingStatus status;
-    
-    @Column(name = "fine_amount", precision = 10, scale = 2)
-    private BigDecimal fineAmount;
-    
-    @Column(name = "note", columnDefinition = "TEXT")
-    private String note;
-    
+    private BorrowingStatus status = BorrowingStatus.BORROWED;
+
+    @Column(name = "fine_amount")
+    private Double fineAmount = 0.0;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
     public enum BorrowingStatus {
-        BORROWED, RETURNED, OVERDUE
+        RESERVED,    // Đã đặt sách
+        BORROWED,    // Đang mượn
+        RETURNED,    // Đã trả
+        OVERDUE,     // Quá hạn
+        LOST,        // Mất sách
+        CANCELLED    // Hủy đặt/mượn
+    }
+
+    /**
+     * Kiểm tra xem có quá hạn không
+     */
+    public boolean isOverdue() {
+        return Instant.now().isAfter(dueDate) && status == BorrowingStatus.BORROWED;
+    }
+
+    /**
+     * Tính số ngày quá hạn
+     */
+    public long getOverdueDays() {
+        if (!isOverdue()) return 0;
+        return (Instant.now().getEpochSecond() - dueDate.getEpochSecond()) / (24 * 60 * 60);
+    }
+
+    /**
+     * Tính phí phạt (ví dụ: 10,000 VND/ngày)
+     */
+    public double calculateFine() {
+        if (!isOverdue()) return 0.0;
+        return getOverdueDays() * 10000.0; // 10,000 VND per day
     }
 } 
 

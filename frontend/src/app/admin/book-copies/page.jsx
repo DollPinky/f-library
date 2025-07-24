@@ -6,282 +6,200 @@ import ActionButton from '../../../components/ui/ActionButton';
 import NotificationToast from '../../../components/ui/NotificationToast';
 import LoadingSkeleton from '../../../components/ui/LoadingSkeleton';
 import DetailDrawer from '../../../components/ui/DetailDrawer';
+import Pagination from '../../../components/ui/Pagination';
+import { useBookCopies } from '../../../hooks/useBookCopies';
+import { useBookCopyForm } from '../../../hooks/useBookCopyForm';
 import { 
   PlusIcon,
   PencilIcon,
   TrashIcon,
-  EyeIcon,
   QrCodeIcon,
   BookOpenIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
   XMarkIcon,
   MagnifyingGlassIcon,
-  MapPinIcon
+  MapPinIcon,
+  BuildingLibraryIcon,
+  ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 
 const AdminBookCopiesPage = () => {
   const router = useRouter();
   
-  // Mock data - trong thực tế sẽ fetch từ API
-  const [bookCopies, setBookCopies] = useState([
-    {
-      id: 1,
-      qrCode: 'BK001-001',
-      book: {
-        id: 1,
-        title: 'Kitchen technology.',
-        author: 'Amber Kidd',
-        isbn: '978-1136505587'
-      },
-      status: 'AVAILABLE',
-      shelfLocation: 'A1-B2-C3',
-      condition: 'EXCELLENT',
-      acquisitionDate: '2024-01-15',
-      lastMaintenance: '2024-01-20',
-      borrowCount: 5,
-      createdAt: '2024-01-15',
-      updatedAt: '2024-01-20'
-    },
-    {
-      id: 2,
-      qrCode: 'BK001-002',
-      book: {
-        id: 1,
-        title: 'Kitchen technology.',
-        author: 'Amber Kidd',
-        isbn: '978-1136505587'
-      },
-      status: 'BORROWED',
-      shelfLocation: 'A1-B2-C3',
-      condition: 'GOOD',
-      acquisitionDate: '2024-01-15',
-      lastMaintenance: '2024-01-18',
-      borrowCount: 3,
-      createdAt: '2024-01-15',
-      updatedAt: '2024-01-25'
-    },
-    {
-      id: 3,
-      qrCode: 'BK002-001',
-      book: {
-        id: 2,
-        title: 'Image loss ten.',
-        author: 'Carmen Smith',
-        isbn: '978-3585650756'
-      },
-      status: 'AVAILABLE',
-      shelfLocation: 'A2-B1-C4',
-      condition: 'EXCELLENT',
-      acquisitionDate: '2024-01-10',
-      lastMaintenance: '2024-01-22',
-      borrowCount: 2,
-      createdAt: '2024-01-10',
-      updatedAt: '2024-01-22'
-    },
-    {
-      id: 4,
-      qrCode: 'BK002-002',
-      book: {
-        id: 2,
-        title: 'Image loss ten.',
-        author: 'Carmen Smith',
-        isbn: '978-3585650756'
-      },
-      status: 'MAINTENANCE',
-      shelfLocation: 'A2-B1-C4',
-      condition: 'POOR',
-      acquisitionDate: '2024-01-10',
-      lastMaintenance: '2024-01-15',
-      borrowCount: 8,
-      createdAt: '2024-01-10',
-      updatedAt: '2024-01-28'
-    },
-    {
-      id: 5,
-      qrCode: 'BK003-001',
-      book: {
-        id: 3,
-        title: 'Expect recent room situation.',
-        author: 'Katelyn Lee',
-        isbn: '978-2801823908'
-      },
-      status: 'AVAILABLE',
-      shelfLocation: 'A3-B3-C1',
-      condition: 'GOOD',
-      acquisitionDate: '2024-01-05',
-      lastMaintenance: '2024-01-19',
-      borrowCount: 4,
-      createdAt: '2024-01-05',
-      updatedAt: '2024-01-19'
-    }
-  ]);
+  // Hooks
+  const {
+    bookCopies,
+    loading,
+    error,
+    pagination,
+    searchBookCopies,
+    createBookCopy,
+    updateBookCopy,
+    deleteBookCopy,
+    changeBookCopyStatus,
+    goToPage,
+    changePageSize,
+    clearError
+  } = useBookCopies();
 
-  const [loading, setLoading] = useState(false);
+  const {
+    formData,
+    errors,
+    books,
+    libraries,
+    loadingBooks,
+    loadingLibraries,
+    updateFormData,
+    setFormDataFromBookCopy,
+    resetForm,
+    validateForm,
+    getFormDataForAPI,
+    fetchBooks,
+    fetchLibraries,
+    getBookById,
+    getLibraryById,
+    getStatusOptions,
+    getStatusInfo
+  } = useBookCopyForm();
+
+  // Local state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCopy, setSelectedCopy] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isBulkCreateModalOpen, setIsBulkCreateModalOpen] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
+  const [statusFilter, setStatusFilter] = useState('');
 
-  // Form state
-  const [formData, setFormData] = useState({
-    qrCode: '',
-    bookId: '',
-    shelfLocation: '',
-    condition: 'EXCELLENT',
-    status: 'AVAILABLE'
-  });
+  // ==================== EFFECTS ====================
 
-  const filteredCopies = bookCopies.filter(copy =>
-    copy.qrCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    copy.book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    copy.book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    copy.shelfLocation.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    fetchBooks();
+    fetchLibraries();
+    // Load initial data
+    searchBookCopies();
+  }, [fetchBooks, fetchLibraries, searchBookCopies]);
 
-  const getStatusInfo = (status) => {
-    switch (status) {
-      case 'AVAILABLE':
-        return {
-          text: 'Có sẵn',
-          color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
-          icon: CheckCircleIcon
-        };
-      case 'BORROWED':
-        return {
-          text: 'Đã mượn',
-          color: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-          icon: ClockIcon
-        };
-      case 'MAINTENANCE':
-        return {
-          text: 'Bảo trì',
-          color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-          icon: ExclamationTriangleIcon
-        };
-      default:
-        return {
-          text: 'Không xác định',
-          color: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
-          icon: ExclamationTriangleIcon
-        };
+  useEffect(() => {
+    if (error) {
+      showNotification(error, 'error');
+      clearError();
     }
+  }, [error, clearError]);
+
+  // ==================== SEARCH AND FILTER ====================
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    searchBookCopies({
+      query: term,
+      status: statusFilter || undefined
+    });
   };
 
-  const getConditionInfo = (condition) => {
-    switch (condition) {
-      case 'EXCELLENT':
-        return {
-          text: 'Xuất sắc',
-          color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
-        };
-      case 'GOOD':
-        return {
-          text: 'Tốt',
-          color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-        };
-      case 'FAIR':
-        return {
-          text: 'Khá',
-          color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-        };
-      case 'POOR':
-        return {
-          text: 'Kém',
-          color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-        };
-      default:
-        return {
-          text: 'Không xác định',
-          color: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-        };
-    }
+  const handleStatusFilter = (status) => {
+    setStatusFilter(status);
+    searchBookCopies({
+      query: searchTerm,
+      status: status || undefined
+    });
   };
 
-  const handleCreateCopy = () => {
-    if (!formData.qrCode.trim() || !formData.bookId) {
-      showNotification('Vui lòng điền đầy đủ thông tin', 'error');
+  // ==================== CRUD OPERATIONS ====================
+
+  const handleCreateCopy = async () => {
+    if (!validateForm()) {
+      showNotification('Vui lòng kiểm tra lại thông tin', 'error');
       return;
     }
 
-    const newCopy = {
-      id: Date.now(),
-      ...formData,
-      book: bookCopies.find(copy => copy.book.id === parseInt(formData.bookId))?.book || {
-        title: 'Unknown Book',
-        author: 'Unknown Author',
-        isbn: 'N/A'
-      },
-      acquisitionDate: new Date().toISOString().split('T')[0],
-      lastMaintenance: new Date().toISOString().split('T')[0],
-      borrowCount: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0]
-    };
-
-    setBookCopies([...bookCopies, newCopy]);
-    setFormData({ qrCode: '', bookId: '', shelfLocation: '', condition: 'EXCELLENT', status: 'AVAILABLE' });
-    setIsCreateModalOpen(false);
-    showNotification('Tạo bản sách thành công', 'success');
+    const result = await createBookCopy(getFormDataForAPI());
+    
+    if (result.success) {
+      setIsCreateModalOpen(false);
+      resetForm();
+      showNotification('Tạo bản sách thành công', 'success');
+    } else {
+      showNotification(result.message || 'Có lỗi xảy ra khi tạo bản sách', 'error');
+    }
   };
 
-  const handleEditCopy = () => {
-    if (!formData.qrCode.trim() || !formData.bookId) {
-      showNotification('Vui lòng điền đầy đủ thông tin', 'error');
+  const handleEditCopy = async () => {
+    if (!validateForm()) {
+      showNotification('Vui lòng kiểm tra lại thông tin', 'error');
       return;
     }
 
-    const updatedCopies = bookCopies.map(copy =>
-      copy.id === selectedCopy.id
-        ? { ...copy, ...formData, updatedAt: new Date().toISOString().split('T')[0] }
-        : copy
-    );
-
-    setBookCopies(updatedCopies);
-    setFormData({ qrCode: '', bookId: '', shelfLocation: '', condition: 'EXCELLENT', status: 'AVAILABLE' });
-    setIsEditModalOpen(false);
-    setSelectedCopy(null);
-    showNotification('Cập nhật bản sách thành công', 'success');
+    const result = await updateBookCopy(selectedCopy.bookCopyId, getFormDataForAPI());
+    
+    if (result.success) {
+      setIsEditModalOpen(false);
+      setSelectedCopy(null);
+      resetForm();
+      showNotification('Cập nhật bản sách thành công', 'success');
+    } else {
+      showNotification(result.message || 'Có lỗi xảy ra khi cập nhật bản sách', 'error');
+    }
   };
 
-  const handleDeleteCopy = (copy) => {
+  const handleDeleteCopy = async (copy) => {
     if (copy.status === 'BORROWED') {
       showNotification('Không thể xóa bản sách đang được mượn', 'error');
       return;
     }
 
     if (window.confirm(`Bạn có chắc chắn muốn xóa bản sách "${copy.qrCode}"?`)) {
-      const updatedCopies = bookCopies.filter(c => c.id !== copy.id);
-      setBookCopies(updatedCopies);
-      showNotification('Xóa bản sách thành công', 'success');
+      const result = await deleteBookCopy(copy.bookCopyId);
+      
+      if (result.success) {
+        showNotification('Xóa bản sách thành công', 'success');
+      } else {
+        showNotification(result.message || 'Có lỗi xảy ra khi xóa bản sách', 'error');
+      }
     }
   };
 
+  // ==================== MODAL HANDLERS ====================
+
   const openEditModal = (copy) => {
     setSelectedCopy(copy);
-    setFormData({
-      qrCode: copy.qrCode,
-      bookId: copy.book.id.toString(),
-      shelfLocation: copy.shelfLocation,
-      condition: copy.condition,
-      status: copy.status
-    });
+    setFormDataFromBookCopy(copy);
     setIsEditModalOpen(true);
   };
+
+  const openCreateModal = () => {
+    resetForm();
+    setIsCreateModalOpen(true);
+  };
+
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+    resetForm();
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedCopy(null);
+    resetForm();
+  };
+
+  // ==================== UTILITY FUNCTIONS ====================
 
   const showNotification = (message, type = 'info') => {
     setNotification({ show: true, message, type });
   };
 
-  const resetForm = () => {
-    setFormData({ qrCode: '', bookId: '', shelfLocation: '', condition: 'EXCELLENT', status: 'AVAILABLE' });
-    setSelectedCopy(null);
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('vi-VN');
   };
 
-  if (loading) {
+  const exportQrCodes = (copy) => {
+    // In a real implementation, this would generate and download QR codes
+    showNotification('Tính năng xuất QR code sẽ được implement sau', 'info');
+  };
+
+  if (loading && bookCopies.length === 0) {
     return (
       <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
         <div className="p-4 sm:p-6">
@@ -312,45 +230,136 @@ const AdminBookCopiesPage = () => {
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <ActionButton
                   variant="primary"
-                  onClick={() => setIsCreateModalOpen(true)}
+                  onClick={openCreateModal}
                   className="group min-h-[40px]"
                 >
                   <PlusIcon className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Thêm bản sách</span>
                   <span className="sm:hidden">Thêm</span>
                 </ActionButton>
+                <ActionButton
+                  variant="outline"
+                  onClick={() => setIsBulkCreateModalOpen(true)}
+                  className="group min-h-[40px]"
+                >
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Tạo hàng loạt</span>
+                  <span className="sm:hidden">Hàng loạt</span>
+                </ActionButton>
               </div>
             </div>
           </div>
 
-          {/* Search Bar */}
+          {/* Statistics */}
+          <div className="mb-6 sm:mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/20 rounded-xl flex items-center justify-center">
+                    <QrCodeIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-sage-600 dark:text-sage-400">Tổng bản sách</p>
+                    <p className="text-2xl font-bold text-sage-900 dark:text-sage-100">
+                      {pagination.totalElements}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900/20 rounded-xl flex items-center justify-center">
+                    <BookOpenIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-sage-600 dark:text-sage-400">Đang mượn</p>
+                    <p className="text-2xl font-bold text-sage-900 dark:text-sage-100">
+                      {bookCopies.filter(copy => copy.status === 'BORROWED').length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 dark:bg-yellow-900/20 rounded-xl flex items-center justify-center">
+                    <BuildingLibraryIcon className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-sage-600 dark:text-sage-400">Thư viện</p>
+                    <p className="text-2xl font-bold text-sage-900 dark:text-sage-100">
+                      {new Set(bookCopies.map(copy => copy.library?.libraryId).filter(Boolean)).size}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 dark:bg-red-900/20 rounded-xl flex items-center justify-center">
+                    <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-sage-600 dark:text-sage-400">Bị mất/Hư hỏng</p>
+                    <p className="text-2xl font-bold text-sage-900 dark:text-sage-100">
+                      {bookCopies.filter(copy => copy.status === 'LOST' || copy.status === 'DAMAGED').length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Filter Bar */}
           <div className="mb-6 sm:mb-8">
             <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-4 sm:p-6">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-sage-400" />
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MagnifyingGlassIcon className="h-5 w-5 text-sage-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent text-sm sm:text-base"
+                    placeholder="Tìm kiếm theo QR code, tên sách, tác giả, vị trí..."
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSearch(e.target.value);
+                      }
+                    }}
+                  />
                 </div>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent text-sm sm:text-base"
-                  placeholder="Tìm kiếm theo QR code, tên sách, tác giả, vị trí..."
-                />
+                <div className="sm:w-48">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => handleStatusFilter(e.target.value)}
+                    className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent text-sm sm:text-base"
+                  >
+                    <option value="">Tất cả trạng thái</option>
+                    {getStatusOptions().map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Book Copies Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
-            {filteredCopies.map((copy) => {
+            {bookCopies.map((copy) => {
               const statusInfo = getStatusInfo(copy.status);
-              const conditionInfo = getConditionInfo(copy.condition);
-              const StatusIcon = statusInfo.icon;
+              const book = copy.book;
+              const library = copy.library;
 
               return (
                 <div
-                  key={copy.id}
+                  key={copy.bookCopyId}
                   className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft hover:shadow-medium transition-all duration-300 group cursor-pointer"
                   onClick={() => {
                     setSelectedCopy(copy);
@@ -393,38 +402,70 @@ const AdminBookCopiesPage = () => {
                     <div className="space-y-3">
                       <div>
                         <h3 className="text-base sm:text-lg font-semibold text-sage-900 dark:text-sage-100 line-clamp-1">
-                          {copy.book.title}
+                          {book?.title || 'Không có tên sách'}
                         </h3>
                         <p className="text-sm text-sage-600 dark:text-sage-400 line-clamp-1">
-                          {copy.book.author}
+                          {book?.author || 'Không có tác giả'}
                         </p>
                       </div>
 
                       <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <QrCodeIcon className="w-4 h-4 text-sage-500 dark:text-sage-400" />
-                          <span className="text-sm font-mono text-sage-700 dark:text-sage-300">
-                            {copy.qrCode}
-                          </span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <QrCodeIcon className="w-4 h-4 text-sage-500 dark:text-sage-400" />
+                            <span className="text-sm font-mono text-sage-700 dark:text-sage-300">
+                              {copy.qrCode}
+                            </span>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              exportQrCodes(copy);
+                            }}
+                            className="p-1 rounded-lg bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200"
+                            title="Xuất QR code"
+                          >
+                            <ArrowDownTrayIcon className="w-3 h-3" />
+                          </button>
                         </div>
                         
                         <div className="flex items-center space-x-2">
                           <MapPinIcon className="w-4 h-4 text-sage-500 dark:text-sage-400" />
                           <span className="text-sm text-sage-600 dark:text-sage-400 line-clamp-1">
-                            {copy.shelfLocation}
+                            {copy.shelfLocation || 'Chưa có vị trí'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <BuildingLibraryIcon className="w-4 h-4 text-sage-500 dark:text-sage-400" />
+                          <span className="text-sm text-sage-600 dark:text-sage-400 line-clamp-1">
+                            {library?.name || 'Không có thư viện'}
                           </span>
                         </div>
                       </div>
 
-                      {/* Status and Condition */}
+                      {/* Status */}
                       <div className="flex items-center justify-between">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
-                          <StatusIcon className="w-3 h-3 mr-1" />
-                          {statusInfo.text}
-                        </span>
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${conditionInfo.color}`}>
-                          {conditionInfo.text}
-                        </span>
+                        <select
+                          value={copy.status}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            changeBookCopyStatus(copy.bookCopyId, e.target.value).then(result => {
+                              if (result.success) {
+                                showNotification('Cập nhật trạng thái thành công', 'success');
+                              } else {
+                                showNotification(result.message || 'Có lỗi xảy ra', 'error');
+                              }
+                            });
+                          }}
+                          className={`text-xs font-medium rounded-full px-2.5 py-1 border-0 focus:ring-2 focus:ring-sage-500 focus:outline-none cursor-pointer ${statusInfo.color}`}
+                        >
+                          {getStatusOptions().map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       
                       {/* Stats */}
@@ -432,11 +473,11 @@ const AdminBookCopiesPage = () => {
                         <div className="flex items-center space-x-2">
                           <BookOpenIcon className="w-4 h-4 text-sage-500 dark:text-sage-400" />
                           <span className="text-sm text-sage-600 dark:text-sage-400">
-                            {copy.borrowCount} lần mượn
+                            {copy.borrowingCount || 0} lần mượn
                           </span>
                         </div>
                         <span className="text-xs text-sage-500 dark:text-sage-400">
-                          {new Date(copy.updatedAt).toLocaleDateString('vi-VN')}
+                          {formatDate(copy.updatedAt)}
                         </span>
                       </div>
                     </div>
@@ -447,24 +488,38 @@ const AdminBookCopiesPage = () => {
           </div>
 
           {/* Empty State */}
-          {filteredCopies.length === 0 && (
+          {bookCopies.length === 0 && !loading && (
             <div className="text-center py-12">
               <QrCodeIcon className="w-16 h-16 text-sage-300 dark:text-sage-600 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-sage-900 dark:text-sage-100 mb-2">
-                {searchTerm ? 'Không tìm thấy bản sách' : 'Chưa có bản sách nào'}
+                {searchTerm || statusFilter ? 'Không tìm thấy bản sách' : 'Chưa có bản sách nào'}
               </h3>
               <p className="text-sage-600 dark:text-sage-400 mb-6">
-                {searchTerm ? 'Thử tìm kiếm với từ khóa khác' : 'Tạo bản sách đầu tiên để bắt đầu'}
+                {searchTerm || statusFilter ? 'Thử tìm kiếm với từ khóa khác' : 'Tạo bản sách đầu tiên để bắt đầu'}
               </p>
-              {!searchTerm && (
+              {!searchTerm && !statusFilter && (
                 <ActionButton
                   variant="primary"
-                  onClick={() => setIsCreateModalOpen(true)}
+                  onClick={openCreateModal}
                 >
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Thêm bản sách đầu tiên
                 </ActionButton>
               )}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {pagination.totalElements > 0 && (
+            <div className="mt-8">
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                totalElements={pagination.totalElements}
+                pageSize={pagination.size}
+                onPageChange={goToPage}
+                onPageSizeChange={changePageSize}
+              />
             </div>
           )}
         </div>
@@ -474,14 +529,14 @@ const AdminBookCopiesPage = () => {
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity bg-black/50 backdrop-blur-sm" onClick={() => setIsCreateModalOpen(false)} />
+            <div className="fixed inset-0 transition-opacity bg-black/50 backdrop-blur-sm" onClick={closeCreateModal} />
             <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-neutral-900 shadow-soft rounded-2xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-100">
                   Thêm bản sách mới
                 </h3>
                 <button
-                  onClick={() => setIsCreateModalOpen(false)}
+                  onClick={closeCreateModal}
                   className="p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200"
                 >
                   <XMarkIcon className="w-5 h-5" />
@@ -491,65 +546,86 @@ const AdminBookCopiesPage = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                    Sách *
+                  </label>
+                  <select
+                    value={formData.bookId}
+                    onChange={(e) => updateFormData('bookId', e.target.value)}
+                    className={`block w-full px-3 py-2.5 border rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent ${
+                      errors.bookId ? 'border-red-300 dark:border-red-600' : 'border-sage-200 dark:border-sage-700'
+                    }`}
+                    disabled={loadingBooks}
+                  >
+                    <option value="">Chọn sách</option>
+                    {books.map(book => (
+                      <option key={book.bookId} value={book.bookId}>
+                        {book.title} - {book.author}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.bookId && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.bookId}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                    Thư viện *
+                  </label>
+                  <select
+                    value={formData.libraryId}
+                    onChange={(e) => updateFormData('libraryId', e.target.value)}
+                    className={`block w-full px-3 py-2.5 border rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent ${
+                      errors.libraryId ? 'border-red-300 dark:border-red-600' : 'border-sage-200 dark:border-sage-700'
+                    }`}
+                    disabled={loadingLibraries}
+                  >
+                    <option value="">Chọn thư viện</option>
+                    {libraries.map(library => (
+                      <option key={library.libraryId} value={library.libraryId}>
+                        {library.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.libraryId && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.libraryId}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
                     QR Code *
                   </label>
                   <input
                     type="text"
                     value={formData.qrCode}
-                    onChange={(e) => setFormData({ ...formData, qrCode: e.target.value })}
-                    className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                    onChange={(e) => updateFormData('qrCode', e.target.value)}
+                    className={`block w-full px-3 py-2.5 border rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent ${
+                      errors.qrCode ? 'border-red-300 dark:border-red-600' : 'border-sage-200 dark:border-sage-700'
+                    }`}
                     placeholder="Nhập QR code"
                   />
+                  {errors.qrCode && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.qrCode}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                    Sách *
-                  </label>
-                  <select
-                    value={formData.bookId}
-                    onChange={(e) => setFormData({ ...formData, bookId: e.target.value })}
-                    className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-                  >
-                    <option value="">Chọn sách</option>
-                    {Array.from(new Set(bookCopies.map(copy => copy.book.id))).map(bookId => {
-                      const book = bookCopies.find(copy => copy.book.id === bookId)?.book;
-                      return (
-                        <option key={bookId} value={bookId}>
-                          {book?.title} - {book?.author}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                    Vị trí
+                    Vị trí kệ
                   </label>
                   <input
                     type="text"
                     value={formData.shelfLocation}
-                    onChange={(e) => setFormData({ ...formData, shelfLocation: e.target.value })}
-                    className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                    onChange={(e) => updateFormData('shelfLocation', e.target.value)}
+                    className={`block w-full px-3 py-2.5 border rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent ${
+                      errors.shelfLocation ? 'border-red-300 dark:border-red-600' : 'border-sage-200 dark:border-sage-700'
+                    }`}
                     placeholder="Nhập vị trí kệ sách"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                    Tình trạng
-                  </label>
-                  <select
-                    value={formData.condition}
-                    onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                    className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-                  >
-                    <option value="EXCELLENT">Xuất sắc</option>
-                    <option value="GOOD">Tốt</option>
-                    <option value="FAIR">Khá</option>
-                    <option value="POOR">Kém</option>
-                  </select>
+                  {errors.shelfLocation && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.shelfLocation}</p>
+                  )}
                 </div>
 
                 <div>
@@ -558,11 +634,14 @@ const AdminBookCopiesPage = () => {
                   </label>
                   <select
                     value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    onChange={(e) => updateFormData('status', e.target.value)}
                     className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
                   >
-                    <option value="AVAILABLE">Có sẵn</option>
-                    <option value="MAINTENANCE">Bảo trì</option>
+                    {getStatusOptions().map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -570,18 +649,16 @@ const AdminBookCopiesPage = () => {
               <div className="flex items-center justify-end space-x-3 mt-6">
                 <ActionButton
                   variant="outline"
-                  onClick={() => {
-                    setIsCreateModalOpen(false);
-                    resetForm();
-                  }}
+                  onClick={closeCreateModal}
                 >
                   Hủy
                 </ActionButton>
                 <ActionButton
                   variant="primary"
                   onClick={handleCreateCopy}
+                  disabled={loading}
                 >
-                  Tạo bản sách
+                  {loading ? 'Đang tạo...' : 'Tạo bản sách'}
                 </ActionButton>
               </div>
             </div>
@@ -593,14 +670,14 @@ const AdminBookCopiesPage = () => {
       {isEditModalOpen && selectedCopy && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity bg-black/50 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
+            <div className="fixed inset-0 transition-opacity bg-black/50 backdrop-blur-sm" onClick={closeEditModal} />
             <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-neutral-900 shadow-soft rounded-2xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-100">
                   Chỉnh sửa bản sách
                 </h3>
                 <button
-                  onClick={() => setIsEditModalOpen(false)}
+                  onClick={closeEditModal}
                   className="p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200"
                 >
                   <XMarkIcon className="w-5 h-5" />
@@ -610,65 +687,86 @@ const AdminBookCopiesPage = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                    Sách *
+                  </label>
+                  <select
+                    value={formData.bookId}
+                    onChange={(e) => updateFormData('bookId', e.target.value)}
+                    className={`block w-full px-3 py-2.5 border rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent ${
+                      errors.bookId ? 'border-red-300 dark:border-red-600' : 'border-sage-200 dark:border-sage-700'
+                    }`}
+                    disabled={loadingBooks}
+                  >
+                    <option value="">Chọn sách</option>
+                    {books.map(book => (
+                      <option key={book.bookId} value={book.bookId}>
+                        {book.title} - {book.author}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.bookId && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.bookId}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                    Thư viện *
+                  </label>
+                  <select
+                    value={formData.libraryId}
+                    onChange={(e) => updateFormData('libraryId', e.target.value)}
+                    className={`block w-full px-3 py-2.5 border rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent ${
+                      errors.libraryId ? 'border-red-300 dark:border-red-600' : 'border-sage-200 dark:border-sage-700'
+                    }`}
+                    disabled={loadingLibraries}
+                  >
+                    <option value="">Chọn thư viện</option>
+                    {libraries.map(library => (
+                      <option key={library.libraryId} value={library.libraryId}>
+                        {library.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.libraryId && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.libraryId}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
                     QR Code *
                   </label>
                   <input
                     type="text"
                     value={formData.qrCode}
-                    onChange={(e) => setFormData({ ...formData, qrCode: e.target.value })}
-                    className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                    onChange={(e) => updateFormData('qrCode', e.target.value)}
+                    className={`block w-full px-3 py-2.5 border rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent ${
+                      errors.qrCode ? 'border-red-300 dark:border-red-600' : 'border-sage-200 dark:border-sage-700'
+                    }`}
                     placeholder="Nhập QR code"
                   />
+                  {errors.qrCode && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.qrCode}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                    Sách *
-                  </label>
-                  <select
-                    value={formData.bookId}
-                    onChange={(e) => setFormData({ ...formData, bookId: e.target.value })}
-                    className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-                  >
-                    <option value="">Chọn sách</option>
-                    {Array.from(new Set(bookCopies.map(copy => copy.book.id))).map(bookId => {
-                      const book = bookCopies.find(copy => copy.book.id === bookId)?.book;
-                      return (
-                        <option key={bookId} value={bookId}>
-                          {book?.title} - {book?.author}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                    Vị trí
+                    Vị trí kệ
                   </label>
                   <input
                     type="text"
                     value={formData.shelfLocation}
-                    onChange={(e) => setFormData({ ...formData, shelfLocation: e.target.value })}
-                    className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                    onChange={(e) => updateFormData('shelfLocation', e.target.value)}
+                    className={`block w-full px-3 py-2.5 border rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent ${
+                      errors.shelfLocation ? 'border-red-300 dark:border-red-600' : 'border-sage-200 dark:border-sage-700'
+                    }`}
                     placeholder="Nhập vị trí kệ sách"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                    Tình trạng
-                  </label>
-                  <select
-                    value={formData.condition}
-                    onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                    className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-                  >
-                    <option value="EXCELLENT">Xuất sắc</option>
-                    <option value="GOOD">Tốt</option>
-                    <option value="FAIR">Khá</option>
-                    <option value="POOR">Kém</option>
-                  </select>
+                  {errors.shelfLocation && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.shelfLocation}</p>
+                  )}
                 </div>
 
                 <div>
@@ -677,12 +775,14 @@ const AdminBookCopiesPage = () => {
                   </label>
                   <select
                     value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    onChange={(e) => updateFormData('status', e.target.value)}
                     className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
                   >
-                    <option value="AVAILABLE">Có sẵn</option>
-                    <option value="BORROWED">Đã mượn</option>
-                    <option value="MAINTENANCE">Bảo trì</option>
+                    {getStatusOptions().map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -690,18 +790,16 @@ const AdminBookCopiesPage = () => {
               <div className="flex items-center justify-end space-x-3 mt-6">
                 <ActionButton
                   variant="outline"
-                  onClick={() => {
-                    setIsEditModalOpen(false);
-                    resetForm();
-                  }}
+                  onClick={closeEditModal}
                 >
                   Hủy
                 </ActionButton>
                 <ActionButton
                   variant="primary"
                   onClick={handleEditCopy}
+                  disabled={loading}
                 >
-                  Cập nhật
+                  {loading ? 'Đang cập nhật...' : 'Cập nhật'}
                 </ActionButton>
               </div>
             </div>
@@ -726,7 +824,7 @@ const AdminBookCopiesPage = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-xl sm:text-2xl font-serif font-semibold text-sage-900 dark:text-sage-100 mb-2 line-clamp-2">
-                    {selectedCopy.book.title}
+                    {selectedCopy.book?.title || 'Không có tên sách'}
                   </h3>
                   <p className="text-sage-600 dark:text-sage-400 line-clamp-1">
                     QR: {selectedCopy.qrCode}
@@ -742,32 +840,34 @@ const AdminBookCopiesPage = () => {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Tên sách</label>
-                    <p className="text-sage-900 dark:text-sage-100 font-medium line-clamp-1">{selectedCopy.book.title}</p>
+                    <p className="text-sage-900 dark:text-sage-100 font-medium line-clamp-1">{selectedCopy.book?.title || 'Không có tên sách'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Tác giả</label>
-                    <p className="text-sage-900 dark:text-sage-100 line-clamp-1">{selectedCopy.book.author}</p>
+                    <p className="text-sage-900 dark:text-sage-100 line-clamp-1">{selectedCopy.book?.author || 'Không có tác giả'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-sage-700 dark:text-sage-300">ISBN</label>
-                    <p className="text-sage-900 dark:text-sage-100 font-mono line-clamp-1">{selectedCopy.book.isbn}</p>
+                    <p className="text-sage-900 dark:text-sage-100 font-mono line-clamp-1">{selectedCopy.book?.isbn || 'N/A'}</p>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
                   <div>
+                    <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Thư viện</label>
+                    <p className="text-sage-900 dark:text-sage-100 line-clamp-1">{selectedCopy.library?.name || 'Không có thư viện'}</p>
+                  </div>
+                  <div>
                     <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Vị trí</label>
-                    <p className="text-sage-900 dark:text-sage-100 line-clamp-1">{selectedCopy.shelfLocation}</p>
+                    <p className="text-sage-900 dark:text-sage-100 line-clamp-1">{selectedCopy.shelfLocation || 'Chưa có vị trí'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Trạng thái</label>
                     <div className="mt-1">
                       {(() => {
                         const statusInfo = getStatusInfo(selectedCopy.status);
-                        const StatusIcon = statusInfo.icon;
                         return (
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
-                            <StatusIcon className="w-3 h-3 mr-1" />
                             {statusInfo.text}
                           </span>
                         );
@@ -775,21 +875,8 @@ const AdminBookCopiesPage = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Tình trạng</label>
-                    <div className="mt-1">
-                      {(() => {
-                        const conditionInfo = getConditionInfo(selectedCopy.condition);
-                        return (
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${conditionInfo.color}`}>
-                            {conditionInfo.text}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                  <div>
                     <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Số lần mượn</label>
-                    <p className="text-sage-900 dark:text-sage-100 font-medium">{selectedCopy.borrowCount} lần</p>
+                    <p className="text-sage-900 dark:text-sage-100 font-medium">{selectedCopy.borrowingCount || 0} lần</p>
                   </div>
                 </div>
               </div>
@@ -802,27 +889,15 @@ const AdminBookCopiesPage = () => {
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Ngày nhập kho</label>
-                  <p className="text-sage-900 dark:text-sage-100">
-                    {new Date(selectedCopy.acquisitionDate).toLocaleDateString('vi-VN')}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Bảo trì lần cuối</label>
-                  <p className="text-sage-900 dark:text-sage-100">
-                    {new Date(selectedCopy.lastMaintenance).toLocaleDateString('vi-VN')}
-                  </p>
-                </div>
-                <div>
                   <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Ngày tạo</label>
                   <p className="text-sage-900 dark:text-sage-100">
-                    {new Date(selectedCopy.createdAt).toLocaleDateString('vi-VN')}
+                    {formatDate(selectedCopy.createdAt)}
                   </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-sage-700 dark:text-sage-300">Cập nhật lần cuối</label>
                   <p className="text-sage-900 dark:text-sage-100">
-                    {new Date(selectedCopy.updatedAt).toLocaleDateString('vi-VN')}
+                    {formatDate(selectedCopy.updatedAt)}
                   </p>
                 </div>
               </div>
@@ -863,6 +938,114 @@ const AdminBookCopiesPage = () => {
           </div>
         )}
       </DetailDrawer>
+
+      {/* Bulk Create Modal */}
+      {isBulkCreateModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity bg-black/50 backdrop-blur-sm" onClick={() => setIsBulkCreateModalOpen(false)} />
+            <div className="inline-block w-full max-w-lg p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-neutral-900 shadow-soft rounded-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-100">
+                  Tạo nhiều bản sách từ một cuốn sách
+                </h3>
+                <button
+                  onClick={() => setIsBulkCreateModalOpen(false)}
+                  className="p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                    Chọn sách *
+                  </label>
+                  <select
+                    className="block w-full px-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+                    disabled={loadingBooks}
+                  >
+                    <option value="">Chọn sách</option>
+                    {books.map(book => (
+                      <option key={book.bookId} value={book.bookId}>
+                        {book.title} - {book.author}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                    Thông tin bản sách
+                  </label>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <label className="block text-xs text-sage-600 dark:text-sage-400 mb-1">
+                          Thư viện
+                        </label>
+                        <select className="block w-full px-3 py-2 border border-sage-200 dark:border-sage-700 rounded-lg bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent text-sm">
+                          <option value="">Chọn thư viện</option>
+                          {libraries.map(library => (
+                            <option key={library.libraryId} value={library.libraryId}>
+                              {library.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="w-24">
+                        <label className="block text-xs text-sage-600 dark:text-sage-400 mb-1">
+                          Số lượng
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="100"
+                          className="block w-full px-3 py-2 border border-sage-200 dark:border-sage-700 rounded-lg bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent text-sm"
+                          placeholder="1"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-sage-600 dark:text-sage-400 mb-1">
+                        Vị trí kệ (tùy chọn)
+                      </label>
+                      <input
+                        type="text"
+                        className="block w-full px-3 py-2 border border-sage-200 dark:border-sage-700 rounded-lg bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent text-sm"
+                        placeholder="Ví dụ: Kệ A, Tầng 1"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-sage-50 dark:bg-sage-900/20 rounded-lg p-3">
+                  <p className="text-sm text-sage-600 dark:text-sage-400">
+                    <strong>Lưu ý:</strong> Hệ thống sẽ tự động tạo QR code cho từng bản sách. 
+                    Bạn có thể thêm nhiều thư viện khác nhau bằng cách click "Thêm thư viện".
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 mt-6">
+                <ActionButton
+                  variant="outline"
+                  onClick={() => setIsBulkCreateModalOpen(false)}
+                >
+                  Hủy
+                </ActionButton>
+                <ActionButton
+                  variant="primary"
+                  disabled={loading}
+                >
+                  {loading ? 'Đang tạo...' : 'Tạo bản sách'}
+                </ActionButton>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Notification Toast */}
       <NotificationToast

@@ -3,33 +3,29 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAccountAuth } from '../../contexts/AccountAuthContext';
 import ActionButton from '../../components/ui/ActionButton';
 import NotificationToast from '../../components/ui/NotificationToast';
 import DarkModeToggle from '../../components/ui/DarkModeToggle';
 
 const RegisterPage = () => {
   const router = useRouter();
-  const { register, isAuthenticated } = useAuth();
+  const { register, isAuthenticated } = useAccountAuth();
   const [formData, setFormData] = useState({
-    username: '',
+    fullName: '',
     email: '',
+    phone: '',
+    department: '',
+    position: '',
+    employeeCode: '',
     password: '',
     confirmPassword: '',
-    fullName: '',
-    phone: '',
-    studentId: '',
-    faculty: '',
-    major: '',
-    academicYear: '',
-    userType: 'READER',
     campusId: ''
   });
   const [campuses, setCampuses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
 
-  // Fetch campus list on mount
   useEffect(() => {
     const fetchCampuses = async () => {
       try {
@@ -47,7 +43,6 @@ const RegisterPage = () => {
     fetchCampuses();
   }, []);
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       router.push('/');
@@ -55,16 +50,16 @@ const RegisterPage = () => {
   }, [isAuthenticated, router]);
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
   };
 
   const validateForm = () => {
     if (!formData.campusId) {
-      showNotification('Vui lòng chọn cơ sở (campus)', 'error');
+      showNotification('Vui lòng chọn chi nhánh', 'error');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -107,7 +102,6 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen bg-sage-50 dark:bg-neutral-950 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <div className="p-3 bg-sage-100 dark:bg-sage-800 rounded-2xl">
@@ -117,34 +111,30 @@ const RegisterPage = () => {
             </div>
           </div>
           <h1 className="text-3xl font-serif font-bold text-sage-900 dark:text-sage-100 mb-2">
-            Tạo tài khoản mới
+            Đăng ký nhân viên
           </h1>
           <p className="text-sage-600 dark:text-sage-400">
-            Tham gia hệ thống thư viện của chúng tôi
+            Tham gia hệ thống thư viện công ty
           </p>
         </div>
-
-        {/* Register Form */}
         <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                  Tên đăng nhập *
+                <label htmlFor="fullName" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                  Họ tên *
                 </label>
                 <input
                   type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Nhập tên đăng nhập"
+                  placeholder="Nhập họ tên"
                 />
               </div>
-
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
                   Email *
@@ -160,31 +150,83 @@ const RegisterPage = () => {
                   placeholder="Nhập email"
                 />
               </div>
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                  Số điện thoại *
+                </label>
+                <input
+                  type="text"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Nhập số điện thoại"
+                />
+              </div>
+              <div>
+                <label htmlFor="employeeCode" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                  Mã nhân viên *
+                </label>
+                <input
+                  type="text"
+                  id="employeeCode"
+                  name="employeeCode"
+                  value={formData.employeeCode}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Nhập mã nhân viên"
+                />
+              </div>
+              <div>
+                <label htmlFor="department" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                  Phòng ban
+                </label>
+                <input
+                  type="text"
+                  id="department"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Nhập phòng ban"
+                />
+              </div>
+              <div>
+                <label htmlFor="position" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                  Chức vụ
+                </label>
+                <input
+                  type="text"
+                  id="position"
+                  name="position"
+                  value={formData.position}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Nhập chức vụ"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label htmlFor="campusId" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                  Chi nhánh công ty *
+                </label>
+                <select
+                  id="campusId"
+                  name="campusId"
+                  value={formData.campusId}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
+                >
+                  <option value="">Chọn chi nhánh công ty</option>
+                  {campuses.map(campus => (
+                    <option key={campus.campusId} value={campus.campusId}>{campus.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-
-            {/* Campus Dropdown */}
-            <div>
-              <label htmlFor="campusId" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                Cơ sở (Campus) *
-              </label>
-              <select
-                id="campusId"
-                name="campusId"
-                value={formData.campusId}
-                onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
-              >
-                <option value="">Chọn cơ sở</option>
-                {campuses.map((campus) => (
-                  <option key={campus.campusId} value={campus.campusId}>
-                    {campus.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Password */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
@@ -201,7 +243,6 @@ const RegisterPage = () => {
                   placeholder="Nhập mật khẩu"
                 />
               </div>
-
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
                   Xác nhận mật khẩu *
@@ -218,127 +259,6 @@ const RegisterPage = () => {
                 />
               </div>
             </div>
-
-            {/* Personal Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                  Họ và tên *
-                </label>
-                <input
-                  type="text"
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Nhập họ và tên"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                  Số điện thoại *
-                </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Nhập số điện thoại"
-                />
-              </div>
-            </div>
-
-            {/* Student Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="studentId" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                  Mã sinh viên
-                </label>
-                <input
-                  type="text"
-                  id="studentId"
-                  name="studentId"
-                  value={formData.studentId}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Nhập mã sinh viên"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="userType" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                  Vai trò *
-                </label>
-                <select
-                  id="userType"
-                  name="userType"
-                  value={formData.userType}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
-                >
-                  <option value="READER">Độc giả</option>
-                  <option value="STAFF">Nhân viên</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label htmlFor="faculty" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                  Khoa
-                </label>
-                <input
-                  type="text"
-                  id="faculty"
-                  name="faculty"
-                  value={formData.faculty}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Nhập khoa"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="major" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                  Ngành
-                </label>
-                <input
-                  type="text"
-                  id="major"
-                  name="major"
-                  value={formData.major}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Nhập ngành"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="academicYear" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                  Năm học
-                </label>
-                <input
-                  type="number"
-                  id="academicYear"
-                  name="academicYear"
-                  value={formData.academicYear}
-                  onChange={handleInputChange}
-                  min="1"
-                  max="10"
-                  className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Nhập năm học"
-                />
-              </div>
-            </div>
-
-            {/* Submit Button */}
             <ActionButton
               type="submit"
               variant="primary"
@@ -349,8 +269,6 @@ const RegisterPage = () => {
               Đăng ký
             </ActionButton>
           </form>
-
-          {/* Login Link */}
           <div className="text-center mt-6">
             <p className="text-sm text-sage-600 dark:text-sage-400">
               Đã có tài khoản?{' '}
@@ -360,20 +278,11 @@ const RegisterPage = () => {
             </p>
           </div>
         </div>
-
-        {/* Dark Mode Toggle */}
         <div className="flex justify-center mt-6">
           <DarkModeToggle />
         </div>
       </div>
-
-      {/* Notification Toast */}
-      <NotificationToast
-        message={notification.message}
-        type={notification.type}
-        isVisible={notification.show}
-        onClose={() => setNotification({ ...notification, show: false })}
-      />
+      <NotificationToast {...notification} onClose={() => setNotification({ ...notification, show: false })} />
     </div>
   );
 };

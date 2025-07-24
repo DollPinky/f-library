@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '../../contexts/AuthContext';
-import { 
-  HomeIcon, 
-  BookOpenIcon, 
-  UserGroupIcon, 
-  ChartBarIcon, 
-  CogIcon, 
-  Bars3Icon, 
+import { useAccountAuth } from '../../contexts/AccountAuthContext';
+import {
+  HomeIcon,
+  BookOpenIcon,
+  UserGroupIcon,
+  ChartBarIcon,
+  CogIcon,
+  Bars3Icon,
   XMarkIcon,
   SunIcon,
   MoonIcon,
@@ -27,7 +27,7 @@ import {
 const Navigation = ({ darkMode, onToggleDarkMode }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, isStaff, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAccountAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -50,7 +50,10 @@ const Navigation = ({ darkMode, onToggleDarkMode }) => {
     { name: 'Hồ sơ', href: '/profile', icon: UserIcon },
   ];
 
-  const navigation = isStaff() ? adminNavigation : userNavigation;
+  let navigation = userNavigation;
+  if (user?.role === 'ADMIN' || user?.role === 'STAFF') {
+    navigation = adminNavigation;
+  }
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
@@ -75,7 +78,7 @@ const Navigation = ({ darkMode, onToggleDarkMode }) => {
       <div className="hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 lg:z-50 lg:bg-white dark:lg:bg-neutral-900 lg:border-r lg:border-sage-200 dark:lg:border-sage-700">
         {/* Logo Section */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-sage-200 dark:border-sage-700">
-          <Link href={isStaff() ? '/admin' : '/'} className="flex items-center space-x-3 group">
+          <Link href="/" className="flex items-center space-x-3 group">
             <div className="w-9 h-9 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center group-hover:bg-sage-700 dark:group-hover:bg-sage-400 transition-colors duration-200">
               <BuildingLibraryIcon className="w-5 h-5 text-white" />
             </div>
@@ -128,7 +131,7 @@ const Navigation = ({ darkMode, onToggleDarkMode }) => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-sage-900 dark:text-sage-100 truncate">
-                {user?.name || 'Admin User'}
+                {user?.fullName || 'Admin User'}
               </p>
               <p className="text-xs text-sage-600 dark:text-sage-400 truncate">
                 {user?.email || 'admin@library.com'}
@@ -170,7 +173,7 @@ const Navigation = ({ darkMode, onToggleDarkMode }) => {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white dark:bg-neutral-900 border-b border-sage-200 dark:border-sage-700">
         <div className="flex items-center justify-between h-16 px-4">
           {/* Logo */}
-          <Link href={isStaff() ? '/admin' : '/'} className="flex items-center space-x-3">
+          <Link href="/" className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center">
               <BuildingLibraryIcon className="w-5 h-5 text-white" />
             </div>
@@ -252,7 +255,7 @@ const Navigation = ({ darkMode, onToggleDarkMode }) => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-sage-900 dark:text-sage-100 truncate">
-                    {user?.name || 'Admin User'}
+                    {user?.fullName || 'Admin User'}
                   </p>
                   <p className="text-xs text-sage-600 dark:text-sage-400 truncate">
                     {user?.email || 'admin@library.com'}

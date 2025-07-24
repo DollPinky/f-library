@@ -51,12 +51,7 @@ const BookEditPage = () => {
             sortBy: 'name', 
             sortDirection: 'ASC' 
           }),
-          libraryService.getLibraries({ 
-            page: 0, 
-            size: 100, 
-            sortBy: 'name', 
-            sortDirection: 'ASC' 
-          })
+          libraryService.getAllLibraries()
         ]);
 
         if (categoriesResponse.success) {

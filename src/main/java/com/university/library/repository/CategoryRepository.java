@@ -3,6 +3,8 @@ package com.university.library.repository;
 import com.university.library.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -35,5 +37,11 @@ public interface CategoryRepository extends JpaRepository<Category, UUID>, JpaSp
      * Tìm danh mục theo mô tả
      */
     List<Category> findByDescriptionContainingIgnoreCase(String description);
+    
+    /**
+     * Đếm số sách trong một danh mục
+     */
+    @Query("SELECT COUNT(b) FROM Book b WHERE b.category.categoryId = :categoryId")
+    Long countBooksByCategoryId(@Param("categoryId") UUID categoryId);
 } 
 

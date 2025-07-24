@@ -6,34 +6,6 @@ package com.university.library.constants;
  */
 public final class BookCopyConstants {
     
-    // Cache Constants
-    public static final String CACHE_NAME = "book-copies";
-    public static final String CACHE_KEY_PREFIX_BOOK_COPY = "book-copy:";
-    public static final String CACHE_KEY_PREFIX_SEARCH = "search:";
-    public static final String CACHE_KEY_PREFIX_BOOK = "book:";
-    public static final String CACHE_KEY_PREFIX_LIBRARY = "library:";
-    public static final String CACHE_KEY_PREFIX_STATUS = "status:";
-    
-    // Kafka Topics
-    public static final String TOPIC_BOOK_COPY_CREATED = "book-copy.created";
-    public static final String TOPIC_BOOK_COPY_UPDATED = "book-copy.updated";
-    public static final String TOPIC_BOOK_COPY_DELETED = "book-copy.deleted";
-    public static final String TOPIC_BOOK_COPY_STATUS_CHANGED = "book-copy.status.changed";
-    public static final String TOPIC_BOOK_COPY_CACHE_EVICT = "book-copy.cache.evict";
-    
-    // Event Types
-    public static final String EVENT_BOOK_COPY_CREATED = "BOOK_COPY_CREATED";
-    public static final String EVENT_BOOK_COPY_UPDATED = "BOOK_COPY_UPDATED";
-    public static final String EVENT_BOOK_COPY_DELETED = "BOOK_COPY_DELETED";
-    public static final String EVENT_BOOK_COPY_STATUS_CHANGED = "BOOK_COPY_STATUS_CHANGED";
-    public static final String EVENT_CACHE_EVICT = "CACHE_EVICT";
-    
-    // Cache TTL (in minutes)
-    public static final int CACHE_TTL_BOOK_COPY_DETAIL = 20;
-    public static final int CACHE_TTL_BOOK_COPY_SEARCH = 15;
-    public static final int CACHE_TTL_BOOK_COPY_LIST = 25;
-    public static final int CACHE_TTL_LOCAL = 8;
-    
     // Error Messages
     public static final String ERROR_BOOK_COPY_NOT_FOUND = "Book copy not found with ID: ";
     public static final String ERROR_BOOK_COPY_ALREADY_EXISTS = "Book copy already exists with QR code: ";

@@ -25,11 +25,11 @@ public class BookCopy extends BaseEntity {
     private UUID bookCopyId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "book_id")
+    @JoinColumn(name = "book_id", nullable = false)
     private Book book;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "library_id")
+    @JoinColumn(name = "library_id", nullable = false)
     private Library library;
     
     @Column(name = "qr_code", unique = true, length = 255)
@@ -48,6 +48,5 @@ public class BookCopy extends BaseEntity {
     public enum BookStatus {
         AVAILABLE, BORROWED, RESERVED, LOST, DAMAGED
     }
-
 } 
 

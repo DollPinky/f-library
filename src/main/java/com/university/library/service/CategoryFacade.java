@@ -60,20 +60,6 @@ public class CategoryFacade {
         return categoryQueryService.getCategoryChildren(parentCategoryId);
     }
 
-    /**
-     * Kiểm tra xem category có trong cache không
-     */
-    public boolean isCategoryCached(UUID categoryId) {
-        return categoryQueryService.isCategoryCached(categoryId);
-    }
-
-    /**
-     * Lấy TTL của category trong cache
-     */
-    public Long getCategoryCacheTtl(UUID categoryId) {
-        return categoryQueryService.getCategoryCacheTtl(categoryId);
-    }
-
     // ==================== COMMAND OPERATIONS ====================
 
     /**
@@ -98,64 +84,6 @@ public class CategoryFacade {
     public void deleteCategory(UUID categoryId) {
         log.info("CategoryFacade: Deleting category with ID: {}", categoryId);
         categoryCommandService.deleteCategory(categoryId);
-    }
-
-    // ==================== CACHE MANAGEMENT ====================
-
-    /**
-     * Xóa cache cho một category cụ thể
-     */
-    public void clearCategoryCache(UUID categoryId) {
-        log.info("CategoryFacade: Clearing cache for category: {}", categoryId);
-        categoryQueryService.clearCategoryCache(categoryId);
-        categoryCommandService.publishCacheEvictEvent(categoryId);
-    }
-
-    /**
-     * Xóa cache cho nhiều categories
-     */
-    public void clearCategoriesCache(List<UUID> categoryIds) {
-        log.info("CategoryFacade: Clearing cache for {} categories", categoryIds.size());
-        categoryQueryService.clearCategoriesCache(categoryIds);
-        categoryCommandService.clearCategoriesCache(categoryIds);
-    }
-
-    /**
-     * Xóa toàn bộ search cache
-     */
-    public void clearSearchCache() {
-        log.info("CategoryFacade: Clearing all search cache");
-        categoryQueryService.clearSearchCache();
-    }
-
-    /**
-     * Xóa cache cho một tìm kiếm cụ thể
-     */
-    public void clearSearchCache(CategorySearchParams params) {
-        log.info("CategoryFacade: Clearing search cache for specific params");
-        categoryQueryService.clearSearchCache(params);
-    }
-
-    /**
-     * Xóa toàn bộ cache
-     */
-    public void clearAllCache() {
-        log.info("CategoryFacade: Clearing all category cache");
-        // CACHE DISABLED;
-    }
-
-    // ==================== CACHE STATISTICS ====================
-
-    /**
-     * Lấy thống kê cache
-     */
-    public CacheStatistics getCacheStatistics() {
-        // Trong thực tế, bạn sẽ implement logic để lấy thống kê cache
-        return CacheStatistics.builder()
-            .cacheName(CategoryConstants.CACHE_NAME)
-            .totalKeys(0) // TODO: Implement
-            .hitRate(0.0) // TODO: Implement
-            .build();
     }
 
     /**

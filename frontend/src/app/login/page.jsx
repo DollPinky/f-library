@@ -1,69 +1,44 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAccountAuth } from '../../contexts/AccountAuthContext';
 import ActionButton from '../../components/ui/ActionButton';
 import NotificationToast from '../../components/ui/NotificationToast';
 import DarkModeToggle from '../../components/ui/DarkModeToggle';
 
 const LoginPage = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { login, isAuthenticated, isStaff } = useAuth();
+  const { login, isAuthenticated } = useAccountAuth();
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    rememberMe: false
+    email: '',
+    password: ''
   });
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
 
-  // Check if user is already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      if (isStaff()) {
-        router.push('/admin');
-      } else {
-        router.push('/');
-      }
+      router.push('/');
     }
-  }, [isAuthenticated, isStaff, router]);
-
-  // Show error message from URL params
-  useEffect(() => {
-    const error = searchParams.get('error');
-    const logout = searchParams.get('logout');
-    const expired = searchParams.get('expired');
-    
-    if (error) {
-      showNotification('Tên đăng nhập hoặc mật khẩu không đúng', 'error');
-    } else if (logout) {
-      showNotification('Đăng xuất thành công', 'success');
-    } else if (expired) {
-      showNotification('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại', 'warning');
-    }
-  }, [searchParams]);
+  }, [isAuthenticated, router]);
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const result = await login(formData);
-      
       if (result.success) {
         showNotification(result.message, 'success');
-        // Redirect will be handled by AuthContext
       } else {
         showNotification(result.message, 'error');
       }
@@ -81,7 +56,6 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-sage-50 dark:bg-neutral-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <div className="p-3 bg-sage-100 dark:bg-sage-800 rounded-2xl">
@@ -91,34 +65,29 @@ const LoginPage = () => {
             </div>
           </div>
           <h1 className="text-3xl font-serif font-bold text-sage-900 dark:text-sage-100 mb-2">
-            Chào mừng trở lại
+            Đăng nhập nhân viên
           </h1>
           <p className="text-sage-600 dark:text-sage-400">
-            Đăng nhập vào hệ thống thư viện
+            Đăng nhập vào hệ thống thư viện công ty
           </p>
         </div>
-
-        {/* Login Form */}
         <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
-                Tên đăng nhập
+              <label htmlFor="email" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                Email
               </label>
               <input
-                type="text"
-                id="username"
-                name="username"
-                value={formData.username}
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
-                placeholder="Nhập tên đăng nhập"
+                placeholder="Nhập email"
               />
             </div>
-
-            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
                 Mật khẩu
@@ -134,23 +103,6 @@ const LoginPage = () => {
                 placeholder="Nhập mật khẩu"
               />
             </div>
-
-            {/* Remember Me */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="rememberMe"
-                name="rememberMe"
-                checked={formData.rememberMe}
-                onChange={handleInputChange}
-                className="h-4 w-4 text-sage-600 focus:ring-sage-500 border-sage-300 rounded"
-              />
-              <label htmlFor="rememberMe" className="ml-2 block text-sm text-sage-600 dark:text-sage-400">
-                Ghi nhớ đăng nhập
-              </label>
-            </div>
-
-            {/* Submit Button */}
             <ActionButton
               type="submit"
               variant="primary"
@@ -161,23 +113,7 @@ const LoginPage = () => {
               Đăng nhập
             </ActionButton>
           </form>
-
-          {/* Divider */}
-          <div className="my-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-sage-200 dark:border-sage-700"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-neutral-900 text-sage-500 dark:text-sage-400">
-                  hoặc
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Register Link */}
-          <div className="text-center">
+          <div className="text-center mt-6">
             <p className="text-sm text-sage-600 dark:text-sage-400">
               Chưa có tài khoản?{' '}
               <Link href="/register" className="font-medium text-sage-600 dark:text-sage-400 hover:text-sage-500 dark:hover:text-sage-300 transition-colors duration-200">
@@ -186,20 +122,11 @@ const LoginPage = () => {
             </p>
           </div>
         </div>
-
-        {/* Dark Mode Toggle */}
         <div className="flex justify-center mt-6">
           <DarkModeToggle />
         </div>
       </div>
-
-      {/* Notification Toast */}
-      <NotificationToast
-        message={notification.message}
-        type={notification.type}
-        isVisible={notification.show}
-        onClose={() => setNotification({ ...notification, show: false })}
-      />
+      <NotificationToast {...notification} onClose={() => setNotification({ ...notification, show: false })} />
     </div>
   );
 };

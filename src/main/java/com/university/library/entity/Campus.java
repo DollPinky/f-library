@@ -34,9 +34,5 @@ public class Campus extends BaseEntity {
     
     @OneToMany(mappedBy = "campus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Library> libraries = new ArrayList<>();
-    
-    @OneToMany(mappedBy = "campus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Reader> readers = new ArrayList<>();
-
 } 
 

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.university.library.config.UUIDDeserializer;
 
@@ -23,6 +24,9 @@ public class CreateCategoryCommand {
     
     @Size(max = 1000, message = "Mô tả không được vượt quá 1000 ký tự")
     private String description;
+    
+    @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "Màu sắc phải là mã hex hợp lệ (ví dụ: #5a735a)")
+    private String color = "#5a735a";
     
     @JsonDeserialize(using = UUIDDeserializer.class)
     private UUID parentCategoryId;

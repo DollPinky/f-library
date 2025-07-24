@@ -3,370 +3,318 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { PlusIcon } from '@heroicons/react/24/outline';
-import SearchCard from '../../../components/ui/SearchCard';
-import TableView from '../../../components/ui/TableView';
+import borrowingService from '../../../services/borrowingService';
 import ActionButton from '../../../components/ui/ActionButton';
 import NotificationToast from '../../../components/ui/NotificationToast';
-import DarkModeToggle from '../../../components/ui/DarkModeToggle';
+import { 
+  BookOpenIcon, 
+  ClockIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ExclamationTriangleIcon,
+  ArrowLeftIcon,
+  ChevronRightIcon
+} from '@heroicons/react/24/outline';
 
-const AdminBorrowingsPage = () => {
+const BorrowingManagementPage = () => {
   const router = useRouter();
   const [borrowings, setBorrowings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({
-    currentPage: 0,
-    totalPages: 0,
-    totalElements: 0,
-    size: 10
-  });
-  const [searchParams, setSearchParams] = useState({
-    search: '',
-    status: '',
-    library: '',
-    overdue: ''
-  });
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
-  const [selectedBorrowing, setSelectedBorrowing] = useState(null);
-  const [showReturnModal, setShowReturnModal] = useState(false);
 
   useEffect(() => {
-    fetchBorrowings();
-  }, [pagination.currentPage, searchParams]);
+    loadBorrowings();
+  }, []);
 
-  const fetchBorrowings = async () => {
+  const loadBorrowings = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        page: pagination.currentPage,
-        size: pagination.size,
-        ...searchParams
-      });
-
-      const response = await fetch(`/api/v1/borrowings?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setBorrowings(data.data.content || []);
-        setPagination({
-          currentPage: data.data.number || 0,
-          totalPages: data.data.totalPages || 0,
-          totalElements: data.data.totalElements || 0,
-          size: data.data.size || 10
-        });
+      const response = await borrowingService.getAllBorrowings();
+      if (response.success) {
+        setBorrowings(response.data || []);
       } else {
-        showNotification(data.message || 'Không thể tải danh sách mượn sách', 'error');
+        showNotification(response.message || 'Không thể tải danh sách mượn sách', 'error');
       }
     } catch (error) {
+      console.error('Error loading borrowings:', error);
       showNotification('Không thể tải danh sách mượn sách', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (searchTerm) => {
-    setSearchParams(prev => ({ ...prev, search: searchTerm }));
-    setPagination(prev => ({ ...prev, currentPage: 0 }));
-  };
-
-  const handleFilterChange = (filters) => {
-    setSearchParams(prev => ({ ...prev, ...filters }));
-    setPagination(prev => ({ ...prev, currentPage: 0 }));
-  };
-
-  const handlePageChange = (page) => {
-    setPagination(prev => ({ ...prev, currentPage: page }));
-  };
-
-  const handleReturnBook = async () => {
-    if (!selectedBorrowing) return;
-
+  const handleConfirmBorrowing = async (borrowingId) => {
     try {
-      setLoading(true);
-      const response = await fetch(`/api/v1/borrowings/${selectedBorrowing.borrowId}/return`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          returnedAt: new Date().toISOString().split('T')[0]
-        })
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        showNotification('Trả sách thành công!', 'success');
-        setShowReturnModal(false);
-        setSelectedBorrowing(null);
-        fetchBorrowings();
-      } else {
-        showNotification(data.message || 'Không thể trả sách', 'error');
+      const response = await borrowingService.confirmBorrowing(borrowingId);
+      if (response.success) {
+        showNotification('Xác nhận mượn sách thành công', 'success');
+        loadBorrowings();
       }
     } catch (error) {
-      showNotification('Không thể trả sách', 'error');
-    } finally {
-      setLoading(false);
+      showNotification(error.message, 'error');
     }
   };
 
-  const confirmReturn = (borrowing) => {
-    setSelectedBorrowing(borrowing);
-    setShowReturnModal(true);
+  const handleReturnBook = async (borrowingId) => {
+    try {
+      const response = await borrowingService.returnBook(borrowingId);
+      if (response.success) {
+        showNotification('Trả sách thành công', 'success');
+        loadBorrowings();
+      }
+    } catch (error) {
+      showNotification(error.message, 'error');
+    }
   };
 
-  const showNotification = (message, type = 'info') => {
-    setNotification({ show: true, message, type });
+  const handleCancelReservation = async (borrowingId) => {
+    try {
+      const response = await borrowingService.cancelReservation(borrowingId);
+      if (response.success) {
+        showNotification('Hủy đặt sách thành công', 'success');
+        loadBorrowings();
+      }
+    } catch (error) {
+      showNotification(error.message, 'error');
+    }
   };
 
-  const getStatusColor = (status) => {
+  const handleReportLost = async (borrowingId) => {
+    try {
+      const response = await borrowingService.reportLost(borrowingId);
+      if (response.success) {
+        showNotification('Đã báo mất sách', 'success');
+        loadBorrowings();
+      }
+    } catch (error) {
+      showNotification(error.message, 'error');
+    }
+  };
+
+  const getStatusIcon = (status) => {
     switch (status) {
+      case 'RESERVED':
+        return <ClockIcon className="w-5 h-5 text-amber-500" />;
       case 'BORROWED':
-        return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
+        return <BookOpenIcon className="w-5 h-5 text-blue-500" />;
       case 'RETURNED':
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
+        return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
       case 'OVERDUE':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        return <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />;
+      case 'LOST':
+        return <XCircleIcon className="w-5 h-5 text-red-600" />;
       default:
-        return 'bg-sage-100 text-sage-800 dark:bg-sage-900 dark:text-sage-200';
+        return <ClockIcon className="w-5 h-5 text-gray-500" />;
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
+      case 'RESERVED':
+        return 'Đã đặt';
       case 'BORROWED':
         return 'Đang mượn';
       case 'RETURNED':
         return 'Đã trả';
       case 'OVERDUE':
         return 'Quá hạn';
+      case 'LOST':
+        return 'Mất sách';
       default:
-        return 'Không xác định';
+        return status;
     }
   };
 
-  const isOverdue = (dueDate) => {
-    return new Date(dueDate) < new Date();
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'RESERVED':
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
+      case 'BORROWED':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'RETURNED':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'OVERDUE':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'LOST':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    }
   };
 
-  const columns = [
-    {
-      key: 'bookCopy',
-      header: 'Sách',
-      render: (value, row) => (
-        <div className="max-w-xs">
-          <div className="font-medium text-sage-900 dark:text-sage-100 truncate">
-            {value?.book?.title || 'N/A'}
-          </div>
-          <div className="text-sm text-sage-600 dark:text-sage-400">
-            QR: {value?.qrCode || 'N/A'}
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'reader',
-      header: 'Độc giả',
-      render: (value, row) => (
-        <div className="max-w-xs">
-          <div className="font-medium text-sage-900 dark:text-sage-100 truncate">
-            {value?.name || 'N/A'}
-          </div>
-          <div className="text-sm text-sage-600 dark:text-sage-400">
-            {value?.studentId || 'N/A'}
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'borrowedAt',
-      header: 'Ngày mượn',
-      render: (value) => (
-        <span className="text-sage-600 dark:text-sage-400">
-          {new Date(value).toLocaleDateString('vi-VN')}
-        </span>
-      )
-    },
-    {
-      key: 'dueDate',
-      header: 'Hạn trả',
-      render: (value, row) => {
-        const overdue = isOverdue(value);
-        return (
-          <div>
-            <span className={`${overdue ? 'text-red-600 dark:text-red-400 font-medium' : 'text-sage-600 dark:text-sage-400'}`}>
-              {new Date(value).toLocaleDateString('vi-VN')}
-            </span>
-            {overdue && (
-              <div className="text-xs text-red-600 dark:text-red-400">
-                Quá hạn {Math.ceil((new Date() - new Date(value)) / (1000 * 60 * 60 * 24))} ngày
-              </div>
-            )}
-          </div>
-        );
-      }
-    },
-    {
-      key: 'status',
-      header: 'Trạng thái',
-      render: (value) => (
-        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(value)}`}>
-          {getStatusText(value)}
-        </span>
-      )
-    },
-    {
-      key: 'fineAmount',
-      header: 'Tiền phạt',
-      render: (value) => (
-        <span className={`font-medium ${value > 0 ? 'text-red-600 dark:text-red-400' : 'text-sage-600 dark:text-sage-400'}`}>
-          {value > 0 ? `${value.toLocaleString('vi-VN')} VNĐ` : '0 VNĐ'}
-        </span>
-      )
-    },
-    {
-      key: 'actions',
-      header: 'Thao tác',
-      render: (value, row) => (
-        <div className="flex items-center space-x-2">
-          <ActionButton
-            variant="outline"
-            size="sm"
-            onClick={() => router.push(`/admin/borrowings/${row.borrowId}`)}
-          >
-            Chi tiết
-          </ActionButton>
-          {row.status === 'BORROWED' && (
-            <ActionButton
-              variant="success"
-              size="sm"
-              onClick={() => confirmReturn(row)}
-            >
-              Trả sách
-            </ActionButton>
-          )}
-          {row.status === 'OVERDUE' && (
-            <ActionButton
-              variant="warning"
-              size="sm"
-              onClick={() => router.push(`/admin/borrowings/${row.borrowId}/fine`)}
-            >
-              Xử lý phạt
-            </ActionButton>
-          )}
-        </div>
-      )
-    }
-  ];
+  const showNotification = (message, type = 'info') => {
+    setNotification({ show: true, message, type });
+  };
 
-  return (
-    <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
-      <div className="p-4 sm:p-6 lg:p-6">
-        <div className="max-w-none mx-auto">
-          {/* Page Header */}
-          <div className="mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-sage-900 dark:text-sage-100 mb-2">
-                  Quản lý mượn trả
-                </h1>
-                <p className="text-sm sm:text-base text-sage-600 dark:text-sage-400">
-                  Quản lý và theo dõi hoạt động mượn trả sách
-                </p>
-              </div>
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <ActionButton
-                  variant="primary"
-                  onClick={() => router.push('/admin/borrowings/create')}
-                  className="group min-h-[40px]"
-                >
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Tạo mượn sách</span>
-                  <span className="sm:hidden">Tạo</span>
-                </ActionButton>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
+        <div className="p-4 sm:p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="animate-pulse space-y-6">
+              <div className="h-8 bg-sage-200 dark:bg-sage-700 rounded w-1/3"></div>
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-20 bg-sage-200 dark:bg-sage-700 rounded-xl"></div>
+                ))}
               </div>
             </div>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="mb-6 sm:mb-8">
-            <SearchCard
-              onSearch={handleSearch}
-              onFilterChange={handleFilterChange}
-              filters={searchParams}
-              placeholder="Tìm kiếm theo tên sách, độc giả, QR code..."
-            />
-          </div>
-
-          {/* Borrowings Table */}
-          <div className="bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft overflow-hidden">
-            <TableView
-              data={borrowings}
-              columns={columns}
-              loading={loading}
-              pagination={{
-                currentPage: pagination.currentPage + 1,
-                totalPages: pagination.totalPages,
-                total: pagination.totalElements,
-                from: pagination.currentPage * pagination.size + 1,
-                to: Math.min((pagination.currentPage + 1) * pagination.size, pagination.totalElements)
-              }}
-              onPageChange={handlePageChange}
-            />
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Return Confirmation Modal */}
-      {showReturnModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-serif font-semibold text-sage-900 dark:text-sage-100 mb-4">
-              Xác nhận trả sách
-            </h3>
-            <div className="mb-6 space-y-3">
-              <p className="text-sage-600 dark:text-sage-400">
-                <strong>Sách:</strong> {selectedBorrowing?.bookCopy?.book?.title}
-              </p>
-              <p className="text-sage-600 dark:text-sage-400">
-                <strong>Độc giả:</strong> {selectedBorrowing?.reader?.name}
-              </p>
-              <p className="text-sage-600 dark:text-sage-400">
-                <strong>Ngày mượn:</strong> {new Date(selectedBorrowing?.borrowedAt).toLocaleDateString('vi-VN')}
-              </p>
-              <p className="text-sage-600 dark:text-sage-400">
-                <strong>Hạn trả:</strong> {new Date(selectedBorrowing?.dueDate).toLocaleDateString('vi-VN')}
-              </p>
-              {isOverdue(selectedBorrowing?.dueDate) && (
-                <p className="text-red-600 dark:text-red-400 font-medium">
-                  ⚠️ Sách đã quá hạn! Cần xử lý tiền phạt.
+  return (
+    <div className="min-h-screen bg-sage-50 dark:bg-neutral-950">
+      <div className="p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Breadcrumb */}
+          <nav className="mb-8">
+            <ol className="flex items-center space-x-2 text-sm text-sage-600 dark:text-sage-400">
+              <li>
+                <Link href="/admin" className="hover:text-sage-500 dark:hover:text-sage-300 transition-colors duration-200 flex items-center">
+                  <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                  Admin
+                </Link>
+              </li>
+              <li>
+                <ChevronRightIcon className="w-4 h-4" />
+              </li>
+              <li className="text-sage-900 dark:text-sage-100 font-medium">
+                Quản lý mượn sách
+              </li>
+            </ol>
+          </nav>
+
+          {/* Page Header */}
+          <div className="mb-8">
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="w-12 h-12 bg-sage-100 dark:bg-sage-800 rounded-xl flex items-center justify-center">
+                <BookOpenIcon className="w-6 h-6 text-sage-600 dark:text-sage-400" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-serif font-bold text-sage-900 dark:text-sage-100">
+                  Quản lý mượn sách
+                </h1>
+                <p className="text-lg text-sage-600 dark:text-sage-400">
+                  Theo dõi và quản lý tất cả hoạt động mượn sách
                 </p>
-              )}
+              </div>
             </div>
-            <div className="flex gap-4">
-              <ActionButton
-                variant="success"
-                onClick={handleReturnBook}
-                loading={loading}
-              >
-                Xác nhận trả sách
-              </ActionButton>
-              <ActionButton
-                variant="outline"
-                onClick={() => setShowReturnModal(false)}
-              >
-                Hủy
-              </ActionButton>
+          </div>
+
+          {/* Borrowings List */}
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft">
+            <div className="p-6 border-b border-sage-200 dark:border-sage-700">
+              <h2 className="text-xl font-semibold text-sage-900 dark:text-sage-100">
+                Danh sách mượn sách ({borrowings.length})
+              </h2>
+            </div>
+
+            <div className="divide-y divide-sage-200 dark:divide-sage-700">
+              {borrowings.length === 0 ? (
+                <div className="p-8 text-center">
+                  <BookOpenIcon className="w-16 h-16 text-sage-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-100 mb-2">
+                    Chưa có hoạt động mượn sách
+                  </h3>
+                  <p className="text-sage-600 dark:text-sage-400">
+                    Khi có người mượn sách, thông tin sẽ hiển thị ở đây
+                  </p>
+                </div>
+              ) : (
+                borrowings.map((borrowing) => (
+                  <div key={borrowing.borrowingId} className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-4 mb-3">
+                          {getStatusIcon(borrowing.status)}
+                          <div>
+                            <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-100">
+                              {borrowing.bookCopy.book.title}
+                            </h3>
+                            <p className="text-sage-600 dark:text-sage-400">
+                              Tác giả: {borrowing.bookCopy.book.author}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span className="text-sage-500 dark:text-sage-400">Người mượn:</span>
+                            <p className="text-sage-900 dark:text-sage-100 font-medium">
+                              {borrowing.borrower.username} ({borrowing.borrower.email})
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sage-500 dark:text-sage-400">QR Code:</span>
+                            <p className="text-sage-900 dark:text-sage-100 font-mono">
+                              {borrowing.bookCopy.qrCode}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sage-500 dark:text-sage-400">Ngày hẹn trả:</span>
+                            <p className="text-sage-900 dark:text-sage-100">
+                              {new Date(borrowing.dueDate).toLocaleDateString('vi-VN')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end space-y-3">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(borrowing.status)}`}>
+                          {getStatusText(borrowing.status)}
+                        </span>
+                        
+                        <div className="flex space-x-2">
+                          {borrowing.status === 'RESERVED' && (
+                            <>
+                              <ActionButton
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleConfirmBorrowing(borrowing.borrowingId)}
+                              >
+                                Xác nhận
+                              </ActionButton>
+                              <ActionButton
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCancelReservation(borrowing.borrowingId)}
+                              >
+                                Hủy
+                              </ActionButton>
+                            </>
+                          )}
+                          
+                          {borrowing.status === 'BORROWED' && (
+                            <>
+                              <ActionButton
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleReturnBook(borrowing.borrowingId)}
+                              >
+                                Trả sách
+                              </ActionButton>
+                              <ActionButton
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleReportLost(borrowing.borrowingId)}
+                              >
+                                Báo mất
+                              </ActionButton>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Notification Toast */}
       <NotificationToast
@@ -379,4 +327,4 @@ const AdminBorrowingsPage = () => {
   );
 };
 
-export default AdminBorrowingsPage; 
+export default BorrowingManagementPage; 

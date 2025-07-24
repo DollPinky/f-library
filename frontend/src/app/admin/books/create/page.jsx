@@ -27,7 +27,7 @@ const BookCreatePage = () => {
     title: '',
     author: '',
     publisher: '',
-    publicationYear: '',
+    publishYear: '',
     isbn: '',
     description: '',
     categoryId: '',
@@ -47,6 +47,8 @@ const BookCreatePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log('Fetching data for book creation page...');
+        
         // Lấy danh mục và thư viện từ API với parameters rõ ràng
         const [categoriesResponse, librariesResponse] = await Promise.all([
           categoryService.getCategories({ 
@@ -55,19 +57,19 @@ const BookCreatePage = () => {
             sortBy: 'name', 
             sortDirection: 'ASC' 
           }),
-          libraryService.getLibraries({ 
-            page: 0, 
-            size: 100, 
-            sortBy: 'name', 
-            sortDirection: 'ASC' 
-          })
+          libraryService.getAllLibraries()
         ]);
+
+        console.log('Categories response:', categoriesResponse);
+        console.log('Libraries response:', librariesResponse);
 
         if (categoriesResponse.success) {
           setCategories(categoriesResponse.data.content || []);
+          console.log('Categories set:', categoriesResponse.data.content || []);
         }
         if (librariesResponse.success) {
-          setLibraries(librariesResponse.data.content || []);
+          setLibraries(librariesResponse.data || []);
+          console.log('Libraries set:', librariesResponse.data || []);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -94,8 +96,14 @@ const BookCreatePage = () => {
   };
 
   const addBookCopy = () => {
-    if (!bookCopyData.qrCode || !bookCopyData.libraryId) {
-      showNotification('Vui lòng điền đầy đủ thông tin bản sách', 'warning');
+    if (!bookCopyData.libraryId) {
+      showNotification('Vui lòng chọn thư viện', 'warning');
+      return;
+    }
+
+    // Auto-generate QR code if not provided
+    if (!bookCopyData.qrCode) {
+      generateQRCode();
       return;
     }
 
@@ -120,7 +128,13 @@ const BookCreatePage = () => {
   };
 
   const generateQRCode = () => {
-    const qrCode = `BOOK_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Generate QR code with format: BK_ISBN_LIBRARYCODE_COPYNUMBER
+    const library = libraries.find(lib => lib.libraryId === bookCopyData.libraryId);
+    const libraryCode = library ? library.code : 'LIB';
+    const isbn = formData.isbn ? formData.isbn.replace(/[^0-9X]/gi, '') : 'NOISBN';
+    const copyNumber = formData.bookCopies.length + 1;
+    
+    const qrCode = `BK_${isbn}_${libraryCode}_${copyNumber.toString().padStart(3, '0')}`;
     setBookCopyData(prev => ({
       ...prev,
       qrCode
@@ -154,7 +168,7 @@ const BookCreatePage = () => {
         title: formData.title,
         author: formData.author,
         publisher: formData.publisher,
-        publishYear: formData.publicationYear ? parseInt(formData.publicationYear) : null,
+        publishYear: formData.publishYear ? parseInt(formData.publishYear) : null,
         isbn: formData.isbn,
         description: formData.description,
         categoryId: formData.categoryId,
@@ -285,8 +299,8 @@ const BookCreatePage = () => {
                     </label>
                     <input
                       type="number"
-                      name="publicationYear"
-                      value={formData.publicationYear}
+                      name="publishYear"
+                      value={formData.publishYear}
                       onChange={handleInputChange}
                       min="1900"
                       max="2030"

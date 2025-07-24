@@ -44,14 +44,6 @@ public class LibraryFacade {
         return libraryQueryService.getAllLibraries();
     }
     
-    public boolean isLibraryCached(UUID libraryId) {
-        return libraryQueryService.isLibraryCached(libraryId);
-    }
-    
-    public Long getLibraryCacheTtl(UUID libraryId) {
-        return libraryQueryService.getLibraryCacheTtl(libraryId);
-    }
-    
     // Command Operations
     public LibraryResponse createLibrary(CreateLibraryCommand command) {
         return libraryCommandService.createLibrary(command);
@@ -65,41 +57,5 @@ public class LibraryFacade {
         libraryCommandService.deleteLibrary(libraryId);
     }
     
-    // Cache Operations
-    public void clearLibraryCache(UUID libraryId) {
-        libraryQueryService.clearLibraryCache(libraryId);
-        libraryCommandService.clearLibraryCache(libraryId);
-    }
-    
-    public void clearLibrariesCache(List<UUID> libraryIds) {
-        libraryQueryService.clearLibrariesCache(libraryIds);
-        libraryCommandService.clearLibrariesCache(libraryIds);
-    }
-    
-    public void clearSearchCache() {
-        libraryQueryService.clearSearchCache();
-        libraryCommandService.clearSearchCache();
-    }
-    
-    public void clearSearchCache(LibrarySearchParams params) {
-        libraryQueryService.clearSearchCache(params);
-    }
-    
-    public void clearAllCache() {
-        log.info("Clearing all library cache");
-        // CACHE DISABLED;
-    }
-    
-    // Health Check
-    public boolean isHealthy() {
-        try {
-            // Basic health check - try to access cache service
-            false;
-            return true;
-        } catch (Exception e) {
-            log.error(LibraryConstants.ERROR_HEALTH_CHECK_FAILED, e.getMessage());
-            return false;
-        }
-    }
 } 
 

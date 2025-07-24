@@ -6,31 +6,6 @@ package com.university.library.constants;
  */
 public final class LibraryConstants {
     
-    // Cache Constants
-    public static final String CACHE_NAME = "libraries";
-    public static final String CACHE_KEY_PREFIX_LIBRARY = "library:";
-    public static final String CACHE_KEY_PREFIX_SEARCH = "search:";
-    public static final String CACHE_KEY_PREFIX_CAMPUS = "campus:";
-    public static final String CACHE_KEY_PREFIX_CODE = "code:";
-    
-    // Kafka Topics
-    public static final String TOPIC_LIBRARY_CREATED = "library.created";
-    public static final String TOPIC_LIBRARY_UPDATED = "library.updated";
-    public static final String TOPIC_LIBRARY_DELETED = "library.deleted";
-    public static final String TOPIC_LIBRARY_CACHE_EVICT = "library.cache.evict";
-    
-    // Event Types
-    public static final String EVENT_LIBRARY_CREATED = "LIBRARY_CREATED";
-    public static final String EVENT_LIBRARY_UPDATED = "LIBRARY_UPDATED";
-    public static final String EVENT_LIBRARY_DELETED = "LIBRARY_DELETED";
-    public static final String EVENT_CACHE_EVICT = "CACHE_EVICT";
-    
-    // Cache TTL (in minutes)
-    public static final int CACHE_TTL_LIBRARY_DETAIL = 30;
-    public static final int CACHE_TTL_LIBRARY_SEARCH = 20;
-    public static final int CACHE_TTL_LIBRARY_LIST = 35;
-    public static final int CACHE_TTL_LOCAL = 10;
-    
     // Error Messages
     public static final String ERROR_LIBRARY_NOT_FOUND = "Library not found with ID: ";
     public static final String ERROR_LIBRARY_ALREADY_EXISTS = "Library already exists with code: ";
