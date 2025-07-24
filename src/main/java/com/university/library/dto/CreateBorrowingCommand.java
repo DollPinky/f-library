@@ -37,6 +37,14 @@ public class CreateBorrowingCommand {
     
     // For reservation
     private boolean isReservation = false;
+
+    public boolean isReservation() {
+        return isReservation;
+    }
+
+    public void setIsReservation(boolean isReservation) {
+        this.isReservation = isReservation;
+    }
     
     // For bulk operations
     private Integer quantity = 1;
