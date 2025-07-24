@@ -128,7 +128,7 @@ const BooksPageContent = () => {
       };
 
       const response = await borrowingService.createBorrowing(borrowingData);
-      
+      console.log(response);
       if (response.success) {
         showNotification(`Đã mượn sách thành công: ${book.title}`, 'success');
         // Refresh books list

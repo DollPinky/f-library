@@ -6,8 +6,7 @@ class BorrowingService {
    */
   async createBorrowing(borrowingData) {
     try {
-      const response = await api.post('/borrowings', borrowingData);
-      return response.data;
+      return await api.post('/borrowings', borrowingData);
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể tạo yêu cầu mượn sách');
     }
@@ -66,8 +65,7 @@ class BorrowingService {
    */
   async getUserBorrowings(userId, params = {}) {
     try {
-      const response = await api.get(`/borrowings/user/${userId}`, { params });
-      return response.data;
+      return await api.get(`/borrowings/user/${userId}`, {params});
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể lấy danh sách mượn sách');
     }
