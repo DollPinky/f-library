@@ -34,3 +34,4 @@ public interface BookRepository extends JpaRepository<Book, UUID>, JpaSpecificat
      */
     boolean existsByIsbn(String isbn);
 } 
+

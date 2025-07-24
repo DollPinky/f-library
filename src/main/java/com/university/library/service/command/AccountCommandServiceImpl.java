@@ -19,7 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -48,7 +48,7 @@ public class AccountCommandServiceImpl implements AccountCommandService{
                 .fullName(request.getFullName())
                 .userType(Account.UserType.READER)
                 .status(Account.AccountStatus.ACTIVE)
-                .createdAt(LocalDateTime.now())
+                .createdAt(Instant.now())
                 .campus(campus)
                 .emailVerified(false)
                 .phoneVerified(false)
@@ -110,3 +110,4 @@ public class AccountCommandServiceImpl implements AccountCommandService{
         }
     }
 }
+

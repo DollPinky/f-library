@@ -8,7 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -54,7 +54,7 @@ public class Account extends BaseEntity implements UserDetails, java.io.Serializ
     private AccountStatus status;
 
     @Column(name = "last_login_at")
-    private LocalDateTime lastLoginAt;
+    private Instant lastLoginAt;
 
     @Column(name = "email_verified")
     private Boolean emailVerified;
@@ -143,7 +143,7 @@ public class Account extends BaseEntity implements UserDetails, java.io.Serializ
     }
 
     public void updateLastLogin() {
-        this.lastLoginAt = LocalDateTime.now();
+        this.lastLoginAt = Instant.now();
     }
 
     public boolean isStaff() {
@@ -184,3 +184,4 @@ public class Account extends BaseEntity implements UserDetails, java.io.Serializ
         return status == AccountStatus.ACTIVE;
     }
 }
+

@@ -53,3 +53,4 @@ public class RegisterRequest {
     private boolean isActive = true;
 
 } 
+

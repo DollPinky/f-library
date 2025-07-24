@@ -7,6 +7,8 @@ import ActionButton from '../../../../../components/ui/ActionButton';
 import NotificationToast from '../../../../../components/ui/NotificationToast';
 import DarkModeToggle from '../../../../../components/ui/DarkModeToggle';
 import { useBooksApi } from '../../../../../hooks/useBooksApi';
+import categoryService from '../../../../../services/categoryService';
+import libraryService from '../../../../../services/libraryService';
 
 const BookEditPage = () => {
   const params = useParams();
@@ -21,8 +23,9 @@ const BookEditPage = () => {
     title: '',
     author: '',
     publisher: '',
-    year: '',
+    publishYear: '',
     isbn: '',
+    description: '',
     categoryId: ''
   });
 
@@ -35,24 +38,32 @@ const BookEditPage = () => {
           title: bookData.title || '',
           author: bookData.author || '',
           publisher: bookData.publisher || '',
-          year: bookData.year?.toString() || '',
+          publishYear: bookData.year?.toString() || '',
           isbn: bookData.isbn || '',
+          description: bookData.description || '',
           categoryId: bookData.category?.categoryId || ''
         });
 
         const [categoriesResponse, librariesResponse] = await Promise.all([
-          fetch('/api/v1/categories'),
-          fetch('/api/v1/libraries')
+          categoryService.getCategories({ 
+            page: 0, 
+            size: 100, 
+            sortBy: 'name', 
+            sortDirection: 'ASC' 
+          }),
+          libraryService.getLibraries({ 
+            page: 0, 
+            size: 100, 
+            sortBy: 'name', 
+            sortDirection: 'ASC' 
+          })
         ]);
 
-        const categoriesData = await categoriesResponse.json();
-        const librariesData = await librariesResponse.json();
-
-        if (categoriesData.success) {
-          setCategories(categoriesData.data.content || []);
+        if (categoriesResponse.success) {
+          setCategories(categoriesResponse.data.content || []);
         }
-        if (librariesData.success) {
-          setLibraries(librariesData.data.content || []);
+        if (librariesResponse.success) {
+          setLibraries(librariesResponse.data.content || []);
         }
       } catch (error) {
         showNotification('Không thể tải dữ liệu sách', 'error');
@@ -62,7 +73,7 @@ const BookEditPage = () => {
     if (params.id) {
       fetchData();
     }
-  }, [params.id, getBookById]);
+  }, [params.id]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -82,8 +93,12 @@ const BookEditPage = () => {
 
     try {
       const bookData = {
-        ...formData,
-        year: formData.year ? parseInt(formData.year) : null,
+        title: formData.title,
+        author: formData.author,
+        publisher: formData.publisher,
+        publishYear: formData.publishYear ? parseInt(formData.publishYear) : null,
+        isbn: formData.isbn,
+        description: formData.description,
         categoryId: formData.categoryId || null
       };
 

@@ -56,12 +56,6 @@ public class CategoryController {
             @ModelAttribute CategorySearchParams params) {
 
         log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
-        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
-        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
-        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
-        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
-        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
-        log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
         
         try {
             PagedResponse<CategoryResponse> result = categoryFacade.searchCategories(params);
@@ -346,3 +340,4 @@ public class CategoryController {
         public long getTimestamp() { return timestamp; }
     }
 } 
+

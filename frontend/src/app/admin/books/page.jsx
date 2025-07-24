@@ -9,6 +9,8 @@ import DetailDrawer from '../../../components/ui/DetailDrawer';
 import ActionButton from '../../../components/ui/ActionButton';
 import NotificationToast from '../../../components/ui/NotificationToast';
 import LoadingSkeleton from '../../../components/ui/LoadingSkeleton';
+import categoryService from '../../../services/categoryService';
+import libraryService from '../../../services/libraryService';
 import { 
   MagnifyingGlassIcon, 
   BookOpenIcon, 
@@ -35,13 +37,59 @@ const AdminBooksPage = () => {
     loadBooks,
     refreshBooks,
     updateFilters,
-    deleteBook
+    deleteBook,
+    updateBook
   } = useBooks();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [categoriesResponse, librariesResponse] = await Promise.all([
+          categoryService.getCategories({ 
+            page: 0, 
+            size: 100, 
+            sortBy: 'name', 
+            sortDirection: 'ASC' 
+          }),
+          libraryService.getLibraries({ 
+            page: 0, 
+            size: 100, 
+            sortBy: 'name', 
+            sortDirection: 'ASC' 
+          })
+        ]);
+
+        if (categoriesResponse.success) {
+          setCategories(categoriesResponse.data.content || []);
+        }
+        if (librariesResponse.success) {
+          setLibraries(librariesResponse.data.content || []);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        showNotification('Không thể tải dữ liệu', 'error');
+      }
+    };
+    fetchData();
+  }, []);
 
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [selectedBook, setSelectedBook] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingBook, setEditingBook] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [libraries, setLibraries] = useState([]);
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    author: '',
+    publisher: '',
+    publicationYear: '',
+    isbn: '',
+    description: '',
+    categoryId: ''
+  });
   const [filters, setFilters] = useState({
     search: '',
     status: '',
@@ -88,7 +136,7 @@ const AdminBooksPage = () => {
       )
     },
     {
-      key: 'publicationYear',
+      key: 'year',
       header: 'Năm xuất bản',
       render: (value) => (
         <div className="text-sage-600 dark:text-sage-400">
@@ -153,7 +201,7 @@ const AdminBooksPage = () => {
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/admin/books/${row.id}/edit`);
+              handleEditBook(row);
             }}
             className="min-h-[32px] px-2"
           >
@@ -191,10 +239,64 @@ const AdminBooksPage = () => {
     loadBooks({ ...filters, page: newPage - 1 });
   };
 
+  const handleEditBook = (book) => {
+    setEditingBook(book);
+    setEditFormData({
+      title: book.title || '',
+      author: book.author || '',
+      publisher: book.publisher || '',
+      publicationYear: book.year || '',
+      isbn: book.isbn || '',
+      description: book.description || '',
+      categoryId: book.category?.categoryId || ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!editFormData.title || !editFormData.author) {
+      showNotification('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+      return;
+    }
+    if (!editFormData.categoryId) {
+      showNotification('Vui lòng chọn danh mục', 'warning');
+      return;
+    }
+
+    try {
+      const bookData = {
+        title: editFormData.title,
+        author: editFormData.author,
+        publisher: editFormData.publisher,
+        publishYear: editFormData.publicationYear ? parseInt(editFormData.publicationYear) : null,
+        isbn: editFormData.isbn,
+        description: editFormData.description,
+        categoryId: editFormData.categoryId
+      };
+
+      await updateBook(editingBook.bookId, bookData);
+      showNotification('Cập nhật sách thành công!', 'success');
+      setIsEditModalOpen(false);
+      refreshBooks();
+    } catch (error) {
+      showNotification(error.message || 'Không thể cập nhật sách', 'error');
+    }
+  };
+
   const handleDeleteBook = async (book) => {
     if (window.confirm(`Bạn có chắc chắn muốn xóa sách "${book.title}"?`)) {
       try {
-        await deleteBook(book.id);
+        await deleteBook(book.bookId);
         showNotification('Xóa sách thành công', 'success');
         refreshBooks();
       } catch (error) {
@@ -358,6 +460,159 @@ const AdminBooksPage = () => {
         </div>
       </div>
 
+      {/* Edit Book Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-serif font-bold text-sage-900 dark:text-sage-100">
+                  Chỉnh sửa sách
+                </h2>
+                <ActionButton
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="min-h-[32px] px-2"
+                >
+                  <XMarkIcon className="w-4 h-4" />
+                </ActionButton>
+              </div>
+
+              <form onSubmit={handleEditSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                      Tên sách *
+                    </label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={editFormData.title}
+                      onChange={handleEditInputChange}
+                      required
+                      className="input-primary"
+                      placeholder="Nhập tên sách"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                      Tác giả *
+                    </label>
+                    <input
+                      type="text"
+                      name="author"
+                      value={editFormData.author}
+                      onChange={handleEditInputChange}
+                      required
+                      className="input-primary"
+                      placeholder="Nhập tác giả"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                      Nhà xuất bản
+                    </label>
+                    <input
+                      type="text"
+                      name="publisher"
+                      value={editFormData.publisher}
+                      onChange={handleEditInputChange}
+                      className="input-primary"
+                      placeholder="Nhập nhà xuất bản"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                      Năm xuất bản
+                    </label>
+                    <input
+                      type="number"
+                      name="publicationYear"
+                      value={editFormData.publicationYear}
+                      onChange={handleEditInputChange}
+                      min="1900"
+                      max="2030"
+                      className="input-primary"
+                      placeholder="Nhập năm xuất bản"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                      ISBN
+                    </label>
+                    <input
+                      type="text"
+                      name="isbn"
+                      value={editFormData.isbn}
+                      onChange={handleEditInputChange}
+                      className="input-primary"
+                      placeholder="Nhập ISBN"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                      Danh mục *
+                    </label>
+                    <select
+                      name="categoryId"
+                      value={editFormData.categoryId}
+                      onChange={handleEditInputChange}
+                      className="input-primary"
+                      required
+                    >
+                      <option value="">Chọn danh mục</option>
+                      {categories.map((category) => (
+                        <option key={category.categoryId} value={category.categoryId}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-sage-700 dark:text-sage-300 mb-2">
+                    Mô tả
+                  </label>
+                  <textarea
+                    name="description"
+                    value={editFormData.description}
+                    onChange={handleEditInputChange}
+                    rows={4}
+                    className="input-primary resize-none"
+                    placeholder="Nhập mô tả về sách..."
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-6 border-t border-sage-200 dark:border-sage-700">
+                  <ActionButton
+                    type="submit"
+                    variant="primary"
+                    className="group"
+                  >
+                    <PencilIcon className="w-4 h-4 mr-2" />
+                    <span>Cập nhật sách</span>
+                  </ActionButton>
+                  <ActionButton
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsEditModalOpen(false)}
+                  >
+                    Hủy
+                  </ActionButton>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Detail Drawer */}
       <DetailDrawer
         isOpen={isDrawerOpen}
@@ -478,7 +733,7 @@ const AdminBooksPage = () => {
             <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-sage-200 dark:border-sage-700">
               <ActionButton
                 variant="outline"
-                onClick={() => router.push(`/admin/books/${selectedBook.id}/edit`)}
+                onClick={() => handleEditBook(selectedBook)}
                 className="group min-h-[40px]"
               >
                 <PencilIcon className="w-4 h-4 mr-2 group-hover:text-sage-600 dark:group-hover:text-sage-400" />

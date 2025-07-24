@@ -5,13 +5,11 @@ import com.university.library.dto.AccountResponse;
 import com.university.library.dto.LoginRequest;
 import com.university.library.dto.RegisterRequest;
 import com.university.library.entity.Account;
-import com.university.library.event.AccountEvent.AccountRegisEvent;
 import com.university.library.service.command.AccountCommandService;
 import com.university.library.service.query.AccountQueryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -20,7 +18,6 @@ import org.springframework.stereotype.Service;
 public class AccountFacade {
     private final AccountCommandService accountCommandService;
     private final AccountQueryService accountQueryService;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     /**
      * @param page
@@ -38,20 +35,8 @@ public class AccountFacade {
     public AccountResponse register(RegisterRequest request) {
         log.info("POST /api/account/register");
         AccountResponse account = accountCommandService.register(request);
-
-        AccountRegisEvent event = AccountRegisEvent.builder()
-                .accountId(account.getAccountId())
-                .fullName(account.getFullName())
-                .email(account.getEmail())
-                .userType(Account.UserType.READER)
-                .status((account.getStatus()))
-                .createAt(account.getCreateAt())
-                .campusId(request.getCampusId())
-                .build();
-        kafkaTemplate.send("account-events", event);
-        log.info("Account created successfully with id: {} and event sent", account.getAccountId());
+        log.info("Account created successfully with id: {}", account.getAccountId());
         return account;
-
     }
 
     /**
@@ -61,3 +46,4 @@ public class AccountFacade {
         return accountCommandService.login(request);
     }
 }
+

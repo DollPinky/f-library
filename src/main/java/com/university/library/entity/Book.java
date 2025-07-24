@@ -39,6 +39,9 @@ public class Book extends BaseEntity {
     @Column(name = "isbn", length = 20)
     private String isbn;
     
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
@@ -46,3 +49,4 @@ public class Book extends BaseEntity {
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BookCopy> bookCopies = new ArrayList<>();
 }
+

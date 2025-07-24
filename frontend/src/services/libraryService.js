@@ -1,88 +1,74 @@
-import apiService from './api.js';
+import { api } from './api';
 
-class LibraryService {
-  async getLibraries(params = {}) {
-    try {
-      const queryString = new URLSearchParams(params).toString();
-      const endpoint = `/libraries?${queryString}`;
-      const response = await apiService.get(endpoint);
-      return response;
-    } catch (error) {
-      console.error('Get libraries failed:', error);
-      throw error;
-    }
-  }
+export const libraryService = {
+  // ==================== QUERY OPERATIONS ====================
 
+  /**
+   * Lấy danh sách libraries với phân trang và tìm kiếm
+   */
+  async searchLibraries(params = {}) {
+    const searchParams = new URLSearchParams();
+    
+    if (params.query) searchParams.append('query', params.query);
+    if (params.campusId) searchParams.append('campusId', params.campusId);
+    if (params.page !== undefined) searchParams.append('page', params.page);
+    if (params.size !== undefined) searchParams.append('size', params.size);
+    if (params.sortBy) searchParams.append('sortBy', params.sortBy);
+    if (params.sortDirection) searchParams.append('sortDirection', params.sortDirection);
+
+    const response = await api.get(`/api/v1/libraries?${searchParams.toString()}`);
+    return response.data;
+  },
+
+  /**
+   * Lấy library theo ID
+   */
   async getLibraryById(libraryId) {
-    try {
-      const response = await apiService.get(`/libraries/${libraryId}`);
-      return response;
-    } catch (error) {
-      console.error('Get library failed:', error);
-      throw error;
-    }
-  }
+    const response = await api.get(`/api/v1/libraries/${libraryId}`);
+    return response.data;
+  },
 
-  async getAllLibraries() {
-    try {
-      const response = await apiService.get('/libraries/all');
-      return response;
-    } catch (error) {
-      console.error('Get all libraries failed:', error);
-      throw error;
-    }
-  }
-
-  async createLibrary(libraryData) {
-    try {
-      const response = await apiService.post('/libraries', libraryData);
-      return response;
-    } catch (error) {
-      console.error('Create library failed:', error);
-      throw error;
-    }
-  }
-
-  async updateLibrary(libraryId, libraryData) {
-    try {
-      const response = await apiService.put(`/libraries/${libraryId}`, libraryData);
-      return response;
-    } catch (error) {
-      console.error('Update library failed:', error);
-      throw error;
-    }
-  }
-
-  async deleteLibrary(libraryId) {
-    try {
-      const response = await apiService.delete(`/libraries/${libraryId}`);
-      return response;
-    } catch (error) {
-      console.error('Delete library failed:', error);
-      throw error;
-    }
-  }
-
+  /**
+   * Lấy libraries theo campus ID
+   */
   async getLibrariesByCampusId(campusId) {
-    try {
-      const response = await apiService.get(`/libraries/campus/${campusId}`);
-      return response;
-    } catch (error) {
-      console.error('Get libraries by campus failed:', error);
-      throw error;
-    }
-  }
+    const response = await api.get(`/api/v1/libraries/campus/${campusId}`);
+    return response.data;
+  },
 
-  async getLibraryHealth() {
-    try {
-      const response = await apiService.get('/libraries/health');
-      return response;
-    } catch (error) {
-      console.error('Get library health failed:', error);
-      throw error;
-    }
-  }
-}
+  // ==================== COMMAND OPERATIONS ====================
 
-const libraryService = new LibraryService();
-export default libraryService; 
+  /**
+   * Tạo library mới
+   */
+  async createLibrary(libraryData) {
+    const response = await api.post('/api/v1/libraries', libraryData);
+    return response.data;
+  },
+
+  /**
+   * Cập nhật library
+   */
+  async updateLibrary(libraryId, libraryData) {
+    const response = await api.put(`/api/v1/libraries/${libraryId}`, libraryData);
+    return response.data;
+  },
+
+  /**
+   * Xóa library
+   */
+  async deleteLibrary(libraryId) {
+    const response = await api.delete(`/api/v1/libraries/${libraryId}`);
+    return response.data;
+  },
+
+  // ==================== HEALTH CHECK ====================
+
+  /**
+   * Kiểm tra sức khỏe service
+   */
+  async healthCheck() {
+    const response = await api.get('/api/v1/libraries/health');
+    return response.data;
+  }
+}; 

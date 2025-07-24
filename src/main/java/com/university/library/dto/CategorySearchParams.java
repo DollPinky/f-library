@@ -33,17 +33,32 @@ public class CategorySearchParams {
     private Integer page = 0;
     
     @Schema(description = "Kích thước trang", example = "20", defaultValue = "20")
-    @Min(value = 1, message = "Size phải >= 1")
-    private Integer size = 20;
+    private Integer size;
     
     @Schema(description = "Sắp xếp theo trường", example = "name", defaultValue = "name", allowableValues = {"name", "description", "bookCount", "createdAt", "updatedAt"})
-    @Pattern(regexp = "^(name|description|bookCount|createdAt|updatedAt)?$", 
+    @Pattern(regexp = "^(name|description|bookCount|createdAt|updatedAt)$", 
              message = "SortBy phải là một trong các giá trị: name, description, bookCount, createdAt, updatedAt")
     private String sortBy = "name";
     
     @Schema(description = "Thứ tự sắp xếp", example = "ASC", defaultValue = "ASC", allowableValues = {"ASC", "DESC"})
     @Pattern(regexp = "^(ASC|DESC)$", message = "SortDirection phải là ASC hoặc DESC")
     private String sortDirection = "ASC";
+
+    public Integer getSize() {
+        return size != null ? size : 20;
+    }
+
+    public Integer getPage() {
+        return page != null ? page : 0;
+    }
+
+    public String getSortBy() {
+        return sortBy != null ? sortBy : "name";
+    }
+
+    public String getSortDirection() {
+        return sortDirection != null ? sortDirection : "ASC";
+    }
 
     public enum SortDirection {
         ASC("ASC"), DESC("DESC");
@@ -59,3 +74,4 @@ public class CategorySearchParams {
         }
     }
 } 
+

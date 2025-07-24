@@ -8,3 +8,4 @@ import org.mapstruct.Mapper;
 public interface AccountMapper {
     AccountResponse toAccountResponse(Account account);
 }
+

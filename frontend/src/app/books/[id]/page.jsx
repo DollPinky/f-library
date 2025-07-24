@@ -60,8 +60,10 @@ const BookDetailsPage = () => {
         return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
       case 'RESERVED':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'MAINTENANCE':
+      case 'LOST':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'DAMAGED':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
       default:
         return 'bg-sage-100 text-sage-800 dark:bg-sage-900 dark:text-sage-200';
     }
@@ -75,10 +77,58 @@ const BookDetailsPage = () => {
         return 'Đã mượn';
       case 'RESERVED':
         return 'Đã đặt';
-      case 'MAINTENANCE':
-        return 'Bảo trì';
+      case 'LOST':
+        return 'Đã mất';
+      case 'DAMAGED':
+        return 'Hư hỏng';
       default:
         return 'Không xác định';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      console.log('Formatting date:', dateString, 'Type:', typeof dateString);
+      
+      let date;
+      if (typeof dateString === 'string') {
+        // Instant format: "2025-07-24T10:30:00.123Z" or "2025-07-24T10:30:00Z"
+        if (dateString.includes('T') && (dateString.includes('Z') || dateString.includes('.'))) {
+          // ISO 8601 format with timezone
+          date = new Date(dateString);
+        } else if (dateString.includes('T')) {
+          // ISO format without timezone: "2025-07-24T10:30:00"
+          date = new Date(dateString + 'Z');
+        } else if (dateString.includes('-')) {
+          // Date only: "2025-07-24"
+          date = new Date(dateString + 'T00:00:00Z');
+        } else {
+          // Try as timestamp or other format
+          date = new Date(dateString);
+        }
+      } else if (dateString instanceof Date) {
+        date = dateString;
+      } else {
+        date = new Date(dateString);
+      }
+      
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date string:', dateString);
+        return 'N/A';
+      }
+      
+      const formatted = date.toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      console.log('Formatted date:', formatted);
+      return formatted;
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return 'N/A';
     }
   };
 
@@ -198,7 +248,7 @@ const BookDetailsPage = () => {
                         <CalendarIcon className="w-4 h-4 mr-2" />
                         Năm xuất bản
                       </label>
-                      <p className="text-sage-900 dark:text-sage-100">{book.publicationYear || 'N/A'}</p>
+                      <p className="text-sage-900 dark:text-sage-100">{book.year || 'N/A'}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-sage-700 dark:text-sage-300 flex items-center">
@@ -219,10 +269,10 @@ const BookDetailsPage = () => {
                     <div>
                       <label className="text-sm font-medium text-sage-700 dark:text-sage-300 flex items-center">
                         <CalendarIcon className="w-4 h-4 mr-2" />
-                        Ngày thêm
+                        Ngày tạo
                       </label>
                       <p className="text-sage-900 dark:text-sage-100">
-                        {book.createdAt ? new Date(book.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
+                        {formatDate(book.createdAt)}
                       </p>
                     </div>
                     <div>
@@ -231,7 +281,7 @@ const BookDetailsPage = () => {
                         Cập nhật lần cuối
                       </label>
                       <p className="text-sage-900 dark:text-sage-100">
-                        {book.updatedAt ? new Date(book.updatedAt).toLocaleDateString('vi-VN') : 'N/A'}
+                        {formatDate(book.updatedAt)}
                       </p>
                     </div>
                   </div>
@@ -283,9 +333,9 @@ const BookDetailsPage = () => {
                               <CalendarIcon className="w-4 h-4 mr-2" />
                               Ngày tạo
                             </label>
-                            <p className="text-sage-900 dark:text-sage-100 text-sm">
-                              {copy.createdAt ? new Date(copy.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
-                            </p>
+                                                         <p className="text-sage-900 dark:text-sage-100 text-sm">
+                               {formatDate(copy.createdAt)}
+                             </p>
                           </div>
                         </div>
                       </div>
@@ -317,7 +367,7 @@ const BookDetailsPage = () => {
                   <ActionButton
                     variant="outline"
                     size="lg"
-                    onClick={() => router.push(`/admin/books/${book.id}/edit`)}
+                    onClick={() => router.push(`/admin/books/${book.bookId}/edit`)}
                     className="w-full group"
                   >
                     <PencilIcon className="w-4 h-4 mr-2 group-hover:text-sage-600 dark:group-hover:text-sage-400" />
@@ -327,7 +377,7 @@ const BookDetailsPage = () => {
                   <ActionButton
                     variant="outline"
                     size="lg"
-                    onClick={() => router.push(`/books/${book.id}/history`)}
+                    onClick={() => router.push(`/books/${book.bookId}/history`)}
                     className="w-full group"
                   >
                     <ClockIcon className="w-4 h-4 mr-2 group-hover:text-sage-600 dark:group-hover:text-sage-400" />

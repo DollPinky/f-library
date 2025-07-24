@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -23,10 +23,11 @@ public class BookResponse {
     private String publisher;
     private Integer year;
     private String isbn;
+    private String description;
     private CategoryResponse category;
     private List<BookCopyResponse> bookCopies;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
     
     public static BookResponse fromEntity(Book book) {
         if (book == null) {
@@ -40,18 +41,19 @@ public class BookResponse {
             .publisher(book.getPublisher())
             .year(book.getYear())
             .isbn(book.getIsbn())
+            .description(book.getDescription())
             .category(book.getCategory() != null ? CategoryResponse.fromEntity(book.getCategory()) : null)
             .bookCopies(book.getBookCopies() != null ? 
                 book.getBookCopies().stream()
-                    .filter(bookCopy -> bookCopy != null) // Filter out null book copies
+                    .filter(bookCopy -> bookCopy != null) 
                     .map(bookCopy -> {
                         try {
                             return BookCopyResponse.fromEntity(bookCopy);
                         } catch (Exception e) {
-                            return null; // Skip failed conversions
+                            return null; 
                         }
                     })
-                    .filter(response -> response != null) // Filter out null responses
+                    .filter(response -> response != null) 
                     .collect(Collectors.toList()) : null)
             .createdAt(book.getCreatedAt())
             .updatedAt(book.getUpdatedAt())
@@ -91,8 +93,8 @@ public class BookResponse {
         private String qrCode;
         private String status;
         private String shelfLocation;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
+        private Instant createdAt;
+        private Instant updatedAt;
         
         public static BookCopyResponse fromEntity(BookCopy bookCopy) {
             if (bookCopy == null) {
@@ -112,3 +114,4 @@ public class BookResponse {
         }
     }
 } 
+

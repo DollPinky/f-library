@@ -6,6 +6,7 @@ import com.university.library.constants.BookConstants;
 import com.university.library.dto.BookResponse;
 import com.university.library.dto.BookSearchParams;
 import com.university.library.dto.CreateBookCommand;
+import com.university.library.dto.UpdateBookCommand;
 import com.university.library.service.BookFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -98,7 +99,7 @@ public class BookController {
             @Parameter(description = "Book ID", required = true)
             @PathVariable UUID bookId,
             @Parameter(description = "Updated book data", required = true)
-            @Valid @RequestBody CreateBookCommand command) {
+            @Valid @RequestBody UpdateBookCommand command) {
         
         log.info(BookConstants.API_UPDATE_BOOK, bookId);
         
@@ -138,140 +139,6 @@ public class BookController {
         }
     }
 
-    // ==================== CACHE MANAGEMENT ENDPOINTS ====================
-
-    @DeleteMapping("/{bookId}/cache")
-    @Operation(summary = "Clear book cache", description = "Clear cache for a specific book")
-    public ResponseEntity<StandardResponse<String>> clearBookCache(
-            @Parameter(description = "Book ID", required = true)
-            @PathVariable UUID bookId) {
-        
-        log.info(BookConstants.API_CLEAR_BOOK_CACHE, bookId);
-        
-        try {
-            bookFacade.clearBookCache(bookId);
-            return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_CACHE_CLEARED, null));
-        } catch (Exception e) {
-            log.error(BookConstants.ERROR_LOG_CLEAR_CACHE, bookId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(BookConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-
-    @DeleteMapping("/cache/search")
-    @Operation(summary = "Clear search cache", description = "Clear all search cache")
-    public ResponseEntity<StandardResponse<String>> clearSearchCache() {
-        
-        log.info(BookConstants.API_CLEAR_SEARCH_CACHE);
-        
-        try {
-            bookFacade.clearSearchCache();
-            return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_CACHE_CLEARED, null));
-        } catch (Exception e) {
-            log.error(BookConstants.ERROR_LOG_CLEAR_SEARCH_CACHE, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(BookConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-
-    @DeleteMapping("/cache")
-    @Operation(summary = "Clear all cache", description = "Clear all book-related cache")
-    public ResponseEntity<StandardResponse<String>> clearAllCache() {
-        
-        log.info(BookConstants.API_CLEAR_ALL_CACHE);
-        
-        try {
-            bookFacade.clearAllCache();
-            return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_CACHE_CLEARED, null));
-        } catch (Exception e) {
-            log.error(BookConstants.ERROR_LOG_CLEAR_ALL_CACHE, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(BookConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-
-    @PostMapping("/cache/bulk-clear")
-    @Operation(summary = "Clear multiple books cache", description = "Clear cache for multiple books")
-    public ResponseEntity<StandardResponse<String>> clearBooksCache(
-            @Parameter(description = "List of book IDs", required = true)
-            @RequestBody List<UUID> bookIds) {
-        
-        log.info(BookConstants.API_BULK_CLEAR_CACHE, bookIds.size());
-        
-        try {
-            bookFacade.clearBooksCache(bookIds);
-            return ResponseEntity.ok(StandardResponse.success(String.format(BookConstants.SUCCESS_CACHE_BULK_CLEARED, bookIds.size()), null));
-        } catch (Exception e) {
-            log.error(BookConstants.ERROR_LOG_BULK_CLEAR_CACHE, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(BookConstants.ERROR_CACHE_CLEAR_FAILED));
-        }
-    }
-
-    // ==================== CACHE INFORMATION ENDPOINTS ====================
-
-    @GetMapping("/{bookId}/cache/status")
-    @Operation(summary = "Get book cache status", description = "Check if a book is cached and get TTL")
-    public ResponseEntity<StandardResponse<BookCacheStatus>> getBookCacheStatus(
-            @Parameter(description = "Book ID", required = true)
-            @PathVariable UUID bookId) {
-        
-        log.info(BookConstants.API_CACHE_STATUS, bookId);
-        
-        try {
-            boolean isCached = bookFacade.isBookCached(bookId);
-            Long ttl = bookFacade.getBookCacheTtl(bookId);
-            
-            BookCacheStatus status = new BookCacheStatus(bookId, isCached, ttl);
-            return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_CACHE_STATUS_RETRIEVED, status));
-        } catch (Exception e) {
-            log.error(BookConstants.ERROR_LOG_CACHE_STATUS, bookId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(BookConstants.ERROR_CACHE_STATUS_FAILED));
-        }
-    }
-
-    @GetMapping("/cache/statistics")
-    @Operation(summary = "Get cache statistics", description = "Get cache performance statistics")
-    public ResponseEntity<StandardResponse<BookFacade.CacheStatistics>> getCacheStatistics() {
-        
-        log.info(BookConstants.API_CACHE_STATS);
-        
-        try {
-            BookFacade.CacheStatistics stats = bookFacade.getCacheStatistics();
-            return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_CACHE_STATS_RETRIEVED, stats));
-        } catch (Exception e) {
-            log.error(BookConstants.ERROR_LOG_CACHE_STATS, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error(BookConstants.ERROR_CACHE_STATS_FAILED));
-        }
-    }
-
-    // ==================== HEALTH CHECK ENDPOINT ====================
-
-    @GetMapping("/health")
-    @Operation(summary = "Health check", description = "Check the health status of the book service")
-    public ResponseEntity<StandardResponse<HealthStatus>> healthCheck() {
-        
-        log.info(BookConstants.API_HEALTH_CHECK);
-        
-        try {
-            boolean isHealthy = bookFacade.isHealthy();
-            HealthStatus status = new HealthStatus(BookConstants.SERVICE_NAME, isHealthy, System.currentTimeMillis());
-            
-            if (isHealthy) {
-                return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_SERVICE_HEALTHY, status));
-            } else {
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(StandardResponse.error(BookConstants.ERROR_SERVICE_UNHEALTHY));
-            }
-        } catch (Exception e) {
-            log.error(BookConstants.ERROR_LOG_HEALTH_CHECK, e.getMessage());
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(StandardResponse.error(BookConstants.ERROR_HEALTH_CHECK_FAILED));
-        }
-    }
-
     // ==================== INNER CLASSES ====================
 
     public static class BookCacheStatus {
@@ -306,3 +173,4 @@ public class BookController {
         public long getTimestamp() { return timestamp; }
     }
 }
+

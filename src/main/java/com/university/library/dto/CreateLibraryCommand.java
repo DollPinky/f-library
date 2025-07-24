@@ -30,3 +30,4 @@ public class CreateLibraryCommand {
     @JsonDeserialize(using = UUIDDeserializer.class)
     private UUID campusId;
 } 
+

@@ -36,3 +36,4 @@ public interface CategoryRepository extends JpaRepository<Category, UUID>, JpaSp
      */
     List<Category> findByDescriptionContainingIgnoreCase(String description);
 } 
+

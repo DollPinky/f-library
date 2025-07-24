@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -21,7 +21,7 @@ public class AccountResponse {
     private String phone;
     private Account.UserType userType;
     private Account.AccountStatus status;
-    private LocalDateTime lastLoginAt;
+    private Instant lastLoginAt;
     private Boolean emailVerified;
     private Boolean phoneVerified;
     private UUID campusId;
@@ -35,6 +35,7 @@ public class AccountResponse {
     private Integer totalBorrowCount;
     private Integer overdueCount;
     private Double fineAmount;
-    private LocalDateTime createAt;
-    private LocalDateTime updateAt;
+    private Instant createAt;
+    private Instant updateAt;
 }
+

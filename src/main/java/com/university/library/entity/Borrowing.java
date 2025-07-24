@@ -3,7 +3,7 @@ package com.university.library.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,7 +32,7 @@ public class Borrowing {
     private Reader reader;
     
     @Column(name = "borrowed_at", nullable = false)
-    private LocalDateTime borrowedAt;
+    private Instant borrowedAt;
     
     @Column(name = "due_date", nullable = false)
     private LocalDate dueDate;
@@ -54,3 +54,4 @@ public class Borrowing {
         BORROWED, RETURNED, OVERDUE
     }
 } 
+

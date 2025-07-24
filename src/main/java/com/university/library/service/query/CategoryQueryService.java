@@ -6,7 +6,6 @@ import com.university.library.dto.CategoryResponse;
 import com.university.library.dto.CategorySearchParams;
 import com.university.library.entity.Category;
 import com.university.library.repository.CategoryRepository;
-import com.university.library.service.ManualCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -27,7 +25,6 @@ import java.util.stream.Collectors;
 public class CategoryQueryService {
 
     private final CategoryRepository categoryRepository;
-    private final ManualCacheService cacheService;
 
     /**
      * Lấy danh mục theo ID với cache
@@ -35,77 +32,58 @@ public class CategoryQueryService {
     public CategoryResponse getCategoryById(UUID categoryId) {
         log.info(CategoryConstants.LOG_GETTING_CATEGORY, categoryId);
         
-        String cacheKey = CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + categoryId;
-        
-        // Try to get from cache first
-        var cachedResult = cacheService.get(CategoryConstants.CACHE_NAME, cacheKey, CategoryResponse.class);
-        if (cachedResult.isPresent()) {
-            log.info(CategoryConstants.LOG_CACHE_HIT, categoryId);
-            return cachedResult.get();
-        }
-        
-        log.info(CategoryConstants.LOG_CACHE_MISS, categoryId);
-        
-        // Get from database
+        // DISABLE CACHE - DIRECT DATABASE QUERY
         Category category = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new RuntimeException(CategoryConstants.ERROR_CATEGORY_NOT_FOUND + categoryId));
         
         CategoryResponse categoryResponse = CategoryResponse.fromEntity(category);
         
-        // Cache the result
-        cacheCategory(categoryResponse);
-        
         return categoryResponse;
     }
 
     /**
-     * Tìm kiếm danh mục với cache
+     * Tìm kiếm danh mục
      */
     public PagedResponse<CategoryResponse> searchCategories(CategorySearchParams params) {
         log.info(CategoryConstants.LOG_SEARCHING_CATEGORIES, params);
         
-        String cacheKey = buildSearchCacheKey(params);
+        // TEMPORARILY DISABLE CACHE
+        // String cacheKey = buildSearchCacheKey(params);
+        // var cachedResult = Optional.empty();
+        // if (cachedResult.isPresent()) {
+        //     log.info(CategoryConstants.LOG_CACHE_HIT_SEARCH, cacheKey);
+        //     return (PagedResponse<CategoryResponse>) cachedResult.get();
+        // }
+        // log.info(CategoryConstants.LOG_CACHE_MISS_SEARCH, cacheKey);
         
-        // Try to get from cache first
-        var cachedResult = cacheService.get(CategoryConstants.CACHE_NAME, cacheKey, PagedResponse.class);
-        if (cachedResult.isPresent()) {
-            log.info(CategoryConstants.LOG_CACHE_HIT_SEARCH, cacheKey);
-            return (PagedResponse<CategoryResponse>) cachedResult.get();
-        }
-        
-        log.info(CategoryConstants.LOG_CACHE_MISS_SEARCH, cacheKey);
-        
-        // Create specification for search
         Specification<Category> spec = createSearchSpecification(params);
         
-        // Create pageable
         Pageable pageable = PageRequest.of(
-            params.getPage() != null ? params.getPage() : 0,
-            params.getSize() != null ? params.getSize() : CategoryConstants.DEFAULT_PAGE_SIZE,
+            params.getPage(),
+            params.getSize(),
             Sort.by(
-                Sort.Direction.fromString(params.getSortDirection() != null ? params.getSortDirection() : "ASC"),
-                params.getSortBy() != null ? params.getSortBy() : CategoryConstants.DEFAULT_SORT_FIELD
+                Sort.Direction.fromString(params.getSortDirection()),
+                params.getSortBy()
             )
         );
         
-        // Query database
         Page<Category> categories = categoryRepository.findAll(spec, pageable);
         
-        // Convert to response
         List<CategoryResponse> categoryResponses = categories.getContent().stream()
             .map(CategoryResponse::fromEntitySimple)
             .collect(Collectors.toList());
         
-        PagedResponse<CategoryResponse> result = PagedResponse.<CategoryResponse>builder()
-            .content(categoryResponses)
-            .totalElements(categories.getTotalElements())
-            .totalPages(categories.getTotalPages())
-            .build();
+        PagedResponse<CategoryResponse> result = PagedResponse.of(
+            categoryResponses,
+            categories.getNumber(),
+            categories.getSize(),
+            categories.getTotalElements()
+        );
         
-        // Cache the result
-        Duration localTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_LOCAL);
-        Duration distributedTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_CATEGORY_SEARCH);
-        cacheService.put(CategoryConstants.CACHE_NAME, cacheKey, result, localTtl, distributedTtl);
+        // TEMPORARILY DISABLE CACHE
+        // Duration localTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_LOCAL);
+        // Duration distributedTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_CATEGORY_SEARCH);
+        // // CACHE DISABLED;
         
         return result;
     }
@@ -118,23 +96,20 @@ public class CategoryQueryService {
         
         String cacheKey = CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + "hierarchy";
         
-        // Try to get from cache first
-        var cachedResult = cacheService.get(CategoryConstants.CACHE_NAME, cacheKey, List.class);
+        var cachedResult = Optional.empty();
         if (cachedResult.isPresent()) {
             return (List<CategoryResponse>) cachedResult.get();
         }
         
-        // Get root categories (no parent)
         List<Category> rootCategories = categoryRepository.findByParentCategoryIsNull();
         
         List<CategoryResponse> hierarchy = rootCategories.stream()
             .map(CategoryResponse::fromEntity)
             .collect(Collectors.toList());
         
-        // Cache the result
         Duration localTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_LOCAL);
         Duration distributedTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_CATEGORY_LIST);
-        cacheService.put(CategoryConstants.CACHE_NAME, cacheKey, hierarchy, localTtl, distributedTtl);
+        // CACHE DISABLED;
         
         return hierarchy;
     }
@@ -147,23 +122,20 @@ public class CategoryQueryService {
         
         String cacheKey = CategoryConstants.CACHE_KEY_PREFIX_CHILDREN + parentCategoryId;
         
-        // Try to get from cache first
-        var cachedResult = cacheService.get(CategoryConstants.CACHE_NAME, cacheKey, List.class);
+        var cachedResult = Optional.empty();
         if (cachedResult.isPresent()) {
             return (List<CategoryResponse>) cachedResult.get();
         }
         
-        // Get children from database
         List<Category> children = categoryRepository.findByParentCategoryCategoryId(parentCategoryId);
         
         List<CategoryResponse> childrenResponses = children.stream()
             .map(CategoryResponse::fromEntitySimple)
             .collect(Collectors.toList());
         
-        // Cache the result
         Duration localTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_LOCAL);
         Duration distributedTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_CATEGORY_LIST);
-        cacheService.put(CategoryConstants.CACHE_NAME, cacheKey, childrenResponses, localTtl, distributedTtl);
+        // CACHE DISABLED;
         
         return childrenResponses;
     }
@@ -173,7 +145,7 @@ public class CategoryQueryService {
      */
     public boolean isCategoryCached(UUID categoryId) {
         String cacheKey = CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + categoryId;
-        return cacheService.exists(CategoryConstants.CACHE_NAME, cacheKey);
+        return false;
     }
 
     /**
@@ -181,7 +153,7 @@ public class CategoryQueryService {
      */
     public Long getCategoryCacheTtl(UUID categoryId) {
         String cacheKey = CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + categoryId;
-        return cacheService.getTtl(CategoryConstants.CACHE_NAME, cacheKey);
+        return null;
     }
 
     // ==================== CACHE MANAGEMENT ====================
@@ -195,11 +167,10 @@ public class CategoryQueryService {
         String categoryKey = CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + categoryId;
         String childrenKey = CategoryConstants.CACHE_KEY_PREFIX_CHILDREN + categoryId;
         
-        cacheService.evict(CategoryConstants.CACHE_NAME, categoryKey);
-        cacheService.evict(CategoryConstants.CACHE_NAME, childrenKey);
+        // CACHE DISABLED;
+        // CACHE DISABLED;
         
-        // Clear hierarchy cache as well
-        cacheService.evict(CategoryConstants.CACHE_NAME, CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + "hierarchy");
+        // CACHE DISABLED;
     }
 
     /**
@@ -216,7 +187,7 @@ public class CategoryQueryService {
      */
     public void clearSearchCache() {
         log.info("Clearing all category search cache");
-        cacheService.evictAll(CategoryConstants.CACHE_NAME);
+        // CACHE DISABLED;
     }
 
     /**
@@ -225,7 +196,7 @@ public class CategoryQueryService {
     public void clearSearchCache(CategorySearchParams params) {
         String cacheKey = buildSearchCacheKey(params);
         log.info(CategoryConstants.LOG_CLEARING_SEARCH_CACHE, cacheKey);
-        cacheService.evict(CategoryConstants.CACHE_NAME, cacheKey);
+        // CACHE DISABLED;
     }
 
     // ==================== PRIVATE METHODS ====================
@@ -237,7 +208,7 @@ public class CategoryQueryService {
         String cacheKey = CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + categoryResponse.getCategoryId();
         Duration localTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_LOCAL);
         Duration distributedTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_CATEGORY_DETAIL);
-        cacheService.put(CategoryConstants.CACHE_NAME, cacheKey, categoryResponse, localTtl, distributedTtl);
+        // CACHE DISABLED;
         log.info(CategoryConstants.LOG_CACHING_CATEGORY, categoryResponse.getCategoryId());
     }
 
@@ -248,7 +219,6 @@ public class CategoryQueryService {
         return (root, query, criteriaBuilder) -> {
             var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
             
-            // Search by query (name or description)
             if (params.getQuery() != null && !params.getQuery().trim().isEmpty()) {
                 String searchTerm = "%" + params.getQuery().toLowerCase() + "%";
                 predicates.add(criteriaBuilder.or(
@@ -256,18 +226,15 @@ public class CategoryQueryService {
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchTerm)
                 ));
             }
-            
-            // Filter by parent category
+                
             if (params.getParentCategoryId() != null) {
                 predicates.add(criteriaBuilder.equal(root.get("parentCategory").get("categoryId"), params.getParentCategoryId()));
             }
             
-            // Filter root categories only
             if (params.getRootOnly() != null && params.getRootOnly()) {
                 predicates.add(criteriaBuilder.isNull(root.get("parentCategory")));
             }
             
-            // Filter categories with books
             if (params.getHasBooks() != null && params.getHasBooks()) {
                 predicates.add(criteriaBuilder.isNotEmpty(root.get("books")));
             }
@@ -304,3 +271,4 @@ public class CategoryQueryService {
         return keyBuilder.toString();
     }
 } 
+

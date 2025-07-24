@@ -2,7 +2,7 @@ package com.university.library.entity;
 
 import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -46,7 +46,7 @@ public class Staff extends BaseEntity {
     private String position;
     
     @Column(name = "hire_date")
-    private LocalDateTime hireDate;
+    private Instant hireDate;
     
     @Column(name = "work_schedule", length = 255)
     private String workSchedule;
@@ -58,7 +58,7 @@ public class Staff extends BaseEntity {
     private Boolean isActive;
     
     @Column(name = "last_activity_at")
-    private LocalDateTime lastActivityAt;
+    private Instant lastActivityAt;
     
     @Column(name = "can_manage_books")
     private Boolean canManageBooks;
@@ -103,7 +103,7 @@ public class Staff extends BaseEntity {
     }
     
     public void updateLastActivity() {
-        this.lastActivityAt = LocalDateTime.now();
+        this.lastActivityAt = Instant.now();
     }
     
     public boolean isAdmin() {
@@ -122,3 +122,4 @@ public class Staff extends BaseEntity {
         return staffRole == StaffRole.ASSISTANT;
     }
 } 
+

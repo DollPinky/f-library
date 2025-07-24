@@ -39,3 +39,4 @@ public class CreateBookCopyCommand {
         AVAILABLE, BORROWED, RESERVED, LOST, DAMAGED
     }
 } 
+

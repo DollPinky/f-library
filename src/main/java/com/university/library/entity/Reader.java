@@ -2,7 +2,7 @@ package com.university.library.entity;
 
 import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -41,7 +41,7 @@ public class Reader extends BaseEntity {
     private String phone;
     
     @Column(name = "registered_at")
-    private LocalDateTime registeredAt;
+    private Instant registeredAt;
     
     @Column(name = "is_active")
     private Boolean isActive;
@@ -50,3 +50,4 @@ public class Reader extends BaseEntity {
     private List<Borrowing> borrowings = new ArrayList<>();
 
 } 
+

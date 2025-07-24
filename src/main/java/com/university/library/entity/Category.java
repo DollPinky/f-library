@@ -38,3 +38,4 @@ public class Category extends BaseEntity {
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Book> books = new ArrayList<>();
 } 
+

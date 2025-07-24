@@ -2,7 +2,7 @@ package com.university.library.dto;
 
 import com.university.library.entity.Library;
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -17,8 +17,8 @@ public class LibraryResponse {
     private CampusResponse campus;
     private Long bookCopyCount;
     private Long staffCount;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
 
     public static LibraryResponse fromEntity(Library library) {
         if (library == null) {
@@ -90,3 +90,4 @@ public class LibraryResponse {
         }
     }
 } 
+

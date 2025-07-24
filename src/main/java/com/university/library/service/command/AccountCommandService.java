@@ -8,3 +8,4 @@ public interface AccountCommandService {
     AccountResponse register(RegisterRequest request);
     AccountResponse login(LoginRequest request);
 }
+

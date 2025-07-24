@@ -21,7 +21,7 @@ public class LibraryFacade {
     
     private final LibraryQueryService libraryQueryService;
     private final LibraryCommandService libraryCommandService;
-    private final ManualCacheService cacheService;
+    
     
     // Query Operations
     public LibraryResponse getLibraryById(UUID libraryId) {
@@ -87,14 +87,14 @@ public class LibraryFacade {
     
     public void clearAllCache() {
         log.info("Clearing all library cache");
-        cacheService.evictAll(LibraryConstants.CACHE_NAME);
+        // CACHE DISABLED;
     }
     
     // Health Check
     public boolean isHealthy() {
         try {
             // Basic health check - try to access cache service
-            cacheService.exists(LibraryConstants.CACHE_NAME, "health-check");
+            false;
             return true;
         } catch (Exception e) {
             log.error(LibraryConstants.ERROR_HEALTH_CHECK_FAILED, e.getMessage());
@@ -102,3 +102,4 @@ public class LibraryFacade {
         }
     }
 } 
+

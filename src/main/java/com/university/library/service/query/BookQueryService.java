@@ -6,7 +6,6 @@ import com.university.library.dto.BookSearchParams;
 import com.university.library.dto.BookResponse;
 import com.university.library.entity.Book;
 import com.university.library.repository.BookRepository;
-import com.university.library.service.ManualCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,9 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
@@ -29,31 +26,28 @@ import java.util.ArrayList;
 public class BookQueryService {
 
   private final BookRepository bookRepository;
-  private final ManualCacheService cacheService;
 
-  public BookResponse getBookById(UUID bookId) {
-    log.info(BookConstants.LOG_GETTING_BOOK, bookId);
-    
-    String cacheKey = BookConstants.CACHE_KEY_PREFIX_BOOK + bookId;
-    
-    // Thử lấy từ cache trước
-    Optional<BookResponse> cachedResult = cacheService.get(BookConstants.CACHE_NAME, cacheKey, BookResponse.class);
-    if (cachedResult.isPresent()) {
-      log.debug(BookConstants.LOG_CACHE_HIT, bookId);
-      return cachedResult.get();
+      public BookResponse getBookById(UUID bookId) {
+        log.info(BookConstants.LOG_GETTING_BOOK, bookId);
+        
+        // TEMPORARILY DISABLE CACHE
+        // String cacheKey = BookConstants.CACHE_KEY_PREFIX_BOOK + bookId;
+        // Optional<BookResponse> cachedResult = Optional.empty();
+        // if (cachedResult.isPresent()) {
+        //     log.debug(BookConstants.LOG_CACHE_HIT, bookId);
+        //     return cachedResult.get();
+        // }
+        // log.debug(BookConstants.LOG_CACHE_MISS, bookId);
+        
+        BookResponse result = performGetBookById(bookId);
+        
+        // TEMPORARILY DISABLE CACHE
+        // Duration localTtl = Duration.ofMinutes(BookConstants.CACHE_TTL_LOCAL);
+        // Duration distributedTtl = Duration.ofMinutes(BookConstants.CACHE_TTL_BOOK_DETAIL);
+        // // CACHE DISABLED;
+        
+        return result;
     }
-    
-    // Nếu không có trong cache, thực hiện tìm kiếm từ database
-    log.debug(BookConstants.LOG_CACHE_MISS, bookId);
-    BookResponse result = performGetBookById(bookId);
-    
-    // Lưu kết quả vào cache
-    Duration localTtl = Duration.ofMinutes(BookConstants.CACHE_TTL_LOCAL);
-    Duration distributedTtl = Duration.ofMinutes(BookConstants.CACHE_TTL_BOOK_DETAIL);
-    cacheService.put(BookConstants.CACHE_NAME, cacheKey, result, localTtl, distributedTtl);
-    
-    return result;
-  }
   
   private BookResponse performGetBookById(UUID bookId) {
     Book book = bookRepository.findById(bookId)
@@ -68,22 +62,8 @@ public class BookQueryService {
   public PagedResponse<BookResponse> searchBooks(BookSearchParams params) {
     log.info(BookConstants.LOG_SEARCHING_BOOKS, params);
     
-    String cacheKey = generateCacheKey(params);
-    
-    Optional<PagedResponse> cachedResult = cacheService.get(BookConstants.CACHE_NAME, cacheKey, PagedResponse.class);
-    if (cachedResult.isPresent()) {
-      log.debug(BookConstants.LOG_CACHE_HIT_SEARCH, cacheKey);
-      return (PagedResponse<BookResponse>) cachedResult.get();
-    }
-    
-    log.debug(BookConstants.LOG_CACHE_MISS_SEARCH, cacheKey);
-    PagedResponse<BookResponse> result = performSearch(params);
-    
-    Duration localTtl = Duration.ofMinutes(BookConstants.CACHE_TTL_LOCAL);
-    Duration distributedTtl = Duration.ofMinutes(BookConstants.CACHE_TTL_BOOK_SEARCH);
-    cacheService.put(BookConstants.CACHE_NAME, cacheKey, result, localTtl, distributedTtl);
-    
-    return result;
+    // DISABLE CACHE - DIRECT DATABASE QUERY
+    return performSearch(params);
   }
   
   private PagedResponse<BookResponse> performSearch(BookSearchParams params) {
@@ -139,51 +119,48 @@ public class BookQueryService {
    * Xóa cache cho tìm kiếm sách
    */
   public void clearSearchCache() {
-    cacheService.evictAll(BookConstants.CACHE_NAME);
     log.info(BookConstants.SUCCESS_CACHE_CLEARED);
+    // DISABLE CACHE - NO ACTION NEEDED
   }
   
   /**
    * Xóa cache cho một tìm kiếm cụ thể
    */
   public void clearSearchCache(BookSearchParams params) {
-    String cacheKey = generateCacheKey(params);
-    cacheService.evict(BookConstants.CACHE_NAME, cacheKey);
-    log.info(BookConstants.LOG_CLEARING_SEARCH_CACHE, cacheKey);
+    log.info(BookConstants.LOG_CLEARING_SEARCH_CACHE, params);
+    // DISABLE CACHE - NO ACTION NEEDED
   }
   
   /**
    * Xóa cache cho một book cụ thể
    */
   public void clearBookCache(UUID bookId) {
-    String cacheKey = BookConstants.CACHE_KEY_PREFIX_BOOK + bookId;
-    cacheService.evict(BookConstants.CACHE_NAME, cacheKey);
     log.info(BookConstants.LOG_CACHE_EVICTED, bookId);
+    // DISABLE CACHE - NO ACTION NEEDED
   }
   
   /**
    * Xóa cache cho nhiều book
    */
   public void clearBooksCache(List<UUID> bookIds) {
-    for (UUID bookId : bookIds) {
-      clearBookCache(bookId);
-    }
     log.info(BookConstants.LOG_CLEARING_CACHE, bookIds.size());
+    // DISABLE CACHE - NO ACTION NEEDED
   }
   
   /**
    * Kiểm tra xem book có trong cache không
    */
   public boolean isBookCached(UUID bookId) {
-    String cacheKey = BookConstants.CACHE_KEY_PREFIX_BOOK + bookId;
-    return cacheService.exists(BookConstants.CACHE_NAME, cacheKey);
+    // DISABLE CACHE - ALWAYS RETURN FALSE
+    return false;
   }
   
   /**
    * Lấy TTL của book trong cache
    */
   public Long getBookCacheTtl(UUID bookId) {
-    String cacheKey = BookConstants.CACHE_KEY_PREFIX_BOOK + bookId;
-    return cacheService.getTtl(BookConstants.CACHE_NAME, cacheKey);
+    // DISABLE CACHE - ALWAYS RETURN NULL
+    return null;
   }
 }
+

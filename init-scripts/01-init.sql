@@ -7,8 +7,8 @@ CREATE TABLE campuses (
                           code VARCHAR(50) UNIQUE NOT NULL,
                           address TEXT NOT NULL,
     is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 2. libraries
@@ -19,8 +19,8 @@ CREATE TABLE libraries (
                            code VARCHAR(50) UNIQUE NOT NULL,
                            address TEXT NOT NULL,
     is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 3. accounts
@@ -48,8 +48,8 @@ CREATE TABLE accounts (
     overdue_count INTEGER DEFAULT 0,
     fine_amount DECIMAL(10,2) DEFAULT 0.0,
     is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 4. staffs
@@ -70,10 +70,10 @@ CREATE TABLE staffs (
     can_manage_users BOOLEAN DEFAULT FALSE,
     can_manage_staff BOOLEAN DEFAULT FALSE,
     can_view_reports BOOLEAN DEFAULT FALSE,
-    can_process_borrowings BOOLEAN DEFAULT TRUE,
+        can_process_borrowings BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE,
-                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 5. categories
@@ -83,8 +83,8 @@ CREATE TABLE categories (
                             description TEXT,
     parent_category_id UUID REFERENCES categories(category_id),
     is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 6. books
@@ -95,10 +95,11 @@ CREATE TABLE books (
                        publisher VARCHAR(255),
     year INTEGER,
                        isbn VARCHAR(20),
+                       description TEXT,
                        category_id UUID REFERENCES categories(category_id),
     is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 7. book_copies
@@ -110,8 +111,8 @@ CREATE TABLE book_copies (
                              status VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'BORROWED', 'RESERVED', 'LOST', 'DAMAGED')),
                              shelf_location VARCHAR(100),
     is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 8. readers (legacy table - now replaced by accounts with user_type = 'READER')
@@ -121,11 +122,11 @@ CREATE TABLE readers (
                          name VARCHAR(255) NOT NULL,
                          student_id VARCHAR(50) UNIQUE,
                          email VARCHAR(255) UNIQUE NOT NULL,
-                         phone VARCHAR(50),
+                             phone VARCHAR(50),
     is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                         registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    registered_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                          is_active BOOLEAN DEFAULT TRUE
 );
 
@@ -141,8 +142,8 @@ CREATE TABLE borrowings (
                             fine_amount NUMERIC(10, 2) DEFAULT 0,
     note TEXT,
     is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insert sample data
@@ -168,12 +169,12 @@ INSERT INTO categories (category_id, name, description, is_deleted, created_at, 
 (gen_random_uuid(), 'Tâm lý học', 'Mô tả cho Tâm lý học', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 --- Books
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), 'Kitchen technology.', 'Amber Kidd', 'Novak and Sons', 2013, '978-1136505587', (SELECT category_id FROM categories WHERE name = 'Khoa học máy tính'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Image loss ten.', 'Carmen Smith', 'Baker-Bowers', 2006, '978-3585650756', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Expect recent room situation.', 'Katelyn Lee', 'Novak PLC', 2006, '978-2801823908', (SELECT category_id FROM categories WHERE name = 'Lịch sử'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Article finish anyone live try.', 'Amy Romero', 'Jones Inc', 2018, '978-4733616459', (SELECT category_id FROM categories WHERE name = 'Toán học'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'Identify walk now.', 'Amanda Miller', 'Silva, Mills and Donovan', 2022, '978-7110082321', (SELECT category_id FROM categories WHERE name = 'Văn học'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO books (book_id, title, author, publisher, year, isbn, description, category_id, is_deleted, created_at, updated_at) VALUES 
+(gen_random_uuid(), 'Kitchen technology.', 'Amber Kidd', 'Novak and Sons', 2013, '978-1136505587', 'A comprehensive guide to modern kitchen technology and culinary innovations.', (SELECT category_id FROM categories WHERE name = 'Khoa học máy tính'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Image loss ten.', 'Carmen Smith', 'Baker-Bowers', 2006, '978-3585650756', 'Exploring the psychological aspects of image and identity loss in modern society.', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Expect recent room situation.', 'Katelyn Lee', 'Novak PLC', 2006, '978-2801823908', 'Historical analysis of room dynamics and spatial relationships throughout different eras.', (SELECT category_id FROM categories WHERE name = 'Lịch sử'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Article finish anyone live try.', 'Amy Romero', 'Jones Inc', 2018, '978-4733616459', 'Advanced mathematical concepts and their applications in real-world scenarios.', (SELECT category_id FROM categories WHERE name = 'Toán học'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(gen_random_uuid(), 'Identify walk now.', 'Amanda Miller', 'Silva, Mills and Donovan', 2022, '978-7110082321', 'Contemporary literature exploring themes of identity and personal journey.', (SELECT category_id FROM categories WHERE name = 'Văn học'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 --- Book Copies
 INSERT INTO book_copies (book_copy_id, book_id, library_id, qr_code, status, shelf_location, is_deleted, created_at, updated_at) VALUES 

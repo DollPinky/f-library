@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,8 +22,8 @@ public class CategoryResponse {
     private CategoryResponse parentCategory;
     private List<CategoryResponse> subCategories;
     private Long bookCount;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
     
     public static CategoryResponse fromEntity(Category category) {
         if (category == null) {
@@ -66,9 +66,10 @@ public class CategoryResponse {
             .categoryId(category.getCategoryId())
             .name(category.getName())
             .description(category.getDescription())
-            .bookCount(category.getBooks() != null ? (long) category.getBooks().size() : 0L)
+            .bookCount(0L) // Avoid lazy loading issues
             .createdAt(category.getCreatedAt())
             .updatedAt(category.getUpdatedAt())
             .build();
     }
 } 
+

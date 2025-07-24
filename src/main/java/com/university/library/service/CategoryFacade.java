@@ -24,7 +24,7 @@ public class CategoryFacade {
 
     private final CategoryQueryService categoryQueryService;
     private final CategoryCommandService categoryCommandService;
-    private final ManualCacheService cacheService;
+    
 
     // ==================== QUERY OPERATIONS ====================
 
@@ -141,7 +141,7 @@ public class CategoryFacade {
      */
     public void clearAllCache() {
         log.info("CategoryFacade: Clearing all category cache");
-        cacheService.evictAll(CategoryConstants.CACHE_NAME);
+        // CACHE DISABLED;
     }
 
     // ==================== CACHE STATISTICS ====================
@@ -222,3 +222,4 @@ public class CategoryFacade {
         }
     }
 } 
+

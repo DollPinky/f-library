@@ -25,3 +25,4 @@ public class CampusQueryService {
         return campusRepository.findByCampusId(campusId).orElse(null);
     }
 } 
+

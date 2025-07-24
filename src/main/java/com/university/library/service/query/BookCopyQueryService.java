@@ -6,7 +6,7 @@ import com.university.library.dto.BookCopyResponse;
 import com.university.library.dto.BookCopySearchParams;
 import com.university.library.entity.BookCopy;
 import com.university.library.repository.BookCopyRepository;
-import com.university.library.service.ManualCacheService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -25,13 +25,12 @@ import jakarta.persistence.criteria.Predicate;
 public class BookCopyQueryService {
     
     private final BookCopyRepository bookCopyRepository;
-    private final ManualCacheService cacheService;
     
     public BookCopyResponse getBookCopyById(UUID bookCopyId) {
         log.info("Getting book copy by ID: {}", bookCopyId);
         
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK_COPY + bookCopyId;
-        BookCopyResponse cached = cacheService.get(BookCopyConstants.CACHE_NAME, cacheKey, BookCopyResponse.class).orElse(null);
+        BookCopyResponse cached = Optional.empty().orElse(null);
         if (cached != null) {
             log.debug("Book copy found in cache: {}", bookCopyId);
             return cached;
@@ -51,7 +50,7 @@ public class BookCopyQueryService {
         log.info("Searching book copies with params: {}", params);
         
         String cacheKey = buildSearchCacheKey(params);
-        PagedResponse<BookCopyResponse> cached = cacheService.get(BookCopyConstants.CACHE_NAME, cacheKey, PagedResponse.class).orElse(null);
+        PagedResponse<BookCopyResponse> cached = Optional.empty().orElse(null);
         if (cached != null) {
             log.debug("Search results found in cache for key: {}", cacheKey);
             return cached;
@@ -67,15 +66,14 @@ public class BookCopyQueryService {
                 .map(BookCopyResponse::fromEntity)
                 .collect(Collectors.toList());
         
-        PagedResponse<BookCopyResponse> response = PagedResponse.<BookCopyResponse>builder()
-                .content(responses)
-                .number(params.getPage())
-                .size(params.getSize())
-                .totalElements(bookCopyPage.getTotalElements())
-                .totalPages(bookCopyPage.getTotalPages())
-                .build();
+        PagedResponse<BookCopyResponse> response = PagedResponse.of(
+                responses,
+                params.getPage(),
+                params.getSize(),
+                bookCopyPage.getTotalElements()
+        );
         
-        cacheService.put(BookCopyConstants.CACHE_NAME, cacheKey, response, Duration.ofMinutes(BookCopyConstants.CACHE_TTL_BOOK_COPY_SEARCH), Duration.ofMinutes(BookCopyConstants.CACHE_TTL_LOCAL));
+        // CACHE DISABLED, Duration.ofMinutes(BookCopyConstants.CACHE_TTL_LOCAL));
         
         log.info("Book copy search completed. Found {} results", bookCopyPage.getTotalElements());
         return response;
@@ -85,7 +83,7 @@ public class BookCopyQueryService {
         log.info("Getting book copies by book ID: {}", bookId);
         
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK + bookId;
-        List<BookCopyResponse> cached = cacheService.get(BookCopyConstants.CACHE_NAME, cacheKey, List.class).orElse(null);
+        List<BookCopyResponse> cached = Optional.empty().orElse(null);
         if (cached != null) {
             log.debug("Book copies found in cache for book: {}", bookId);
             return cached;
@@ -96,7 +94,7 @@ public class BookCopyQueryService {
                 .map(BookCopyResponse::fromEntity)
                 .collect(Collectors.toList());
         
-        cacheService.put(BookCopyConstants.CACHE_NAME, cacheKey, responses, Duration.ofMinutes(BookCopyConstants.CACHE_TTL_BOOK_COPY_LIST), Duration.ofMinutes(BookCopyConstants.CACHE_TTL_LOCAL));
+        // CACHE DISABLED, Duration.ofMinutes(BookCopyConstants.CACHE_TTL_LOCAL));
         
         log.info("Retrieved {} book copies for book: {}", responses.size(), bookId);
         return responses;
@@ -106,7 +104,7 @@ public class BookCopyQueryService {
         log.info("Getting book copies by library ID: {}", libraryId);
         
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_LIBRARY + libraryId;
-        List<BookCopyResponse> cached = cacheService.get(BookCopyConstants.CACHE_NAME, cacheKey, List.class).orElse(null);
+        List<BookCopyResponse> cached = Optional.empty().orElse(null);
         if (cached != null) {
             log.debug("Book copies found in cache for library: {}", libraryId);
             return cached;
@@ -117,7 +115,7 @@ public class BookCopyQueryService {
                 .map(BookCopyResponse::fromEntity)
                 .collect(Collectors.toList());
         
-        cacheService.put(BookCopyConstants.CACHE_NAME, cacheKey, responses, Duration.ofMinutes(BookCopyConstants.CACHE_TTL_BOOK_COPY_LIST), Duration.ofMinutes(BookCopyConstants.CACHE_TTL_LOCAL));
+        // CACHE DISABLED, Duration.ofMinutes(BookCopyConstants.CACHE_TTL_LOCAL));
         
         log.info("Retrieved {} book copies for library: {}", responses.size(), libraryId);
         return responses;
@@ -127,7 +125,7 @@ public class BookCopyQueryService {
         log.info("Getting available book copies by book ID: {}", bookId);
         
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_STATUS + "available:book:" + bookId;
-        List<BookCopyResponse> cached = cacheService.get(BookCopyConstants.CACHE_NAME, cacheKey, List.class).orElse(null);
+        List<BookCopyResponse> cached = Optional.empty().orElse(null);
         if (cached != null) {
             log.debug("Available book copies found in cache for book: {}", bookId);
             return cached;
@@ -138,7 +136,7 @@ public class BookCopyQueryService {
                 .map(BookCopyResponse::fromEntity)
                 .collect(Collectors.toList());
         
-        cacheService.put(BookCopyConstants.CACHE_NAME, cacheKey, responses, Duration.ofMinutes(BookCopyConstants.CACHE_TTL_BOOK_COPY_LIST), Duration.ofMinutes(BookCopyConstants.CACHE_TTL_LOCAL));
+        // CACHE DISABLED, Duration.ofMinutes(BookCopyConstants.CACHE_TTL_LOCAL));
         
         log.info("Retrieved {} available book copies for book: {}", responses.size(), bookId);
         return responses;
@@ -148,7 +146,7 @@ public class BookCopyQueryService {
         log.info("Getting book copy by QR code: {}", qrCode);
         
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK_COPY + "qr:" + qrCode;
-        BookCopyResponse cached = cacheService.get(BookCopyConstants.CACHE_NAME, cacheKey, BookCopyResponse.class).orElse(null);
+        BookCopyResponse cached = Optional.empty().orElse(null);
         if (cached != null) {
             log.debug("Book copy found in cache by QR code: {}", qrCode);
             return cached;
@@ -168,18 +166,18 @@ public class BookCopyQueryService {
     
     public boolean isBookCopyCached(UUID bookCopyId) {
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK_COPY + bookCopyId;
-        return cacheService.exists(BookCopyConstants.CACHE_NAME, cacheKey);
+        return false;
     }
     
     public Long getBookCopyCacheTtl(UUID bookCopyId) {
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK_COPY + bookCopyId;
-        return cacheService.getTtl(BookCopyConstants.CACHE_NAME, cacheKey);
+        return null;
     }
     
     public void clearBookCopyCache(UUID bookCopyId) {
         log.info("Clearing cache for book copy: {}", bookCopyId);
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK_COPY + bookCopyId;
-        cacheService.evict(BookCopyConstants.CACHE_NAME, cacheKey);
+        // CACHE DISABLED;
     }
     
     public void clearBookCopiesCache(List<UUID> bookCopyIds) {
@@ -189,18 +187,18 @@ public class BookCopyQueryService {
     
     public void clearSearchCache() {
         log.info("Clearing all book copy search cache");
-        cacheService.evictAll(BookCopyConstants.CACHE_NAME);
+        // CACHE DISABLED;
     }
     
     public void clearSearchCache(BookCopySearchParams params) {
         log.info("Clearing book copy search cache for params: {}", params);
         String cacheKey = buildSearchCacheKey(params);
-        cacheService.evict(BookCopyConstants.CACHE_NAME, cacheKey);
+        // CACHE DISABLED;
     }
     
     private void cacheBookCopy(BookCopyResponse bookCopyResponse) {
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK_COPY + bookCopyResponse.getBookCopyId();
-        cacheService.put(BookCopyConstants.CACHE_NAME, cacheKey, bookCopyResponse, Duration.ofMinutes(BookCopyConstants.CACHE_TTL_BOOK_COPY_DETAIL), Duration.ofMinutes(BookCopyConstants.CACHE_TTL_LOCAL));
+        // CACHE DISABLED, Duration.ofMinutes(BookCopyConstants.CACHE_TTL_LOCAL));
     }
     
     private Specification<BookCopy> createSearchSpecification(BookCopySearchParams params) {
@@ -262,3 +260,4 @@ public class BookCopyQueryService {
         );
     }
 } 
+

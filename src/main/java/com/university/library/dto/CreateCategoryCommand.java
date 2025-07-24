@@ -27,3 +27,4 @@ public class CreateCategoryCommand {
     @JsonDeserialize(using = UUIDDeserializer.class)
     private UUID parentCategoryId;
 } 
+

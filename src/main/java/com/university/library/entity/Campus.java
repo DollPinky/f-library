@@ -2,7 +2,7 @@ package com.university.library.entity;
 
 import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -39,3 +39,4 @@ public class Campus extends BaseEntity {
     private List<Reader> readers = new ArrayList<>();
 
 } 
+

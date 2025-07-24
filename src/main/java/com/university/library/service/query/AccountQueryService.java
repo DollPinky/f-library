@@ -6,3 +6,4 @@ import com.university.library.dto.AccountResponse;
 public interface AccountQueryService {
     PagedResponse<AccountResponse> getAllAccounts(int page, int size);
 }
+

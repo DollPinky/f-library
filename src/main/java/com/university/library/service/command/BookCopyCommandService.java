@@ -3,9 +3,14 @@ package com.university.library.service.command;
 import com.university.library.constants.BookCopyConstants;
 import com.university.library.dto.BookCopyResponse;
 import com.university.library.dto.CreateBookCopyCommand;
+import com.university.library.dto.CreateBookCopyFromBookCommand;
+import com.university.library.entity.Book;
 import com.university.library.entity.BookCopy;
+import com.university.library.entity.Library;
 import com.university.library.repository.BookCopyRepository;
-import com.university.library.service.ManualCacheService;
+import com.university.library.repository.BookRepository;
+import com.university.library.repository.LibraryRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -13,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,7 +28,9 @@ import java.util.UUID;
 public class BookCopyCommandService {
     
     private final BookCopyRepository bookCopyRepository;
-    private final ManualCacheService cacheService;
+    private final BookRepository bookRepository;
+    private final LibraryRepository libraryRepository;
+    
     private final KafkaTemplate<String, Object> kafkaTemplate;
     
     @Transactional
@@ -134,10 +142,67 @@ public class BookCopyCommandService {
         return response;
     }
     
+    /**
+     * Tạo book copies cho một book đã tồn tại
+     */
+    @Transactional
+    public void createBookCopiesFromBook(CreateBookCopyFromBookCommand command) {
+        log.info("Creating {} book copies for book: {}", command.getCopies().size(), command.getBookId());
+        
+        // Validate book exists
+        Book book = bookRepository.findById(command.getBookId())
+            .orElseThrow(() -> new RuntimeException("Book not found with ID: " + command.getBookId()));
+        
+        List<BookCopy> bookCopies = new ArrayList<>();
+        
+        for (CreateBookCopyFromBookCommand.BookCopyInfo copyInfo : command.getCopies()) {
+            // Validate library exists
+            Library library = libraryRepository.findById(copyInfo.getLibraryId())
+                .orElseThrow(() -> new RuntimeException("Library not found with ID: " + copyInfo.getLibraryId()));
+            
+            // Create multiple copies based on quantity
+            for (int i = 0; i < copyInfo.getQuantity(); i++) {
+                String qrCode = generateUniqueQrCode(book.getIsbn(), library.getCode(), i + 1);
+                
+                BookCopy bookCopy = BookCopy.builder()
+                    .book(book)
+                    .library(library)
+                    .qrCode(qrCode)
+                    .shelfLocation(copyInfo.getLocation())
+                    .status(BookCopy.BookStatus.AVAILABLE)
+                    .build();
+                
+                bookCopies.add(bookCopy);
+            }
+        }
+        
+        // Save all book copies
+        bookCopyRepository.saveAll(bookCopies);
+        
+        log.info("Successfully created {} book copies for book: {}", bookCopies.size(), command.getBookId());
+    }
+    
+    /**
+     * Generate unique QR code for book copy
+     */
+    private String generateUniqueQrCode(String isbn, String libraryCode, int copyNumber) {
+        String baseQrCode = String.format("BK_%s_%s_%03d", isbn, libraryCode, copyNumber);
+        
+        // Check if QR code already exists and generate a new one if needed
+        int attempt = 0;
+        String qrCode = baseQrCode;
+        while (bookCopyRepository.existsByQrCode(qrCode)) {
+            attempt++;
+            qrCode = baseQrCode + "_" + attempt;
+        }
+        
+        return qrCode;
+    }
+    
     public void clearBookCopyCache(UUID bookCopyId) {
         log.info("Clearing cache for book copy: {}", bookCopyId);
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK_COPY + bookCopyId;
-        cacheService.evict(BookCopyConstants.CACHE_NAME, cacheKey);
+        // CACHE DISABLED;
     }
     
     public void clearBookCopiesCache(List<UUID> bookCopyIds) {
@@ -147,7 +212,7 @@ public class BookCopyCommandService {
     
     public void clearSearchCache() {
         log.info("Clearing all book copy search cache");
-        cacheService.evictAll(BookCopyConstants.CACHE_NAME);
+        // CACHE DISABLED;
     }
     
     private void publishBookCopyCreatedEvent(BookCopy bookCopy) {
@@ -197,10 +262,7 @@ public class BookCopyCommandService {
     }
     
     private void cacheBookCopy(BookCopyResponse bookCopyResponse) {
-        String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK_COPY + bookCopyResponse.getBookCopyId();
-        cacheService.put(BookCopyConstants.CACHE_NAME, cacheKey, bookCopyResponse, 
-                Duration.ofMinutes(BookCopyConstants.CACHE_TTL_BOOK_COPY_DETAIL), 
-                Duration.ofMinutes(BookCopyConstants.CACHE_TTL_LOCAL));
+        // CACHE DISABLED
     }
     
     private BookCopy.BookStatus convertBookStatus(CreateBookCopyCommand.BookStatus status) {
@@ -241,3 +303,4 @@ public class BookCopyCommandService {
         public BookCopy.BookStatus getNewStatus() { return newStatus; }
     }
 } 
+

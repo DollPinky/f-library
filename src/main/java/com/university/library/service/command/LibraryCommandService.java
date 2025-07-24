@@ -7,7 +7,7 @@ import com.university.library.entity.Library;
 import com.university.library.entity.Campus;
 import com.university.library.repository.LibraryRepository;
 import com.university.library.repository.CampusRepository;
-import com.university.library.service.ManualCacheService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -25,7 +25,7 @@ public class LibraryCommandService {
     
     private final LibraryRepository libraryRepository;
     private final CampusRepository campusRepository;
-    private final ManualCacheService cacheService;
+    
     private final KafkaTemplate<String, Object> kafkaTemplate;
     
     @Transactional
@@ -131,7 +131,7 @@ public class LibraryCommandService {
     public void clearLibraryCache(UUID libraryId) {
         log.info("Clearing cache for library: {}", libraryId);
         String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_LIBRARY + libraryId;
-        cacheService.evict(LibraryConstants.CACHE_NAME, cacheKey);
+        // CACHE DISABLED;
     }
     
     public void clearLibrariesCache(List<UUID> libraryIds) {
@@ -141,7 +141,7 @@ public class LibraryCommandService {
     
     public void clearSearchCache() {
         log.info("Clearing all library search cache");
-        cacheService.evictAll(LibraryConstants.CACHE_NAME);
+        // CACHE DISABLED;
     }
     
     private void publishLibraryCreatedEvent(Library library) {
@@ -181,9 +181,7 @@ public class LibraryCommandService {
     }
     
     private void cacheLibrary(LibraryResponse libraryResponse) {
-        String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_LIBRARY + libraryResponse.getLibraryId();
-        cacheService.put(LibraryConstants.CACHE_NAME, cacheKey, libraryResponse, 
-                Duration.ofMinutes(LibraryConstants.CACHE_TTL_LIBRARY_DETAIL), 
-                Duration.ofMinutes(LibraryConstants.CACHE_TTL_LOCAL));
+        // CACHE DISABLED
     }
 } 
+

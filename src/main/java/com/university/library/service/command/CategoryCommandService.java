@@ -5,7 +5,7 @@ import com.university.library.dto.CategoryResponse;
 import com.university.library.dto.CreateCategoryCommand;
 import com.university.library.entity.Category;
 import com.university.library.repository.CategoryRepository;
-import com.university.library.service.ManualCacheService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -22,7 +22,7 @@ import java.util.UUID;
 public class CategoryCommandService {
 
     private final CategoryRepository categoryRepository;
-    private final ManualCacheService cacheService;
+    
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     /**
@@ -163,11 +163,11 @@ public class CategoryCommandService {
         String categoryKey = CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + categoryId;
         String childrenKey = CategoryConstants.CACHE_KEY_PREFIX_CHILDREN + categoryId;
         
-        cacheService.evict(CategoryConstants.CACHE_NAME, categoryKey);
-        cacheService.evict(CategoryConstants.CACHE_NAME, childrenKey);
+        // CACHE DISABLED;
+        // CACHE DISABLED;
         
         // Clear hierarchy cache as well
-        cacheService.evict(CategoryConstants.CACHE_NAME, CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + "hierarchy");
+        // CACHE DISABLED;
     }
 
     /**
@@ -181,7 +181,7 @@ public class CategoryCommandService {
      * Xóa toàn bộ search cache
      */
     public void clearSearchCache() {
-        cacheService.evictAll(CategoryConstants.CACHE_NAME);
+        // CACHE DISABLED;
     }
 
     // ==================== KAFKA EVENTS ====================
@@ -243,7 +243,8 @@ public class CategoryCommandService {
         String cacheKey = CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + categoryResponse.getCategoryId();
         Duration localTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_LOCAL);
         Duration distributedTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_CATEGORY_DETAIL);
-        cacheService.put(CategoryConstants.CACHE_NAME, cacheKey, categoryResponse, localTtl, distributedTtl);
+        // CACHE DISABLED;
         log.info(CategoryConstants.LOG_CACHING_CATEGORY, categoryResponse.getCategoryId());
     }
 } 
+

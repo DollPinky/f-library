@@ -58,7 +58,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(
                             "/api/v1/admin/**").hasRole("STAFF")
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
@@ -113,3 +113,4 @@ public class SecurityConfig {
         return source;
     }
 }
+

@@ -10,3 +10,4 @@ public class CampusConstants {
     public static final String ERROR_GET_CAMPUS = "Không thể lấy thông tin cơ sở";
     public static final String ERROR_CAMPUS_NOT_FOUND = "Không tìm thấy cơ sở với id: ";
 } 
+

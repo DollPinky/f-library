@@ -61,3 +61,4 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, UUID>, JpaSp
      */
     long countByBookBookIdAndStatus(UUID bookId, BookCopy.BookStatus status);
 } 
+

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import bookService from '../services/bookService';
 
 export const useBooksApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const apiCall = async (apiFunction, ...args) => {
+  const apiCall = useCallback(async (apiFunction, ...args) => {
     setLoading(true);
     setError(null);
     
@@ -18,47 +18,47 @@ export const useBooksApi = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const getBookById = async (bookId) => {
+  const getBookById = useCallback(async (bookId) => {
     const response = await apiCall(bookService.getBookById, bookId);
     return response.data;
-  };
+  }, [apiCall]);
 
-  const searchBooks = async (params = {}) => {
+  const searchBooks = useCallback(async (params = {}) => {
     const response = await apiCall(bookService.getBooks, params);
     return response.data;
-  };
+  }, [apiCall]);
 
-  const createBook = async (bookData) => {
+  const createBook = useCallback(async (bookData) => {
     const response = await apiCall(bookService.createBook, bookData);
     return response.data;
-  };
+  }, [apiCall]);
 
-  const updateBook = async (bookId, bookData) => {
+  const updateBook = useCallback(async (bookId, bookData) => {
     const response = await apiCall(bookService.updateBook, bookId, bookData);
     return response.data;
-  };
+  }, [apiCall]);
 
-  const deleteBook = async (bookId) => {
+  const deleteBook = useCallback(async (bookId) => {
     const response = await apiCall(bookService.deleteBook, bookId);
     return response.data;
-  };
+  }, [apiCall]);
 
-  const clearBookCache = async (bookId) => {
+  const clearBookCache = useCallback(async (bookId) => {
     const response = await apiCall(bookService.clearBookCache, bookId);
     return response.data;
-  };
+  }, [apiCall]);
 
-  const getBookCacheStatus = async (bookId) => {
+  const getBookCacheStatus = useCallback(async (bookId) => {
     const response = await apiCall(bookService.getBookCacheStatus, bookId);
     return response.data;
-  };
+  }, [apiCall]);
 
-  const getBookHealth = async () => {
+  const getBookHealth = useCallback(async () => {
     const response = await apiCall(bookService.getBookHealth);
     return response.data;
-  };
+  }, [apiCall]);
 
   return {
     loading,
@@ -134,6 +134,19 @@ export const useBook = (bookId) => {
     
     try {
       const bookData = await api.getBookById(bookId);
+      console.log('Raw book data:', bookData);
+      console.log('Book createdAt:', bookData?.createdAt, 'Type:', typeof bookData?.createdAt);
+      console.log('Book updatedAt:', bookData?.updatedAt, 'Type:', typeof bookData?.updatedAt);
+      console.log('Book createdAt parsed:', bookData?.createdAt ? new Date(bookData.createdAt) : 'null');
+      console.log('Book updatedAt parsed:', bookData?.updatedAt ? new Date(bookData.updatedAt) : 'null');
+      if (bookData?.bookCopies) {
+        console.log('Book copies:', bookData.bookCopies.map(copy => ({
+          qrCode: copy.qrCode,
+          createdAt: copy.createdAt,
+          createdAtType: typeof copy.createdAt,
+          createdAtParsed: copy.createdAt ? new Date(copy.createdAt) : 'null'
+        })));
+      }
       setBook(bookData);
     } catch (error) {
       console.error('Error loading book:', error);

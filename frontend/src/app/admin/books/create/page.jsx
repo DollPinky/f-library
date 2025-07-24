@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useBooksApi } from '../../../../hooks/useBooksApi';
 import ActionButton from '../../../../components/ui/ActionButton';
 import NotificationToast from '../../../../components/ui/NotificationToast';
+import categoryService from '../../../../services/categoryService';
+import libraryService from '../../../../services/libraryService';
 import { 
   BookOpenIcon, 
   PlusIcon,
@@ -45,16 +47,30 @@ const BookCreatePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Lấy danh mục từ API thật
-        const res = await fetch('http://localhost:8080/api/v1/categories');
-        const data = await res.json();
-        if (data.success && data.data && data.data.content) {
-          setCategories(data.data.content);
-        } else {
-          setCategories([]);
+        // Lấy danh mục và thư viện từ API với parameters rõ ràng
+        const [categoriesResponse, librariesResponse] = await Promise.all([
+          categoryService.getCategories({ 
+            page: 0, 
+            size: 100, 
+            sortBy: 'name', 
+            sortDirection: 'ASC' 
+          }),
+          libraryService.getLibraries({ 
+            page: 0, 
+            size: 100, 
+            sortBy: 'name', 
+            sortDirection: 'ASC' 
+          })
+        ]);
+
+        if (categoriesResponse.success) {
+          setCategories(categoriesResponse.data.content || []);
         }
-        // TODO: Lấy libraries từ API nếu cần
+        if (librariesResponse.success) {
+          setLibraries(librariesResponse.data.content || []);
+        }
       } catch (error) {
+        console.error('Error fetching data:', error);
         showNotification('Không thể tải dữ liệu', 'error');
       }
     };
@@ -140,6 +156,7 @@ const BookCreatePage = () => {
         publisher: formData.publisher,
         publishYear: formData.publicationYear ? parseInt(formData.publicationYear) : null,
         isbn: formData.isbn,
+        description: formData.description,
         categoryId: formData.categoryId,
         copies: copies
       };
@@ -148,7 +165,7 @@ const BookCreatePage = () => {
       showNotification('Tạo sách thành công!', 'success');
       
       setTimeout(() => {
-        router.push(`/admin/books/${createdBook.bookId}`);
+        router.push('/admin/books');
       }, 1500);
     } catch (error) {
       showNotification(error.message || 'Không thể tạo sách', 'error');
@@ -376,7 +393,7 @@ const BookCreatePage = () => {
                       >
                         <option value="">Chọn thư viện</option>
                         {libraries.map((library) => (
-                          <option key={library.id} value={library.id}>
+                          <option key={library.libraryId} value={library.libraryId}>
                             {library.name}
                           </option>
                         ))}
@@ -431,7 +448,7 @@ const BookCreatePage = () => {
                               <BuildingLibraryIcon className="w-4 h-4 text-sage-500 dark:text-sage-400" />
                               <span className="text-sm font-medium text-sage-900 dark:text-sage-100">Thư viện:</span>
                               <span className="text-sm text-sage-600 dark:text-sage-400">
-                                {libraries.find(lib => lib.id === copy.libraryId)?.name || 'N/A'}
+                                {libraries.find(lib => lib.libraryId === copy.libraryId)?.name || 'N/A'}
                               </span>
                             </div>
                             <div className="flex items-center space-x-2">

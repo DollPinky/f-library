@@ -23,3 +23,4 @@ public class CampusFacade {
         return campusQueryService.getCampusById(campusId);
     }
 } 
+

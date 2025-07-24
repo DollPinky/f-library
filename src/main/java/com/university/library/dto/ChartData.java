@@ -84,3 +84,4 @@ public class ChartData {
         private long totalReturns;
     }
 } 
+

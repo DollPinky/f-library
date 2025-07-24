@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Builder
@@ -24,7 +24,7 @@ public class StandardResponse<T> {
     private T data;
     
     @Builder.Default
-    private LocalDateTime timestamp = LocalDateTime.now();
+    private Instant timestamp = Instant.now();
     
     private String errorCode;
     
@@ -32,7 +32,7 @@ public class StandardResponse<T> {
         return StandardResponse.<T>builder()
                 .success(true)
                 .message("Thành công")
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .build();
     }
     
@@ -41,7 +41,7 @@ public class StandardResponse<T> {
                 .success(true)
                 .message("Thành công")
                 .data(data)
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .build();
     }
     
@@ -50,7 +50,7 @@ public class StandardResponse<T> {
                 .success(true)
                 .message(message)
                 .data(data)
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .build();
     }
     
@@ -58,7 +58,7 @@ public class StandardResponse<T> {
         return StandardResponse.<T>builder()
                 .success(false)
                 .message(message)
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .build();
     }
     
@@ -67,7 +67,7 @@ public class StandardResponse<T> {
                 .success(false)
                 .message(message)
                 .errorCode(errorCode)
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .build();
     }
     
@@ -76,7 +76,8 @@ public class StandardResponse<T> {
                 .success(false)
                 .message(message)
                 .data(data)
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .build();
     }
 } 
+

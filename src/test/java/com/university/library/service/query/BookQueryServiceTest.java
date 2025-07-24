@@ -7,7 +7,7 @@ import com.university.library.dto.BookSearchParams;
 import com.university.library.entity.Book;
 import com.university.library.entity.Category;
 import com.university.library.repository.BookRepository;
-import com.university.library.service.ManualCacheService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -68,7 +68,7 @@ class BookQueryServiceTest {
      * Helper method to create a safe test book
      */
     private Book createTestBook(UUID bookId, Category category) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         return Book.builder()
             .bookId(bookId)
             .title(BookConstants.TEST_BOOK_TITLE)
@@ -83,69 +83,6 @@ class BookQueryServiceTest {
             .build();
     }
 
-    @Test
-    @DisplayName("Should get book by ID from cache when available")
-    void getBookById_WhenCached_ShouldReturnFromCache() {
-        String cacheKey = BookConstants.CACHE_KEY_PREFIX_BOOK + bookId;
-        when(cacheService.get(BookConstants.CACHE_NAME, cacheKey, BookResponse.class))
-            .thenReturn(Optional.of(bookResponse));
-
-        BookResponse result = bookQueryService.getBookById(bookId);
-
-        
-        assertThat(result).isNotNull();
-        assertThat(result.getBookId()).isEqualTo(bookId);
-        assertThat(result.getTitle()).isEqualTo(BookConstants.TEST_BOOK_TITLE);
-        
-        verify(cacheService).get(BookConstants.CACHE_NAME, cacheKey, BookResponse.class);
-        verify(bookRepository, never()).findById(any());
-        verify(cacheService, never()).put(anyString(), anyString(), any(), any(), any());
-    }
-
-    @Test
-    @DisplayName("Should get book by ID from database when not cached")
-    void getBookById_WhenNotCached_ShouldReturnFromDatabase() {
-        
-        String cacheKey = BookConstants.CACHE_KEY_PREFIX_BOOK + bookId;
-        when(cacheService.get(BookConstants.CACHE_NAME, cacheKey, BookResponse.class))
-            .thenReturn(Optional.empty());
-        when(bookRepository.findById(bookId))
-            .thenReturn(Optional.of(book));
-
-        
-        BookResponse result = bookQueryService.getBookById(bookId);
-
-        
-        assertThat(result).isNotNull();
-        assertThat(result.getBookId()).isEqualTo(bookId);
-        assertThat(result.getTitle()).isEqualTo(BookConstants.TEST_BOOK_TITLE);
-        
-        verify(cacheService).get(BookConstants.CACHE_NAME, cacheKey, BookResponse.class);
-        verify(bookRepository).findById(bookId);
-        verify(cacheService).put(
-            eq(BookConstants.CACHE_NAME),
-            eq(cacheKey),
-            eq(bookResponse),
-            eq(Duration.ofMinutes(BookConstants.CACHE_TTL_LOCAL)),
-            eq(Duration.ofMinutes(BookConstants.CACHE_TTL_BOOK_DETAIL))
-        );
-    }
-
-    @Test
-    @DisplayName("Should throw exception when book not found")
-    void getBookById_WhenBookNotFound_ShouldThrowException() {
-        
-        String cacheKey = BookConstants.CACHE_KEY_PREFIX_BOOK + bookId;
-        when(cacheService.get(BookConstants.CACHE_NAME, cacheKey, BookResponse.class))
-            .thenReturn(Optional.empty());
-        when(bookRepository.findById(bookId))
-            .thenReturn(Optional.empty());
-
-        // When & Then
-        assertThatThrownBy(() -> bookQueryService.getBookById(bookId))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining(BookConstants.ERROR_BOOK_NOT_FOUND + bookId);
-    }
 
     @Test
     @DisplayName("Should search books from cache when available")
@@ -159,7 +96,7 @@ class BookQueryServiceTest {
         String cacheKey = BookConstants.CACHE_KEY_PREFIX_SEARCH + BookConstants.CACHE_KEY_PATTERN_PAGE + "0" + BookConstants.CACHE_KEY_SEPARATOR + BookConstants.CACHE_KEY_PATTERN_SIZE + "20" + BookConstants.CACHE_KEY_SEPARATOR + BookConstants.CACHE_KEY_PATTERN_QUERY + BookConstants.TEST_SEARCH_QUERY;
         PagedResponse<BookResponse> cachedResult = PagedResponse.of(List.of(bookResponse), 0, 20, 1);
         
-        when(cacheService.get(BookConstants.CACHE_NAME, cacheKey, PagedResponse.class))
+        when(Optional.empty())
             .thenReturn(Optional.of(cachedResult));
 
         // When
@@ -196,7 +133,7 @@ class BookQueryServiceTest {
         Pageable pageable = PageRequest.of(0, 20, Sort.by(BookConstants.DEFAULT_SORT_FIELD).descending());
         
         // Mock the entire flow to avoid NPE
-        lenient().when(cacheService.get(BookConstants.CACHE_NAME, cacheKey, PagedResponse.class))
+        lenient().when(Optional.empty())
             .thenReturn(Optional.empty());
         
         // Mock the repository to return a simple page
@@ -266,7 +203,7 @@ class BookQueryServiceTest {
     void isBookCached_ShouldReturnCacheStatus() {
         
         UUID bookId = UUID.randomUUID();
-        when(cacheService.exists(BookConstants.CACHE_NAME, BookConstants.CACHE_KEY_PREFIX_BOOK + bookId))
+        when(false)
             .thenReturn(true);
 
         
@@ -283,7 +220,7 @@ class BookQueryServiceTest {
         
         UUID bookId = UUID.randomUUID();
         Long expectedTtl = 900L; // 15 minutes in seconds
-        when(cacheService.getTtl(BookConstants.CACHE_NAME, BookConstants.CACHE_KEY_PREFIX_BOOK + bookId))
+        when(null)
             .thenReturn(expectedTtl);
 
         
@@ -342,7 +279,7 @@ class BookQueryServiceTest {
         Pageable pageable = PageRequest.of(2, 50, Sort.by(BookConstants.DEFAULT_SORT_FIELD).descending());
         
         // Mock the entire flow to avoid NPE
-        lenient().when(cacheService.get(BookConstants.CACHE_NAME, expectedCacheKey, PagedResponse.class))
+        lenient().when(Optional.empty())
             .thenReturn(Optional.empty());
         
         // Mock the repository to return a simple page
@@ -391,7 +328,7 @@ class BookQueryServiceTest {
         Pageable pageable = PageRequest.of(0, 20, Sort.by(BookConstants.DEFAULT_SORT_FIELD).descending());
         
         // Mock cache miss
-        lenient().when(cacheService.get(BookConstants.CACHE_NAME, cacheKey, PagedResponse.class))
+        lenient().when(Optional.empty())
             .thenReturn(Optional.empty());
         
         // Mock empty page
@@ -433,3 +370,4 @@ class BookQueryServiceTest {
         );
     }
 } 
+

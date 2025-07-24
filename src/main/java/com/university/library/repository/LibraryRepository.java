@@ -75,3 +75,4 @@ public interface LibraryRepository extends JpaRepository<Library, UUID>, JpaSpec
     @Query("SELECT COUNT(s) FROM Staff s WHERE s.library.libraryId = :libraryId")
     long countStaffByLibraryId(@Param("libraryId") UUID libraryId);
 } 
+

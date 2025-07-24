@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
@@ -18,26 +17,11 @@ import com.university.library.config.UUIDDeserializer;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateBookCommand {
+public class CreateBookCopyFromBookCommand {
     
-    @NotBlank(message = "Tên sách không được để trống")
-    private String title;
-    
-    @NotBlank(message = "Tác giả không được để trống")
-    private String author;
-    
-    private String isbn;
-    
-    private String publisher;
-    
-    @Positive(message = "Năm xuất bản phải là số dương")
-    private Integer publishYear;
-    
-    @NotNull(message = "Danh mục không được để trống")
+    @NotNull(message = "ID sách không được để trống")
     @JsonDeserialize(using = UUIDDeserializer.class)
-    private UUID categoryId;
-    
-    private String description;
+    private UUID bookId;
     
     private List<BookCopyInfo> copies;
     
@@ -46,21 +30,15 @@ public class CreateBookCommand {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class BookCopyInfo {
+        @NotNull(message = "Thư viện không được để trống")
         @JsonDeserialize(using = UUIDDeserializer.class)
         private UUID libraryId;
         
+        @NotNull(message = "Số lượng không được để trống")
         @Positive(message = "Số lượng phải là số dương")
         private Integer quantity;
         
         private String location;
-        
-        // Custom validation
-        public boolean isValid() {
-            if (libraryId != null && quantity != null) {
-                return quantity > 0;
-            }
-            return true; // Allow null values for update operations
-        }
     }
 } 
 

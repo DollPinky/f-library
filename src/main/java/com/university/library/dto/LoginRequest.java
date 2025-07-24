@@ -21,3 +21,4 @@ public class LoginRequest {
     
     private boolean rememberMe = false;
 } 
+

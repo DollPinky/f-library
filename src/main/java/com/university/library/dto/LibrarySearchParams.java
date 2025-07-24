@@ -17,10 +17,26 @@ public class LibrarySearchParams {
     private UUID campusId;
     private Boolean hasBookCopies;
     private Boolean hasStaff;
-    private Integer page = 0;
-    private Integer size = 20;
-    private String sortBy = "name";
-    private String sortDirection = "ASC";
+    private Integer page;
+    private Integer size;
+    private String sortBy;
+    private String sortDirection;
+    
+    public Integer getPage() {
+        return page != null ? page : 0;
+    }
+    
+    public Integer getSize() {
+        return size != null ? size : 20;
+    }
+    
+    public String getSortBy() {
+        return sortBy != null ? sortBy : "name";
+    }
+    
+    public String getSortDirection() {
+        return sortDirection != null ? sortDirection : "ASC";
+    }
     
     public enum SortDirection {
         ASC, DESC;
@@ -38,3 +54,4 @@ public class LibrarySearchParams {
         return SortDirection.fromString(sortDirection);
     }
 } 
+
