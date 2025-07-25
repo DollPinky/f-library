@@ -94,7 +94,6 @@ public class LibraryFacade {
     public boolean isHealthy() {
         try {
             // Basic health check - try to access cache service
-            false;
             return true;
         } catch (Exception e) {
             log.error(LibraryConstants.ERROR_HEALTH_CHECK_FAILED, e.getMessage());

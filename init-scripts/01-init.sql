@@ -184,15 +184,15 @@ INSERT INTO book_copies (book_copy_id, book_id, library_id, qr_code, status, she
 (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-3585650756'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-2-1319', 'AVAILABLE', 'S1R6', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2801823908'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-3-1949', 'AVAILABLE', 'S2R10', FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
---- Sample Accounts (Staff)
-INSERT INTO accounts (account_id, username, email, password_hash, full_name, phone, user_type, status, campus_id, library_id, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), 'admin1', 'admin1@library.edu.vn', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Admin User 1', '0123456789', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HN'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), 'librarian1', 'librarian1@library.edu.vn', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Librarian User 1', '0123456790', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HCM'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
---- Sample Staff
-INSERT INTO staffs (staff_id, account_id, library_id, employee_id, staff_role, department, position, is_active, can_manage_books, can_manage_users, can_manage_staff, can_view_reports, can_process_borrowings, is_deleted, created_at, updated_at) VALUES 
-(gen_random_uuid(), (SELECT account_id FROM accounts WHERE username = 'admin1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'EMP001', 'ADMIN', 'IT Department', 'System Administrator', TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(gen_random_uuid(), (SELECT account_id FROM accounts WHERE username = 'librarian1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'EMP002', 'LIBRARIAN', 'Library Department', 'Senior Librarian', TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- --- Sample Accounts (Staff)
+-- INSERT INTO accounts (account_id, username, email, password_hash, full_name, phone, user_type, status, campus_id, library_id, is_deleted, created_at, updated_at) VALUES
+-- (gen_random_uuid(), 'admin1', 'admin1@library.edu.vn', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Admin User 1', '0123456789', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HN'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- (gen_random_uuid(), 'librarian1', 'librarian1@library.edu.vn', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Librarian User 1', '0123456790', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HCM'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+--
+-- --- Sample Staff
+-- INSERT INTO staffs (staff_id, account_id, library_id, employee_id, staff_role, department, position, is_active, can_manage_books, can_manage_users, can_manage_staff, can_view_reports, can_process_borrowings, is_deleted, created_at, updated_at) VALUES
+-- (gen_random_uuid(), (SELECT account_id FROM accounts WHERE username = 'admin1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'EMP001', 'ADMIN', 'IT Department', 'System Administrator', TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- (gen_random_uuid(), (SELECT account_id FROM accounts WHERE username = 'librarian1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'EMP002', 'LIBRARIAN', 'Library Department', 'Senior Librarian', TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 --- Sample Accounts (Readers)
 INSERT INTO accounts (account_id, username, email, password_hash, full_name, phone, user_type, status, campus_id, student_id, faculty, major, academic_year, max_borrow_limit, is_deleted, created_at, updated_at) VALUES 

@@ -56,5 +56,9 @@ public final class MessageConstants {
     public static final String INVALID_INPUT = "Invalid input/ Invalid request";
     public static final String ACCOUNT_NON_EXIST = "Account doesn't exist";
 
+
+    public static final String ERROR_STAFF_NOT_FOUND = "NOT FOUND STAFF WITH EMPLOYEE ID:";
+    public static final String ERROR_ACCOUNT_NOT_FOUND = "NOT FOUND ACCOUNT WITH ACCOUNT ID:";
+
 } 
 

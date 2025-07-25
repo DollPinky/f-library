@@ -20,9 +20,8 @@ public class AccountQueryServiceImpl implements AccountQueryService{
     public PagedResponse<AccountResponse> getAllAccounts(int page, int size) {
         Pageable pageable = Pageable.ofSize(size).withPage(page);
         Page<Account> accountsPage = accountRepository.findAll(pageable);
-        PagedResponse<AccountResponse> mappedPage =
-                (PagedResponse<AccountResponse>)
-                        accountsPage.map(accountMapper::toAccountResponse);
+
+        Page<AccountResponse> mappedPage = accountsPage.map(accountMapper::toAccountResponse);
 
         return PagedResponse.fromPage(mappedPage);
 

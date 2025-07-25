@@ -30,11 +30,7 @@ public class BookCopyQueryService {
         log.info("Getting book copy by ID: {}", bookCopyId);
         
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK_COPY + bookCopyId;
-        BookCopyResponse cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Book copy found in cache: {}", bookCopyId);
-            return cached;
-        }
+
         
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
                 .orElseThrow(() -> new RuntimeException("Book copy not found with ID: " + bookCopyId));
@@ -50,11 +46,7 @@ public class BookCopyQueryService {
         log.info("Searching book copies with params: {}", params);
         
         String cacheKey = buildSearchCacheKey(params);
-        PagedResponse<BookCopyResponse> cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Search results found in cache for key: {}", cacheKey);
-            return cached;
-        }
+
         
         Specification<BookCopy> spec = createSearchSpecification(params);
         Sort sort = Sort.by(Sort.Direction.fromString(params.getSortDirection()), params.getSortBy());
@@ -83,11 +75,7 @@ public class BookCopyQueryService {
         log.info("Getting book copies by book ID: {}", bookId);
         
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK + bookId;
-        List<BookCopyResponse> cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Book copies found in cache for book: {}", bookId);
-            return cached;
-        }
+
         
         List<BookCopy> bookCopies = bookCopyRepository.findByBookBookId(bookId);
         List<BookCopyResponse> responses = bookCopies.stream()
@@ -104,11 +92,7 @@ public class BookCopyQueryService {
         log.info("Getting book copies by library ID: {}", libraryId);
         
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_LIBRARY + libraryId;
-        List<BookCopyResponse> cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Book copies found in cache for library: {}", libraryId);
-            return cached;
-        }
+
         
         List<BookCopy> bookCopies = bookCopyRepository.findByLibraryLibraryId(libraryId);
         List<BookCopyResponse> responses = bookCopies.stream()
@@ -125,11 +109,7 @@ public class BookCopyQueryService {
         log.info("Getting available book copies by book ID: {}", bookId);
         
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_STATUS + "available:book:" + bookId;
-        List<BookCopyResponse> cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Available book copies found in cache for book: {}", bookId);
-            return cached;
-        }
+
         
         List<BookCopy> bookCopies = bookCopyRepository.findByBookBookIdAndStatus(bookId, BookCopy.BookStatus.AVAILABLE);
         List<BookCopyResponse> responses = bookCopies.stream()
@@ -146,11 +126,7 @@ public class BookCopyQueryService {
         log.info("Getting book copy by QR code: {}", qrCode);
         
         String cacheKey = BookCopyConstants.CACHE_KEY_PREFIX_BOOK_COPY + "qr:" + qrCode;
-        BookCopyResponse cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Book copy found in cache by QR code: {}", qrCode);
-            return cached;
-        }
+
         
         BookCopy bookCopy = bookCopyRepository.findByQrCode(qrCode);
         if (bookCopy == null) {

@@ -96,10 +96,7 @@ public class CategoryQueryService {
         
         String cacheKey = CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + "hierarchy";
         
-        var cachedResult = Optional.empty();
-        if (cachedResult.isPresent()) {
-            return (List<CategoryResponse>) cachedResult.get();
-        }
+
         
         List<Category> rootCategories = categoryRepository.findByParentCategoryIsNull();
         
@@ -107,8 +104,7 @@ public class CategoryQueryService {
             .map(CategoryResponse::fromEntity)
             .collect(Collectors.toList());
         
-        Duration localTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_LOCAL);
-        Duration distributedTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_CATEGORY_LIST);
+
         // CACHE DISABLED;
         
         return hierarchy;
@@ -122,19 +118,14 @@ public class CategoryQueryService {
         
         String cacheKey = CategoryConstants.CACHE_KEY_PREFIX_CHILDREN + parentCategoryId;
         
-        var cachedResult = Optional.empty();
-        if (cachedResult.isPresent()) {
-            return (List<CategoryResponse>) cachedResult.get();
-        }
+
         
         List<Category> children = categoryRepository.findByParentCategoryCategoryId(parentCategoryId);
         
         List<CategoryResponse> childrenResponses = children.stream()
             .map(CategoryResponse::fromEntitySimple)
             .collect(Collectors.toList());
-        
-        Duration localTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_LOCAL);
-        Duration distributedTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_CATEGORY_LIST);
+
         // CACHE DISABLED;
         
         return childrenResponses;
@@ -206,8 +197,7 @@ public class CategoryQueryService {
      */
     private void cacheCategory(CategoryResponse categoryResponse) {
         String cacheKey = CategoryConstants.CACHE_KEY_PREFIX_CATEGORY + categoryResponse.getCategoryId();
-        Duration localTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_LOCAL);
-        Duration distributedTtl = Duration.ofMinutes(CategoryConstants.CACHE_TTL_CATEGORY_DETAIL);
+
         // CACHE DISABLED;
         log.info(CategoryConstants.LOG_CACHING_CATEGORY, categoryResponse.getCategoryId());
     }

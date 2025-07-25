@@ -30,11 +30,7 @@ public class LibraryQueryService {
         log.info("Getting library by ID: {}", libraryId);
         
         String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_LIBRARY + libraryId;
-        LibraryResponse cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Library found in cache: {}", libraryId);
-            return cached;
-        }
+
         
         Library library = libraryRepository.findById(libraryId)
                 .orElseThrow(() -> new RuntimeException("Library not found with ID: " + libraryId));
@@ -70,7 +66,7 @@ public class LibraryQueryService {
         List<LibraryResponse> responses = libraryPage.getContent().stream()
                 .map(LibraryResponse::fromEntity)
                 .collect(Collectors.toList());
-        
+
         PagedResponse<LibraryResponse> response = PagedResponse.of(
                 responses,
                 params.getPage(),
@@ -89,12 +85,8 @@ public class LibraryQueryService {
         log.info("Getting libraries by campus ID: {}", campusId);
         
         String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_CAMPUS + campusId;
-        List<LibraryResponse> cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Libraries found in cache for campus: {}", campusId);
-            return cached;
-        }
-        
+
+
         List<Library> libraries = libraryRepository.findByCampusCampusId(campusId);
         List<LibraryResponse> responses = libraries.stream()
                 .map(LibraryResponse::fromEntity)
@@ -110,11 +102,8 @@ public class LibraryQueryService {
         log.info("Getting library by code: {}", code);
         
         String cacheKey = LibraryConstants.CACHE_KEY_PREFIX_CODE + code;
-        LibraryResponse cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("Library found in cache by code: {}", code);
-            return cached;
-        }
+
+
         
         Library library = libraryRepository.findByCode(code);
         if (library == null) {
@@ -132,11 +121,7 @@ public class LibraryQueryService {
         log.info("Getting all libraries");
         
         String cacheKey = "all";
-        List<LibraryResponse> cached = Optional.empty().orElse(null);
-        if (cached != null) {
-            log.debug("All libraries found in cache");
-            return cached;
-        }
+
         
         List<Library> libraries = libraryRepository.findAll();
         List<LibraryResponse> responses = libraries.stream()
