@@ -27,6 +27,34 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
     List<Borrowing> findByStatus(Borrowing.BorrowingStatus status);
     
     /**
+     * Tìm borrowings theo trạng thái với pagination
+     */
+    Page<Borrowing> findByStatus(Borrowing.BorrowingStatus status, Pageable pageable);
+    
+    /**
+     * Tìm borrowings theo query với pagination
+     */
+    @Query("SELECT b FROM Borrowing b WHERE " +
+           "LOWER(b.bookCopy.book.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(b.bookCopy.book.author) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(b.borrower.fullName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(b.borrower.email) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(b.bookCopy.qrCode) LIKE LOWER(CONCAT('%', :query, '%'))")
+    Page<Borrowing> findByQuery(@Param("query") String query, Pageable pageable);
+    
+    /**
+     * Tìm borrowings theo trạng thái và query với pagination
+     */
+    @Query("SELECT b FROM Borrowing b WHERE b.status = :status AND (" +
+           "LOWER(b.bookCopy.book.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(b.bookCopy.book.author) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(b.borrower.fullName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(b.borrower.email) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(b.bookCopy.qrCode) LIKE LOWER(CONCAT('%', :query, '%')))")
+    Page<Borrowing> findByStatusAndQuery(@Param("status") Borrowing.BorrowingStatus status, 
+                                        @Param("query") String query, Pageable pageable);
+    
+    /**
      * Tìm borrowings quá hạn
      */
     @Query("SELECT b FROM Borrowing b WHERE b.status = 'BORROWED' AND b.dueDate < :now")
@@ -50,9 +78,9 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
     List<Borrowing> findByBorrowedDateBetween(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
     
     /**
-     * Đếm số sách đang mượn của một người dùng
+     * Đếm số sách đang mượn của một người dùng (bao gồm cả chờ xác nhận)
      */
-    @Query("SELECT COUNT(b) FROM Borrowing b WHERE b.borrower.accountId = :borrowerId AND b.status = 'BORROWED'")
+    @Query("SELECT COUNT(b) FROM Borrowing b WHERE b.borrower.accountId = :borrowerId AND b.status IN ('BORROWED', 'PENDING_LIBRARIAN')")
     long countActiveBorrowingsByBorrower(@Param("borrowerId") UUID borrowerId);
     
     /**

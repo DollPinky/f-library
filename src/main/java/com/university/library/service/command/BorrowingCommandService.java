@@ -33,36 +33,34 @@ public class BorrowingCommandService {
     public BorrowingResponse createBorrowing(CreateBorrowingCommand command) {
         log.info("Creating borrowing for book copy: {} by user: {}", command.getBookCopyId(), command.getBorrowerId());
         
-        // Validate book copy exists and is available
         BookCopy bookCopy = bookCopyRepository.findById(command.getBookCopyId())
             .orElseThrow(() -> new RuntimeException("Book copy not found with ID: " + command.getBookCopyId()));
         
-        // Validate borrower exists
         Account borrower = accountRepository.findById(command.getBorrowerId())
             .orElseThrow(() -> new RuntimeException("Borrower not found with ID: " + command.getBorrowerId()));
         
-        // Check if book copy is available
         if (!bookCopy.getStatus().equals(BookCopy.BookStatus.AVAILABLE)) {
             throw new RuntimeException("Book copy is not available for borrowing");
         }
         
-        // Check if user has too many active borrowings (max 5 books)
         long activeBorrowings = borrowingRepository.countActiveBorrowingsByBorrower(command.getBorrowerId());
         if (activeBorrowings >= 5) {
             throw new RuntimeException("User has reached maximum number of active borrowings (5)");
         }
         
-        // Determine status based on command
-        Borrowing.BorrowingStatus status = command.isReservation() ? 
-            Borrowing.BorrowingStatus.RESERVED : Borrowing.BorrowingStatus.BORROWED;
+        // Xác định status: RESERVED hoặc PENDING_LIBRARIAN
+        Borrowing.BorrowingStatus status;
+        if (command.isReservation()) {
+            status = Borrowing.BorrowingStatus.RESERVED;
+        } else {
+            status = Borrowing.BorrowingStatus.PENDING_LIBRARIAN; // Chờ thủ thư xác nhận
+        }
         
-        // Set default dates if not provided
         Instant borrowedDate = command.getBorrowedDate() != null ? 
             command.getBorrowedDate() : Instant.now();
         Instant dueDate = command.getDueDate() != null ? 
-            command.getDueDate() : Instant.now().plus(30, ChronoUnit.DAYS); // Default 30 days
+            command.getDueDate() : Instant.now().plus(30, ChronoUnit.DAYS); 
         
-        // Create borrowing record
         Borrowing borrowing = Borrowing.builder()
             .bookCopy(bookCopy)
             .borrower(borrower)
@@ -74,44 +72,94 @@ public class BorrowingCommandService {
         
         Borrowing savedBorrowing = borrowingRepository.save(borrowing);
         
-        // Update book copy status
+        // Cập nhật trạng thái book copy
         if (command.isReservation()) {
             bookCopy.setStatus(BookCopy.BookStatus.RESERVED);
         } else {
-            bookCopy.setStatus(BookCopy.BookStatus.BORROWED);
+            bookCopy.setStatus(BookCopy.BookStatus.PENDING); // Chờ thủ thư xác nhận
         }
         bookCopyRepository.save(bookCopy);
         
-        log.info("Successfully created borrowing: {}", savedBorrowing.getBorrowingId());
+        log.info("Successfully created borrowing with status: {}", status);
         return BorrowingResponse.fromEntity(savedBorrowing);
     }
     
     /**
-     * Xác nhận mượn sách (chuyển từ RESERVED sang BORROWED)
+     * Thủ thư xác nhận mượn sách (chuyển từ RESERVED/PENDING_LIBRARIAN sang BORROWED)
      */
     @Transactional
     public BorrowingResponse confirmBorrowing(UUID borrowingId) {
-        log.info("Confirming borrowing: {}", borrowingId);
+        log.info("Librarian confirming borrowing: {}", borrowingId);
         
         Borrowing borrowing = borrowingRepository.findById(borrowingId)
             .orElseThrow(() -> new RuntimeException("Borrowing not found with ID: " + borrowingId));
         
-        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.RESERVED)) {
-            throw new RuntimeException("Borrowing is not in RESERVED status");
+        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.PENDING_LIBRARIAN) && 
+            !borrowing.getStatus().equals(Borrowing.BorrowingStatus.RESERVED)) {
+            throw new RuntimeException("Borrowing is not in PENDING_LIBRARIAN or RESERVED status");
         }
         
-        // Update status to BORROWED
         borrowing.setStatus(Borrowing.BorrowingStatus.BORROWED);
         borrowing.setBorrowedDate(Instant.now());
         
-        // Update book copy status
         BookCopy bookCopy = borrowing.getBookCopy();
         bookCopy.setStatus(BookCopy.BookStatus.BORROWED);
         bookCopyRepository.save(bookCopy);
         
         Borrowing savedBorrowing = borrowingRepository.save(borrowing);
         
-        log.info("Successfully confirmed borrowing: {}", borrowingId);
+        log.info("Librarian successfully confirmed borrowing: {}", borrowingId);
+        return BorrowingResponse.fromEntity(savedBorrowing);
+    }
+    
+    /**
+     * User yêu cầu trả sách (chuyển từ BORROWED sang PENDING_RETURN)
+     */
+    @Transactional
+    public BorrowingResponse requestReturn(UUID borrowingId) {
+        log.info("User requesting return for borrowing: {}", borrowingId);
+        
+        Borrowing borrowing = borrowingRepository.findById(borrowingId)
+            .orElseThrow(() -> new RuntimeException("Borrowing not found with ID: " + borrowingId));
+        
+        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.BORROWED)) {
+            throw new RuntimeException("Borrowing is not in BORROWED status");
+        }
+        
+        borrowing.setStatus(Borrowing.BorrowingStatus.PENDING_RETURN);
+        borrowingRepository.save(borrowing);
+        
+        log.info("User successfully requested return for borrowing: {}", borrowingId);
+        return BorrowingResponse.fromEntity(borrowing);
+    }
+    
+    /**
+     * Thủ thư xác nhận trả sách (chuyển từ PENDING_RETURN sang RETURNED)
+     */
+    @Transactional
+    public BorrowingResponse confirmReturn(UUID borrowingId) {
+        log.info("Librarian confirming return for borrowing: {}", borrowingId);
+        
+        Borrowing borrowing = borrowingRepository.findById(borrowingId)
+            .orElseThrow(() -> new RuntimeException("Borrowing not found with ID: " + borrowingId));
+        
+        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.PENDING_RETURN)) {
+            throw new RuntimeException("Borrowing is not in PENDING_RETURN status");
+        }
+        
+        double fine = borrowing.calculateFine();
+        
+        borrowing.setStatus(Borrowing.BorrowingStatus.RETURNED);
+        borrowing.setReturnedDate(Instant.now());
+        borrowing.setFineAmount(fine);
+
+        BookCopy bookCopy = borrowing.getBookCopy();
+        bookCopy.setStatus(BookCopy.BookStatus.AVAILABLE);
+        bookCopyRepository.save(bookCopy);
+        
+        Borrowing savedBorrowing = borrowingRepository.save(borrowing);
+        
+        log.info("Librarian successfully confirmed return for borrowing: {} with fine: {}", borrowingId, fine);
         return BorrowingResponse.fromEntity(savedBorrowing);
     }
     
@@ -129,15 +177,12 @@ public class BorrowingCommandService {
             throw new RuntimeException("Borrowing is not in BORROWED status");
         }
         
-        // Calculate fine if overdue
         double fine = borrowing.calculateFine();
         
-        // Update borrowing
         borrowing.setStatus(Borrowing.BorrowingStatus.RETURNED);
         borrowing.setReturnedDate(Instant.now());
         borrowing.setFineAmount(fine);
-        
-        // Update book copy status
+
         BookCopy bookCopy = borrowing.getBookCopy();
         bookCopy.setStatus(BookCopy.BookStatus.AVAILABLE);
         bookCopyRepository.save(bookCopy);
@@ -158,15 +203,14 @@ public class BorrowingCommandService {
         Borrowing borrowing = borrowingRepository.findById(borrowingId)
             .orElseThrow(() -> new RuntimeException("Borrowing not found with ID: " + borrowingId));
         
-        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.RESERVED)) {
-            throw new RuntimeException("Borrowing is not in RESERVED status");
+        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.RESERVED) && 
+            !borrowing.getStatus().equals(Borrowing.BorrowingStatus.PENDING_LIBRARIAN)) {
+            throw new RuntimeException("Borrowing is not in RESERVED or PENDING_LIBRARIAN status");
         }
         
-        // Update borrowing status
         borrowing.setStatus(Borrowing.BorrowingStatus.CANCELLED);
         borrowingRepository.save(borrowing);
         
-        // Update book copy status back to available
         BookCopy bookCopy = borrowing.getBookCopy();
         bookCopy.setStatus(BookCopy.BookStatus.AVAILABLE);
         bookCopyRepository.save(bookCopy);
@@ -188,14 +232,11 @@ public class BorrowingCommandService {
             throw new RuntimeException("Borrowing is not in BORROWED status");
         }
         
-        // Calculate fine (higher penalty for lost books)
-        double fine = 500000.0; // 500,000 VND penalty for lost books
+        double fine = 500000.0; 
         
-        // Update borrowing
         borrowing.setStatus(Borrowing.BorrowingStatus.LOST);
         borrowing.setFineAmount(fine);
         
-        // Update book copy status
         BookCopy bookCopy = borrowing.getBookCopy();
         bookCopy.setStatus(BookCopy.BookStatus.LOST);
         bookCopyRepository.save(bookCopy);

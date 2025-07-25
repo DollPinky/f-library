@@ -36,8 +36,28 @@ class ApiService {
     }
   }
 
-  async get(endpoint) {
-    return this.request(endpoint, { method: 'GET' });
+  async get(endpoint, options = {}) {
+    const url = options.params ? 
+      `${this.baseURL}${endpoint}?${new URLSearchParams(options.params)}` : 
+      `${this.baseURL}${endpoint}`;
+    
+    const config = {
+      method: 'GET',
+      headers: this.getHeaders(),
+      credentials: 'include',
+    };
+
+    try {
+      const response = await fetch(url, config);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('API request failed:', error);
+      throw error;
+    }
   }
 
   async post(endpoint, data) {

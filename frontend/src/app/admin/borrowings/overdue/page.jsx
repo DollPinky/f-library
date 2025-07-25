@@ -74,7 +74,7 @@ const OverdueBooksPage = () => {
 
   const fetchOverdueStats = async () => {
     try {
-      const response = await fetch('/api/v1/borrowings/overdue/stats', {
+      const response = await fetch('http://localhost:8080/api/v1/borrowings/overdue/stats', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -129,7 +129,7 @@ const OverdueBooksPage = () => {
   const sendBulkReminders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/v1/borrowings/overdue/bulk-remind', {
+      const response = await fetch('http://localhost:8080/api/v1/borrowings/overdue/bulk-remind', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

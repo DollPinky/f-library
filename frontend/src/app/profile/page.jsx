@@ -60,16 +60,22 @@ const ProfilePage = () => {
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'RESERVED':
-        return 'Đã đặt';
+      case 'PENDING_LIBRARIAN':
+        return 'Chờ thủ thư xác nhận';
       case 'BORROWED':
         return 'Đang mượn';
+      case 'PENDING_RETURN':
+        return 'Chờ xác nhận trả';
       case 'RETURNED':
         return 'Đã trả';
+      case 'RESERVED':
+        return 'Đã đặt';
       case 'OVERDUE':
         return 'Quá hạn';
       case 'LOST':
         return 'Mất sách';
+      case 'CANCELLED':
+        return 'Đã hủy';
       default:
         return status;
     }
@@ -77,16 +83,22 @@ const ProfilePage = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'RESERVED':
+      case 'PENDING_LIBRARIAN':
         return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
       case 'BORROWED':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'PENDING_RETURN':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case 'RETURNED':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+      case 'RESERVED':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
       case 'OVERDUE':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       case 'LOST':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'CANCELLED':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
@@ -94,6 +106,28 @@ const ProfilePage = () => {
 
   const showNotification = (message, type = 'info') => {
     setNotification({ show: true, message, type });
+  };
+
+  const handleRequestReturn = async (borrowingId) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/v1/borrowings/${borrowingId}/request-return`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        showNotification('Yêu cầu trả sách thành công. Vui lòng mang sách đến thư viện.', 'success');
+        loadUserBorrowings();
+      } else {
+        showNotification(data.message || 'Không thể yêu cầu trả sách', 'error');
+      }
+    } catch (error) {
+      showNotification('Không thể yêu cầu trả sách', 'error');
+    }
   };
 
   if (!user) {
@@ -273,6 +307,15 @@ const ProfilePage = () => {
                               <span className="text-xs text-red-600 dark:text-red-400">
                                 Quá hạn {borrowing.overdueDays} ngày
                               </span>
+                            )}
+
+                            {borrowing.status === 'BORROWED' && (
+                              <ActionButton
+                                onClick={() => handleRequestReturn(borrowing.borrowingId)}
+                                className="mt-2"
+                              >
+                                Yêu cầu trả sách
+                              </ActionButton>
                             )}
                           </div>
                         </div>

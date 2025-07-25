@@ -21,7 +21,10 @@ import {
   QrCodeIcon,
   ArrowUpTrayIcon,
   TagIcon,
-  DocumentDuplicateIcon
+  DocumentDuplicateIcon,
+  ClockIcon,
+  MagnifyingGlassIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 
 const Navigation = ({ darkMode, onToggleDarkMode }) => {
@@ -31,29 +34,47 @@ const Navigation = ({ darkMode, onToggleDarkMode }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
+  const isLibrarian = user?.role === 'LIBRARIAN';
+  const isAdmin = user?.role === 'ADMIN';
+
+  const librarianNavigation = [
+    { name: 'Dashboard', href: '/librarian', icon: ChartBarIcon },
+    { name: 'Đang mượn', href: '/librarian/borrowed', icon: BookOpenIcon },
+    { name: 'Chờ trả', href: '/librarian/pending', icon: ClockIcon },
+    { name: 'Tất cả', href: '/librarian/all', icon: DocumentTextIcon },
+    { name: 'Tìm kiếm', href: '/librarian/search', icon: MagnifyingGlassIcon },
+  ];
+
   const adminNavigation = [
     { name: 'Dashboard', href: '/admin', icon: ChartBarIcon },
     { name: 'Quản lý sách', href: '/admin/books', icon: BookOpenIcon },
     { name: 'Bản sách', href: '/admin/book-copies', icon: DocumentDuplicateIcon },
     { name: 'Danh mục', href: '/admin/categories', icon: TagIcon },
-    { name: 'Quản lý mượn trả', href: '/admin/borrowings', icon: UserGroupIcon },
     { name: 'Quản lý độc giả', href: '/admin/readers', icon: UserIcon },
     { name: 'Quản lý nhân viên', href: '/admin/staff', icon: UserGroupIcon },
     { name: 'Scanner', href: '/admin/scanner', icon: QrCodeIcon },
     { name: 'Import/Export', href: '/admin/import-export', icon: ArrowUpTrayIcon },
   ];
 
+  // User navigation
   const userNavigation = [
     { name: 'Trang chủ', href: '/', icon: HomeIcon },
     { name: 'Sách', href: '/books', icon: BookOpenIcon },
-    { name: 'Mượn trả', href: '/borrowings', icon: ClipboardDocumentListIcon },
     { name: 'Hồ sơ', href: '/profile', icon: UserIcon },
   ];
 
-  let navigation = userNavigation;
-  if (user?.role === 'ADMIN' || user?.role === 'STAFF') {
-    navigation = adminNavigation;
-  }
+  // Determine which navigation to show
+  const getNavigationItems = () => {
+    if (isLibrarian) {
+      return librarianNavigation;
+    } else if (isAdmin) {
+      return adminNavigation;
+    } else {
+      return userNavigation;
+    }
+  };
+
+  const navigationItems = getNavigationItems();
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
@@ -96,7 +117,7 @@ const Navigation = ({ darkMode, onToggleDarkMode }) => {
         {/* Navigation Menu */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           <div className="space-y-1">
-            {navigation.map((item) => {
+            {navigationItems.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
               
@@ -228,7 +249,7 @@ const Navigation = ({ darkMode, onToggleDarkMode }) => {
             {/* Mobile Navigation */}
             <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
               <div className="space-y-1">
-                {navigation.map((item) => {
+                {navigationItems.map((item) => {
                   const isActive = pathname === item.href;
                   const Icon = item.icon;
                   

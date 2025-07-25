@@ -12,6 +12,10 @@ class AccountAuthService {
   async getCurrentAccount() {
     return await apiService.get('/accounts/me');
   }
+
+  async getAllAccounts(params = {}) {
+    return await apiService.get('/accounts', { params });
+  }
 }
 
 const accountAuthService = new AccountAuthService();

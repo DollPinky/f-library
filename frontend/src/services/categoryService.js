@@ -20,6 +20,13 @@ const categoryService = {
   },
 
   /**
+   * Lấy tất cả categories (alias cho searchCategories)
+   */
+  async getCategories(params = {}) {
+    return this.searchCategories(params);
+  },
+
+  /**
    * Lấy category theo ID
    */
   async getCategoryById(categoryId) {

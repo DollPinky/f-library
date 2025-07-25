@@ -60,7 +60,7 @@ const BooksPageContent = () => {
   const handleRealTimeSearch = async (searchTerm) => {
     setSearchLoading(true);
     try {
-      // Implement real-time search logic here
+      // Realtime Search logic here
       const results = books.filter(book => 
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         book.author?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,34 +104,30 @@ const BooksPageContent = () => {
   };
 
   const handleBorrowBook = async (book) => {
+    if (!user) {
+      showNotification('Vui lòng đăng nhập để mượn sách', 'warning');
+      return;
+    }
+
+    const availableCopy = book.bookCopies?.find(copy => copy.status === 'AVAILABLE');
+    if (!availableCopy) {
+      showNotification('Sách này hiện không có bản sao khả dụng', 'error');
+      return;
+    }
+
     try {
-      if (!user) {
-        showNotification('Vui lòng đăng nhập để mượn sách', 'warning');
-        return;
-      }
-
-      // Tìm bản sách có sẵn
-      const availableCopy = book.bookCopies?.find(copy => copy.status === 'AVAILABLE');
-      if (!availableCopy) {
-        showNotification('Không có bản sách nào có sẵn', 'warning');
-        return;
-      }
-
-      // Tạo yêu cầu mượn sách
       const borrowingData = {
         bookCopyId: availableCopy.bookCopyId,
         borrowerId: user.accountId,
-        borrowedDate: new Date().toISOString(),
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
         isReservation: false,
-        notes: `Mượn sách: ${book.title}`
+        notes: ''
       };
 
       const response = await borrowingService.createBorrowing(borrowingData);
-      console.log(response);
+      
       if (response.success) {
-        showNotification(`Đã mượn sách thành công: ${book.title}`, 'success');
-        // Refresh books list
+        showNotification('Yêu cầu mượn sách đã được gửi. Vui lòng đến thư viện để nhận sách.', 'success');
+        // Refresh danh sách sách
         refreshBooks();
       } else {
         showNotification(response.message || 'Có lỗi xảy ra khi mượn sách', 'error');

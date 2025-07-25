@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import StatisticCard from '../components/ui/StatisticCard';
 import SearchCard from '../components/ui/SearchCard';
 import TableView from '../components/ui/TableView';
@@ -9,6 +10,7 @@ import ActionButton from '../components/ui/ActionButton';
 import NotificationToast from '../components/ui/NotificationToast';
 import useDashboardData from '../hooks/useDashboardData';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
+import { UserGroupIcon } from '@heroicons/react/24/outline';
 
 const Dashboard = () => {
   const { dashboardStats, recentBooks, loading, error, refreshData } = useDashboardData();
@@ -176,6 +178,34 @@ const Dashboard = () => {
               icon={icons.libraries}
               className="card-responsive"
             />
+          </div>
+
+          {/* Quick Actions */}
+          <div className="mb-6 sm:mb-8">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft p-6">
+              <h2 className="text-xl font-semibold text-sage-900 dark:text-sage-100 mb-4">
+                Thao tác nhanh
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link href="/librarian" className="group">
+                  <div className="p-4 bg-sage-50 dark:bg-sage-800 rounded-xl border border-sage-200 dark:border-sage-700 hover:bg-sage-100 dark:hover:bg-sage-700 transition-all duration-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-sage-600 dark:bg-sage-500 rounded-xl flex items-center justify-center group-hover:bg-sage-700 dark:group-hover:bg-sage-400 transition-colors duration-200">
+                        <UserGroupIcon className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-sage-900 dark:text-sage-100 group-hover:text-sage-700 dark:group-hover:text-sage-300 transition-colors duration-200">
+                          Quản lý mượn sách
+                        </h3>
+                        <p className="text-sm text-sage-600 dark:text-sage-400">
+                          Xác nhận và quản lý mượn trả
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            </div>
           </div>
 
           {/* Search Section - Full Width */}

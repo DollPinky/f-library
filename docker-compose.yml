@@ -119,6 +119,26 @@ services:
       retries: 3
       start_period: 60s
 
+  # Frontend (Next.js) - Development
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: library-frontend
+    depends_on:
+      - library-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api
+      - NODE_ENV=development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - library-network
+
   # Kafka UI (optional)
   # kafka-ui:
   #   image: provectuslabs/kafka-ui:latest

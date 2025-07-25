@@ -73,12 +73,15 @@ management:
 # Logging Configuration
 logging:
   level:
-    com.university.library: DEBUG
+    com.university.library: INFO
+    com.university.library.controller: INFO
+    com.university.library.service: INFO
     org.springframework.kafka: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    org.hibernate.type.descriptor.sql: ERROR
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} | %msg%n"
 
 # OpenAPI Configuration
 springdoc:

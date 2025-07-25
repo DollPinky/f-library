@@ -1,8 +1,8 @@
 package com.university.library.controller;
 
-import com.university.library.base.StandardResponse;
 import com.university.library.dto.BorrowingResponse;
 import com.university.library.dto.CreateBorrowingCommand;
+import com.university.library.base.StandardResponse;
 import com.university.library.service.command.BorrowingCommandService;
 import com.university.library.service.query.BorrowingQueryService;
 import lombok.RequiredArgsConstructor;
@@ -126,15 +126,20 @@ public class BorrowingController {
     @GetMapping
     public ResponseEntity<StandardResponse<List<BorrowingResponse>>> getAllBorrowings(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String query) {
         try {
-            log.info("Getting all borrowings with pagination: page={}, size={}", page, size);
+            log.info("Getting borrowings - page: {}, size: {}, status: {}, query: {}", page, size, status, query);
             
-            var response = borrowingQueryService.getAllBorrowings(page, size);
+            var response = borrowingQueryService.getAllBorrowings(page, size, status, query);
+            
+            log.info("Found {} borrowings (page {} of {})", 
+                response.getContent().size(), page + 1, response.getTotalPages());
             
             return ResponseEntity.ok(StandardResponse.success("Lấy danh sách mượn sách thành công", response.getContent()));
         } catch (Exception e) {
-            log.error("Error getting all borrowings: {}", e.getMessage(), e);
+            log.error("Error getting borrowings: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
                 .body(StandardResponse.error("Không thể lấy danh sách mượn sách: " + e.getMessage()));
         }
@@ -194,6 +199,64 @@ public class BorrowingController {
             log.error("Error getting borrowing by ID: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
                 .body(StandardResponse.error("Không thể lấy thông tin mượn sách: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Thủ thư xác nhận mượn sách
+     */
+    @PutMapping("/{borrowingId}/librarian-confirm")
+    public ResponseEntity<StandardResponse<BorrowingResponse>> librarianConfirmBorrowing(@PathVariable UUID borrowingId) {
+        try {
+            log.info("Librarian confirming borrowing: {}", borrowingId);
+            
+            BorrowingResponse borrowing = borrowingCommandService.confirmBorrowing(borrowingId);
+            
+            return ResponseEntity.ok(StandardResponse.success("Xác nhận mượn sách thành công", borrowing));
+        } catch (Exception e) {
+            log.error("Error confirming borrowing: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                .body(StandardResponse.error("Không thể xác nhận mượn sách: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * User yêu cầu trả sách
+     */
+    @PutMapping("/{borrowingId}/request-return")
+    public ResponseEntity<StandardResponse<BorrowingResponse>> requestReturn(@PathVariable UUID borrowingId) {
+        try {
+            log.info("User requesting return for borrowing: {}", borrowingId);
+            
+            BorrowingResponse borrowing = borrowingCommandService.requestReturn(borrowingId);
+            
+            return ResponseEntity.ok(StandardResponse.success("Yêu cầu trả sách thành công", borrowing));
+        } catch (Exception e) {
+            log.error("Error requesting return: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                .body(StandardResponse.error("Không thể yêu cầu trả sách: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Thủ thư xác nhận trả sách
+     */
+    @PutMapping("/{borrowingId}/librarian-confirm-return")
+    public ResponseEntity<StandardResponse<BorrowingResponse>> librarianConfirmReturn(@PathVariable UUID borrowingId) {
+        try {
+            log.info("Librarian confirming return for borrowing: {}", borrowingId);
+            
+            BorrowingResponse borrowing = borrowingCommandService.confirmReturn(borrowingId);
+            
+            String message = borrowing.getFineAmount() > 0 ? 
+                "Xác nhận trả sách thành công. Phí phạt: " + borrowing.getFineAmount() + " VND" :
+                "Xác nhận trả sách thành công";
+            
+            return ResponseEntity.ok(StandardResponse.success(message, borrowing));
+        } catch (Exception e) {
+            log.error("Error confirming return: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                .body(StandardResponse.error("Không thể xác nhận trả sách: " + e.getMessage()));
         }
     }
 } 

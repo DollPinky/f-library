@@ -25,24 +25,49 @@ public class BorrowingQueryService {
     private final BorrowingRepository borrowingRepository;
 
     /**
-     * Lấy tất cả borrowings với pagination
+     * Lấy tất cả borrowings với pagination và filter
      */
-    public PagedResponse<BorrowingResponse> getAllBorrowings(int page, int size) {
-        log.info("Getting all borrowings with pagination: page={}, size={}", page, size);
+    public PagedResponse<BorrowingResponse> getAllBorrowings(int page, int size, String status, String query) {
+        log.info("Querying borrowings - page: {}, size: {}, status: {}, query: {}", page, size, status, query);
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Borrowing> borrowingPage = borrowingRepository.findAll(pageable);
+        Page<Borrowing> borrowingsPage;
         
-        List<BorrowingResponse> borrowings = borrowingPage.getContent().stream()
+        if (status != null && !status.isEmpty()) {
+            try {
+                Borrowing.BorrowingStatus borrowingStatus = Borrowing.BorrowingStatus.valueOf(status);
+                if (query != null && !query.isEmpty()) {
+                    // Filter by both status and query
+                    borrowingsPage = borrowingRepository.findByStatusAndQuery(borrowingStatus, query, pageable);
+                } else {
+                    // Filter by status only
+                    borrowingsPage = borrowingRepository.findByStatus(borrowingStatus, pageable);
+                }
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid status: {}, falling back to all borrowings", status);
+                borrowingsPage = borrowingRepository.findAll(pageable);
+            }
+        } else if (query != null && !query.isEmpty()) {
+            // Filter by query only
+            borrowingsPage = borrowingRepository.findByQuery(query, pageable);
+        } else {
+            // No filters
+            borrowingsPage = borrowingRepository.findAll(pageable);
+        }
+        
+        List<BorrowingResponse> responses = borrowingsPage.getContent().stream()
             .map(BorrowingResponse::fromEntity)
-            .collect(Collectors.toList());
+            .toList();
         
-        return PagedResponse.of(
-            borrowings,
-            borrowingPage.getNumber(),
-            borrowingPage.getSize(),
-            borrowingPage.getTotalElements()
-        );
+        log.info("Found {} borrowings out of {} total", responses.size(), borrowingsPage.getTotalElements());
+        
+        return PagedResponse.<BorrowingResponse>builder()
+            .content(responses)
+            .totalElements(borrowingsPage.getTotalElements())
+            .totalPages(borrowingsPage.getTotalPages())
+            .number(page)
+            .size(size)
+            .build();
     }
 
     /**

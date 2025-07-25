@@ -46,7 +46,7 @@ public class BookCopy extends BaseEntity {
     private List<Borrowing> borrowings = new ArrayList<>();
     
     public enum BookStatus {
-        AVAILABLE, BORROWED, RESERVED, LOST, DAMAGED
+        AVAILABLE, BORROWED, RESERVED, PENDING, LOST, DAMAGED
     }
 } 
 

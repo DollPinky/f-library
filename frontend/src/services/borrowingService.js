@@ -6,7 +6,8 @@ class BorrowingService {
    */
   async createBorrowing(borrowingData) {
     try {
-      return await api.post('/borrowings', borrowingData);
+      const response = await api.post('/borrowings', borrowingData);
+      return response;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể tạo yêu cầu mượn sách');
     }
@@ -18,7 +19,7 @@ class BorrowingService {
   async confirmBorrowing(borrowingId) {
     try {
       const response = await api.put(`/borrowings/${borrowingId}/confirm`);
-      return response.data;
+      return response;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể xác nhận mượn sách');
     }
@@ -30,7 +31,7 @@ class BorrowingService {
   async returnBook(borrowingId) {
     try {
       const response = await api.put(`/borrowings/${borrowingId}/return`);
-      return response.data;
+      return response;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể trả sách');
     }
@@ -42,7 +43,7 @@ class BorrowingService {
   async cancelReservation(borrowingId) {
     try {
       const response = await api.delete(`/borrowings/${borrowingId}/cancel`);
-      return response.data;
+      return response;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể hủy đặt sách');
     }
@@ -54,7 +55,7 @@ class BorrowingService {
   async reportLost(borrowingId) {
     try {
       const response = await api.put(`/borrowings/${borrowingId}/lost`);
-      return response.data;
+      return response;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể báo mất sách');
     }
@@ -65,7 +66,8 @@ class BorrowingService {
    */
   async getUserBorrowings(userId, params = {}) {
     try {
-      return await api.get(`/borrowings/user/${userId}`, {params});
+      const response = await api.get(`/borrowings/user/${userId}`, {params});
+      return response;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể lấy danh sách mượn sách');
     }
@@ -76,8 +78,18 @@ class BorrowingService {
    */
   async getAllBorrowings(params = {}) {
     try {
-      const response = await api.get('/borrowings', { params });
-      return response.data;
+      const queryParams = new URLSearchParams();
+      
+      // Add pagination params
+      if (params.page !== undefined) queryParams.append('page', params.page);
+      if (params.size !== undefined) queryParams.append('size', params.size);
+      
+      // Add filter params
+      if (params.status) queryParams.append('status', params.status);
+      if (params.query) queryParams.append('query', params.query);
+      
+      const response = await api.get(`/borrowings?${queryParams.toString()}`);
+      return response;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể lấy danh sách mượn sách');
     }
@@ -89,7 +101,7 @@ class BorrowingService {
   async getOverdueBooks(params = {}) {
     try {
       const response = await api.get('/borrowings/overdue', { params });
-      return response.data;
+      return response;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể lấy danh sách sách quá hạn');
     }

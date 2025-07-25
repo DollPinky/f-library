@@ -1,6 +1,18 @@
 import apiService from './api.js';
 
 class BookService {
+  async getAllBooks(params = {}) {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const endpoint = `/books?${queryString}`;
+      const response = await apiService.get(endpoint);
+      return response;
+    } catch (error) {
+      console.error('Get all books failed:', error);
+      throw error;
+    }
+  }
+
   async getBooks(params = {}) {
     try {
       const queryString = new URLSearchParams(params).toString();

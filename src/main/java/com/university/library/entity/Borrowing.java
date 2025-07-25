@@ -49,12 +49,14 @@ public class Borrowing extends BaseEntity {
     private String notes;
 
     public enum BorrowingStatus {
-        RESERVED,    // Đã đặt sách
-        BORROWED,    // Đang mượn
-        RETURNED,    // Đã trả
-        OVERDUE,     // Quá hạn
-        LOST,        // Mất sách
-        CANCELLED    // Hủy đặt/mượn
+        RESERVED,           // Đã đặt sách (khi hết sách)
+        PENDING_LIBRARIAN,  // Chờ thủ thư xác nhận mượn
+        BORROWED,           // Đang mượn
+        PENDING_RETURN,     // Chờ thủ thư xác nhận trả
+        RETURNED,           // Đã trả
+        OVERDUE,            // Quá hạn
+        LOST,               // Mất sách
+        CANCELLED           // Hủy đặt/mượn
     }
 
     /**

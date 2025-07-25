@@ -31,6 +31,27 @@ const BookCard = ({
     }
   };
 
+  const getBorrowButtonText = () => {
+    if (!availableCopies || availableCopies === 0) {
+      return 'Hết sách';
+    }
+    return 'Mượn sách';
+  };
+
+  const getBorrowButtonVariant = () => {
+    if (!availableCopies || availableCopies === 0) {
+      return 'disabled';
+    }
+    return 'primary';
+  };
+
+  const handleBorrowClick = () => {
+    if (!availableCopies || availableCopies === 0) {
+      return;
+    }
+    onBorrow(book);
+  };
+
   return (
     <div 
       className={`bg-white dark:bg-neutral-900 rounded-xl sm:rounded-2xl border border-sage-200 dark:border-sage-700 shadow-soft hover:shadow-medium transition-all duration-300 group cursor-pointer ${className}`} 
@@ -111,17 +132,14 @@ const BookCard = ({
             </ActionButton>
             
             <ActionButton
-              variant="primary"
+              variant={getBorrowButtonVariant()}
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onBorrow();
-              }}
-              disabled={availableCopies === 0}
+              onClick={handleBorrowClick}
+              disabled={!availableCopies || availableCopies === 0}
               className="flex-1 min-h-[40px] text-xs sm:text-sm"
             >
               <BookmarkIcon className="w-4 h-4 mr-1" />
-              Mượn
+              {getBorrowButtonText()}
             </ActionButton>
           </div>
         </div>

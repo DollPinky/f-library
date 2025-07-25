@@ -39,17 +39,14 @@ public class BookCommandService {
     public BookResponse createBook(CreateBookCommand command) {
         log.info(BookConstants.LOG_CREATING_BOOK, command.getTitle());
         
-        // Validate ISBN uniqueness
         if (bookRepository.existsByIsbn(command.getIsbn())) {
             log.error(BookConstants.ERROR_BOOK_ALREADY_EXISTS + command.getIsbn());
             throw new RuntimeException(BookConstants.ERROR_BOOK_ALREADY_EXISTS + command.getIsbn());
         }
         
-        // Validate category exists
         Category category = categoryRepository.findById(command.getCategoryId())
             .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_CATEGORY_NOT_FOUND + command.getCategoryId()));
         
-        // Create book entity
         Book book = Book.builder()
             .title(command.getTitle())
             .author(command.getAuthor())
@@ -62,7 +59,6 @@ public class BookCommandService {
         
         Book savedBook = bookRepository.save(book);
         
-        // Create book copies if specified
         if (command.getCopies() != null && !command.getCopies().isEmpty()) {
             createBookCopies(savedBook, command.getCopies());
         }
@@ -83,18 +79,15 @@ public class BookCommandService {
         Book existingBook = bookRepository.findById(bookId)
             .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_BOOK_NOT_FOUND + bookId));
         
-        // Check ISBN uniqueness if changed
         if (!existingBook.getIsbn().equals(command.getIsbn()) && 
             bookRepository.existsByIsbn(command.getIsbn())) {
             log.error(BookConstants.ERROR_BOOK_ALREADY_EXISTS + command.getIsbn());
             throw new RuntimeException(BookConstants.ERROR_BOOK_ALREADY_EXISTS + command.getIsbn());
         }
         
-        // Validate category exists
         Category category = categoryRepository.findById(command.getCategoryId())
             .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_CATEGORY_NOT_FOUND + command.getCategoryId()));
         
-        // Update book fields
         existingBook.setTitle(command.getTitle());
         existingBook.setAuthor(command.getAuthor());
         existingBook.setPublisher(command.getPublisher());
@@ -121,18 +114,15 @@ public class BookCommandService {
         Book existingBook = bookRepository.findById(bookId)
             .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_BOOK_NOT_FOUND + bookId));
         
-        // Check ISBN uniqueness if changed
         if (command.getIsbn() != null && !existingBook.getIsbn().equals(command.getIsbn()) && 
             bookRepository.existsByIsbn(command.getIsbn())) {
             log.error(BookConstants.ERROR_BOOK_ALREADY_EXISTS + command.getIsbn());
             throw new RuntimeException(BookConstants.ERROR_BOOK_ALREADY_EXISTS + command.getIsbn());
         }
         
-        // Validate category exists
         Category category = categoryRepository.findById(command.getCategoryId())
             .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_CATEGORY_NOT_FOUND + command.getCategoryId()));
         
-        // Update book fields
         existingBook.setTitle(command.getTitle());
         existingBook.setAuthor(command.getAuthor());
         existingBook.setPublisher(command.getPublisher());
@@ -142,8 +132,6 @@ public class BookCommandService {
         existingBook.setCategory(category);
         
         Book updatedBook = bookRepository.save(existingBook);
-        
-        // UpdateBookCommand doesn't include book copies - only basic book info
         
         BookResponse bookResponse = BookResponse.fromEntity(updatedBook);
         
@@ -160,14 +148,12 @@ public class BookCommandService {
         
         Book book = bookRepository.findById(bookId)
             .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_BOOK_NOT_FOUND + bookId));
-        
-        // Check if book is in use (has active borrowings)
+
         if (hasActiveBorrowings(bookId)) {
             log.error(BookConstants.ERROR_BOOK_IN_USE);
             throw new RuntimeException(BookConstants.ERROR_BOOK_IN_USE);
         }
         
-        // Delete from database
         bookRepository.deleteById(bookId);
         
         log.info(BookConstants.LOG_BOOK_DELETED, bookId);
@@ -186,11 +172,9 @@ public class BookCommandService {
         List<BookCopy> bookCopies = new ArrayList<>();
         
         for (CreateBookCommand.BookCopyInfo copyInfo : copyInfos) {
-            // Validate library exists
             Library library = libraryRepository.findById(copyInfo.getLibraryId())
                 .orElseThrow(() -> new RuntimeException("Library not found with ID: " + copyInfo.getLibraryId()));
             
-            // Create multiple copies based on quantity
             for (int i = 0; i < copyInfo.getQuantity(); i++) {
                 String qrCode = generateUniqueQrCode(book.getIsbn(), library.getCode(), i + 1);
                 
@@ -206,7 +190,6 @@ public class BookCommandService {
             }
         }
         
-        // Save all book copies
         bookCopyRepository.saveAll(bookCopies);
         
         log.info("Successfully created {} book copies for book: {}", bookCopies.size(), book.getBookId());
@@ -218,7 +201,6 @@ public class BookCommandService {
     private String generateUniqueQrCode(String isbn, String libraryCode, int copyNumber) {
         String baseQrCode = String.format("BK_%s_%s_%03d", isbn, libraryCode, copyNumber);
         
-        // Check if QR code already exists and generate a new one if needed
         int attempt = 0;
         String qrCode = baseQrCode;
         while (bookCopyRepository.existsByQrCode(qrCode)) {
@@ -233,8 +215,6 @@ public class BookCommandService {
      * Kiểm tra xem sách có đang được mượn không
      */
     private boolean hasActiveBorrowings(UUID bookId) {
-        // TODO: Implement check for active borrowings
-        // This would typically query the Borrowing entity
         return false;
     }
     
