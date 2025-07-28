@@ -64,7 +64,7 @@ const BooksPageContent = () => {
       const results = books.filter(book => 
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         book.author?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.isbn?.includes(searchTerm)
+        book.isbn?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setSearchResults(results.slice(0, 5));
     } catch (error) {
@@ -74,12 +74,12 @@ const BooksPageContent = () => {
     }
   };
 
-  const handleSearch = (searchTerm) => {
-    const newFilters = { ...filters, search: searchTerm };
-    setFilters(newFilters);
-    updateFilters(newFilters);
-    router.push(`/books?search=${searchTerm}`);
-  };
+  // const handleSearch = (searchTerm) => {
+  //   const newFilters = { ...filters, search: searchTerm };
+  //   setFilters(newFilters);
+  //   updateFilters(newFilters);
+  //   router.push(`/books?search=${searchTerm}`);
+  // };
 
   const handleFilterChange = (filterType, value) => {
     const newFilters = { ...filters, [filterType]: value };
@@ -93,11 +93,11 @@ const BooksPageContent = () => {
     router.push(`/books?${params.toString()}`);
   };
 
-  const handleSort = (field) => {
-    const newDirection = filters.sortBy === field && filters.sortDirection === 'ASC' ? 'DESC' : 'ASC';
-    handleFilterChange('sortBy', field);
-    handleFilterChange('sortDirection', newDirection);
-  };
+  // const handleSort = (field) => {
+  //   const newDirection = filters.sortBy === field && filters.sortDirection === 'ASC' ? 'DESC' : 'ASC';
+  //   handleFilterChange('sortBy', field);
+  //   handleFilterChange('sortDirection', newDirection);
+  // };
 
   const handlePageChange = (newPage) => {
     loadBooks({ ...filters, page: newPage - 1 });
