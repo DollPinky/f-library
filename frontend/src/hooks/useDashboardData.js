@@ -1,76 +1,113 @@
-import { useState, useEffect } from 'react';
+"use client"
+
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
+import { useBooks } from "./useBooksApi"
 
 const useDashboardData = () => {
   const [dashboardStats, setDashboardStats] = useState({
     totalBooks: 0,
-    totalReaders: 0,
-    totalBorrowings: 0,
-    totalLibraries: 0
-  });
-  const [recentBooks, setRecentBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+    totalReaders: 3247, // Static for now
+    totalBorrowings: 45678, // Static for now
+    totalLibraries: 8, // Static for now
+  })
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "info",
+  })
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      
-      const mockStats = {
-        totalBooks: 15420,
-        totalReaders: 3247,
-        totalBorrowings: 45678,
-        totalLibraries: 8
-      };
+  // Refs to prevent unnecessary re-renders and API calls
+  const hasInitialized = useRef(false)
+  const lastStatsUpdate = useRef(0)
+  const isRefreshing = useRef(false)
 
-      const mockBooks = [
-        {
-          id: 1,
-          title: 'Lập trình Python',
-          author: 'John Smith',
-          category: { name: 'Công nghệ' },
-          bookCopies: [{ id: 1 }, { id: 2 }]
-        },
-        {
-          id: 2,
-          title: 'Toán học cao cấp',
-          author: 'Maria Garcia',
-          category: { name: 'Toán học' },
-          bookCopies: [{ id: 3 }]
-        },
-        {
-          id: 3,
-          title: 'Văn học Việt Nam',
-          author: 'Nguyễn Du',
-          category: { name: 'Văn học' },
-          bookCopies: [{ id: 4 }, { id: 5 }, { id: 6 }]
-        }
-      ];
+  // Get books data with stable references
+  const { books, pagination, loading, error, loadBooks, refreshBooks } = useBooks()
 
-      setDashboardStats(mockStats);
-      setRecentBooks(mockBooks);
-      setError(null);
-    } catch (err) {
-      setError('Không thể tải dữ liệu dashboard');
-    } finally {
-      setLoading(false);
+  // Memoize recentBooks to prevent unnecessary recalculations
+  const recentBooks = useMemo(() => {
+    if (!books || books.length === 0) return []
+    return books.slice(0, 5)
+  }, [books])
+
+  // Stable notification function that doesn't change
+  const showNotification = useCallback((message, type = "info") => {
+    setNotification({ show: true, message, type })
+  }, [])
+
+  // Stable refresh function
+  const refreshData = useCallback(async () => {
+    if (isRefreshing.current) {
+      console.log("useDashboardData: Refresh already in progress, skipping")
+      return
     }
-  };
 
-  const refreshData = () => {
-    fetchDashboardData();
-  };
+    isRefreshing.current = true
+    console.log("useDashboardData: Starting refresh")
+
+    try {
+      await refreshBooks()
+      showNotification("Dashboard data refreshed successfully", "success")
+    } catch (err) {
+      console.error("Error refreshing dashboard data:", err)
+      showNotification("Failed to refresh dashboard data", "error")
+    } finally {
+      isRefreshing.current = false
+    }
+  }, [refreshBooks, showNotification])
+
+  // Initial load - only once on mount
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      console.log("useDashboardData: Initial load triggered")
+      hasInitialized.current = true
+      loadBooks()
+    }
+  }, []) // Empty dependency array - only runs once
+
+  // Update dashboard stats when books data changes (with throttling)
+  useEffect(() => {
+    if (!loading && books && hasInitialized.current) {
+      const currentTotalBooks = pagination?.totalElements ?? books.length
+      const now = Date.now()
+
+      // Throttle updates to prevent excessive re-renders (minimum 1 second between updates)
+      if (now - lastStatsUpdate.current > 1000 && dashboardStats.totalBooks !== currentTotalBooks) {
+        console.log("useDashboardData: Updating stats", {
+          oldTotal: dashboardStats.totalBooks,
+          newTotal: currentTotalBooks,
+        })
+
+        setDashboardStats((prev) => ({
+          ...prev,
+          totalBooks: currentTotalBooks,
+        }))
+
+        lastStatsUpdate.current = now
+      }
+    }
+  }, [books, loading, pagination?.totalElements]) // Removed dashboardStats from dependencies
+
+  // Handle errors separately
+  useEffect(() => {
+    if (error) {
+      console.log("useDashboardData: Error occurred", error)
+      showNotification(error, "error")
+    }
+  }, [error, showNotification])
 
   return {
     dashboardStats,
     recentBooks,
+    notification,
+    showNotification,
     loading,
     error,
-    refreshData
-  };
-};
+    refreshData,
+    books, // For search functionality
+    pagination,
+  }
+}
 
-export default useDashboardData; 
+export default useDashboardData
