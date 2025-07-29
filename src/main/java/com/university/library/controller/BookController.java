@@ -172,5 +172,10 @@ public class BookController {
         public boolean isHealthy() { return healthy; }
         public long getTimestamp() { return timestamp; }
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<BookResponse>> getAllBooks() {
+        return ResponseEntity.ok(bookFacade.getAllBooks());
+    }
 }
 

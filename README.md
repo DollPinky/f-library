@@ -84,7 +84,10 @@ npm run dev
 ### Entities Chính
 
 #### 1. BaseEntity (Abstract)
+
 ```java
+import java.time.Instant;
+
 @MappedSuperclass
 @Data
 @SuperBuilder
@@ -93,12 +96,12 @@ npm run dev
 public abstract class BaseEntity {
     @Builder.Default
     private Boolean isDeleted = false;
-    
+
     @CreatedDate
-    private LocalDateTime createdAt;
-    
+    private Instant createdAt;
+
     @LastModifiedDate
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }
 ```
 
@@ -388,7 +391,7 @@ public class BookCreatedEvent {
     private String libraryName;
     private UUID campusId;
     private String campusName;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
     private int totalCopies;
     private int availableCopies;
     
@@ -398,52 +401,55 @@ public class BookCreatedEvent {
 ```
 
 #### Event Publishing trong Facade
+
 ```java
+import java.time.Instant;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class BookFacade {
-    
+
     private final BookQueryService bookQueryService;
     private final BookCommandService bookCommandService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public Book createBook(CreateBookCommand command, Account currentAccount) {
         log.info("Creating new book: {} by user: {}", command.getTitle(), currentAccount.getUsername());
-        
+
         // Tạo sách
         Book book = bookCommandService.createBook(command);
-        
+
         // Gửi event qua Kafka với đầy đủ thông tin
         BookCreatedEvent event = BookCreatedEvent.builder()
-            .bookId(book.getBookId())
-            .title(book.getTitle())
-            .author(book.getAuthor())
-            .isbn(book.getIsbn())
-            .publisher(book.getPublisher())
-            .publishYear(book.getYear())
-            .categoryId(book.getCategory() != null ? book.getCategory().getCategoryId() : null)
-            .categoryName(book.getCategory() != null ? book.getCategory().getName() : null)
-            .createdByAccountId(currentAccount.getAccountId())
-            .createdByUsername(currentAccount.getUsername())
-            .createdByFullName(currentAccount.getFullName())
-            .createdByUserType(currentAccount.getUserType().name())
-            .createdByStaffRole(currentAccount.isStaff() ? getStaffRole(currentAccount) : null)
-            .createdByEmployeeId(currentAccount.isStaff() ? getEmployeeId(currentAccount) : null)
-            .libraryId(command.getCopies() != null && !command.getCopies().isEmpty() ? 
-                command.getCopies().get(0).getLibraryId() : null)
-            .libraryName("") // Sẽ được populate từ service
-            .campusId(currentAccount.getCampus() != null ? currentAccount.getCampus().getCampusId() : null)
-            .campusName(currentAccount.getCampus() != null ? currentAccount.getCampus().getName() : null)
-            .createdAt(LocalDateTime.now())
-            .totalCopies(command.getCopies() != null ? 
-                command.getCopies().stream().mapToInt(c -> c.getQuantity()).sum() : 0)
-            .availableCopies(command.getCopies() != null ? 
-                command.getCopies().stream().mapToInt(c -> c.getQuantity()).sum() : 0)
-            .build();
-            
+                .bookId(book.getBookId())
+                .title(book.getTitle())
+                .author(book.getAuthor())
+                .isbn(book.getIsbn())
+                .publisher(book.getPublisher())
+                .publishYear(book.getYear())
+                .categoryId(book.getCategory() != null ? book.getCategory().getCategoryId() : null)
+                .categoryName(book.getCategory() != null ? book.getCategory().getName() : null)
+                .createdByAccountId(currentAccount.getAccountId())
+                .createdByUsername(currentAccount.getUsername())
+                .createdByFullName(currentAccount.getFullName())
+                .createdByUserType(currentAccount.getUserType().name())
+                .createdByStaffRole(currentAccount.isStaff() ? getStaffRole(currentAccount) : null)
+                .createdByEmployeeId(currentAccount.isStaff() ? getEmployeeId(currentAccount) : null)
+                .libraryId(command.getCopies() != null && !command.getCopies().isEmpty() ?
+                        command.getCopies().get(0).getLibraryId() : null)
+                .libraryName("") // Sẽ được populate từ service
+                .campusId(currentAccount.getCampus() != null ? currentAccount.getCampus().getCampusId() : null)
+                .campusName(currentAccount.getCampus() != null ? currentAccount.getCampus().getName() : null)
+                .createdAt(Instant.now())
+                .totalCopies(command.getCopies() != null ?
+                        command.getCopies().stream().mapToInt(c -> c.getQuantity()).sum() : 0)
+                .availableCopies(command.getCopies() != null ?
+                        command.getCopies().stream().mapToInt(c -> c.getQuantity()).sum() : 0)
+                .build();
+
         kafkaTemplate.send("book-events", event);
-        
+
         log.info("Book created successfully with id: {} and event sent", book.getBookId());
         return book;
     }

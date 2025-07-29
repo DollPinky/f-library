@@ -113,5 +113,26 @@ public class BookResponse {
                 .build();
         }
     }
+
+    public String toEmbeddingText(Book book) {
+        return """
+        Title: %s
+        Author: %s
+        Publisher: %s
+        Year: %s
+        ISBN: %s
+        Description: %s
+        Category: %s
+        """.formatted(
+                book.getTitle(),
+                book.getAuthor(),
+                book.getPublisher(),
+                book.getYear(),
+                book.getIsbn(),
+                book.getDescription(),
+                book.getCategory() != null ? book.getCategory().getName() : ""
+        );
+    }
+
 } 
 

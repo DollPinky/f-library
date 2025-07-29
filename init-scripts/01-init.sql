@@ -12,6 +12,21 @@ DROP TABLE IF EXISTS staff CASCADE;
 DROP TABLE IF EXISTS libraries CASCADE;
 DROP TABLE IF EXISTS campuses CASCADE;
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS vector;
+
+
+
+--chat_history
+CREATE TABLE chat_history (
+                              chat_history_id UUID PRIMARY KEY,
+                              prompt TEXT,
+                              response TEXT,
+                              embedding vector(1024),
+                              created_at TIMESTAMP
+);
+
+
 -- =====================================================
 -- CREATE TABLES
 -- =====================================================
@@ -215,6 +230,15 @@ INSERT INTO books (book_id, category_id, title, author, publisher, year, isbn, d
 ('aa0e8400-e29b-41d4-a716-446655440003', '770e8400-e29b-41d4-a716-446655440003', 'Clean Code', 'Robert C. Martin', 'Prentice Hall', 2008, '978-604-0-00003-3', 'Hướng dẫn viết code sạch và dễ bảo trì'),
 ('aa0e8400-e29b-41d4-a716-446655440004', '770e8400-e29b-41d4-a716-446655440004', 'Nghĩ giàu làm giàu', 'Napoleon Hill', 'NXB Tổng hợp', 1937, '978-604-0-00004-4', 'Sách về tư duy làm giàu'),
 ('aa0e8400-e29b-41d4-a716-446655440005', '770e8400-e29b-41d4-a716-446655440005', 'Lịch sử Việt Nam', 'Trần Trọng Kim', 'NXB Văn hóa', 1920, '978-604-0-00005-5', 'Lịch sử Việt Nam từ thời cổ đại');
+-- --- Sample Accounts (Staff)
+-- INSERT INTO accounts (account_id, username, email, password_hash, full_name, phone, user_type, status, campus_id, library_id, is_deleted, created_at, updated_at) VALUES
+-- (gen_random_uuid(), 'admin1', 'admin1@library.edu.vn', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Admin User 1', '0123456789', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HN'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- (gen_random_uuid(), 'librarian1', 'librarian1@library.edu.vn', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Librarian User 1', '0123456790', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HCM'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+--
+-- --- Sample Staff
+-- INSERT INTO staffs (staff_id, account_id, library_id, employee_id, staff_role, department, position, is_active, can_manage_books, can_manage_users, can_manage_staff, can_view_reports, can_process_borrowings, is_deleted, created_at, updated_at) VALUES
+-- (gen_random_uuid(), (SELECT account_id FROM accounts WHERE username = 'admin1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'EMP001', 'ADMIN', 'IT Department', 'System Administrator', TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- (gen_random_uuid(), (SELECT account_id FROM accounts WHERE username = 'librarian1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'EMP002', 'LIBRARIAN', 'Library Department', 'Senior Librarian', TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert book copies with new QR code format: BK_ISBN_LIBRARYCODE_COPYNUMBER
 INSERT INTO book_copies (book_copy_id, book_id, library_id, qr_code, status, shelf_location) VALUES

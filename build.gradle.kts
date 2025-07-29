@@ -2,7 +2,39 @@ plugins {
     java
     id("org.springframework.boot") version "3.2.0"
     id("io.spring.dependency-management") version "1.1.4"
+    jacoco
 }
+
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+tasks.test {
+    useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport) // chạy báo cáo sau test
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test) // chạy test trước
+    reports {
+        xml.required.set(true)
+        csv.required.set(false)
+        html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.test)
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.80".toBigDecimal() // ví dụ: yêu cầu tối thiểu 80%
+            }
+        }
+    }
+}
+
+
 
 group = "com.university"
 version = "0.0.1-SNAPSHOT"
@@ -29,8 +61,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.kafka:spring-kafka")
-
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("io.hypersistence:hypersistence-utils-hibernate-60:3.7.0")
 
 
     runtimeOnly("com.h2database:h2")
