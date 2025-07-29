@@ -54,7 +54,6 @@ export const useBookCopies = () => {
       const response = await bookCopyService.createBookCopy(bookCopyData);
       
       if (response.success) {
-        // Refresh the list after creating
         await searchBookCopies();
         return { success: true, data: response.data };
       } else {
@@ -79,7 +78,6 @@ export const useBookCopies = () => {
       const response = await bookCopyService.updateBookCopy(bookCopyId, bookCopyData);
       
       if (response.success) {
-        // Refresh the list after updating
         await searchBookCopies();
         return { success: true, data: response.data };
       } else {
@@ -104,7 +102,6 @@ export const useBookCopies = () => {
       const response = await bookCopyService.deleteBookCopy(bookCopyId);
       
       if (response.success) {
-        // Refresh the list after deleting
         await searchBookCopies();
         return { success: true };
       } else {
@@ -129,7 +126,6 @@ export const useBookCopies = () => {
       const response = await bookCopyService.changeBookCopyStatus(bookCopyId, status);
       
       if (response.success) {
-        // Refresh the list after changing status
         await searchBookCopies();
         return { success: true, data: response.data };
       } else {
@@ -183,26 +179,21 @@ export const useBookCopies = () => {
   }, []);
 
   return {
-    // State
     bookCopies,
     loading,
     error,
     pagination,
     
-    // Search operations
     searchBookCopies,
     
-    // CRUD operations
     createBookCopy,
     updateBookCopy,
     deleteBookCopy,
     changeBookCopyStatus,
     
-    // Pagination operations
     goToPage,
     changePageSize,
     
-    // Utility operations
     clearError,
     getBookCopyById,
     getBookCopyByQrCode

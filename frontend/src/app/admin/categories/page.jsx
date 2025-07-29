@@ -21,7 +21,6 @@ import {
 const AdminCategoriesPage = () => {
   const router = useRouter();
   
-  // Hooks
   const {
     categories,
     loading,
@@ -34,7 +33,6 @@ const AdminCategoriesPage = () => {
     clearError
   } = useCategories();
 
-  // Local state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -42,7 +40,6 @@ const AdminCategoriesPage = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
 
-  // Form state
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -52,7 +49,6 @@ const AdminCategoriesPage = () => {
   // ==================== EFFECTS ====================
 
   useEffect(() => {
-    // Load initial data
     searchCategories();
   }, [searchCategories]);
 

@@ -25,7 +25,6 @@ import {
 const AdminBookCopiesPage = () => {
   const router = useRouter();
   
-  // Hooks
   const {
     bookCopies,
     loading,
@@ -61,7 +60,6 @@ const AdminBookCopiesPage = () => {
     getStatusInfo
   } = useBookCopyForm();
 
-  // Local state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCopy, setSelectedCopy] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -71,12 +69,10 @@ const AdminBookCopiesPage = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [statusFilter, setStatusFilter] = useState('');
 
-  // ==================== EFFECTS ====================
 
   useEffect(() => {
     fetchBooks();
     fetchLibraries();
-    // Load initial data
     searchBookCopies();
   }, [fetchBooks, fetchLibraries, searchBookCopies]);
 
@@ -195,7 +191,7 @@ const AdminBookCopiesPage = () => {
   };
 
   const exportQrCodes = (copy) => {
-    // In a real implementation, this would generate and download QR codes
+    // Generate QR CODES
     showNotification('Tính năng xuất QR code sẽ được implement sau', 'info');
   };
 

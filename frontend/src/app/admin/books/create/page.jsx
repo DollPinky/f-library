@@ -49,7 +49,6 @@ const BookCreatePage = () => {
       try {
         console.log('Fetching data for book creation page...');
         
-        // Lấy danh mục và thư viện từ API với parameters rõ ràng
         const [categoriesResponse, librariesResponse] = await Promise.all([
           categoryService.getCategories({ 
             page: 0, 
@@ -101,7 +100,6 @@ const BookCreatePage = () => {
       return;
     }
 
-    // Auto-generate QR code if not provided
     if (!bookCopyData.qrCode) {
       generateQRCode();
       return;
@@ -128,7 +126,6 @@ const BookCreatePage = () => {
   };
 
   const generateQRCode = () => {
-    // Generate QR code with format: BK_ISBN_LIBRARYCODE_COPYNUMBER
     const library = libraries.find(lib => lib.libraryId === bookCopyData.libraryId);
     const libraryCode = library ? library.code : 'LIB';
     const isbn = formData.isbn ? formData.isbn.replace(/[^0-9X]/gi, '') : 'NOISBN';
