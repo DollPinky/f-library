@@ -1,4 +1,17 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS vector;
+
+
+
+--chat_history
+CREATE TABLE chat_history (
+                              chat_history_id UUID PRIMARY KEY,
+                              prompt TEXT,
+                              response TEXT,
+                              embedding vector(1024),
+                              created_at TIMESTAMP
+);
+
 
 -- 1. campuses
 CREATE TABLE campuses (

@@ -61,8 +61,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.kafka:spring-kafka")
-
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("io.hypersistence:hypersistence-utils-hibernate-60:3.7.0")
 
 
     runtimeOnly("com.h2database:h2")

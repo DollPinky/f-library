@@ -12,9 +12,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,7 +27,17 @@ import java.util.ArrayList;
 @RequiredArgsConstructor
 public class BookQueryService {
 
+
   private final BookRepository bookRepository;
+  private final RestTemplate restTemplate;
+
+
+
+  public List<BookResponse> getAllBooksFromApi() {
+    String apiUrl = "http://localhost:8080/api/v1/books/all";
+    ResponseEntity<BookResponse[]> response = restTemplate.getForEntity(apiUrl, BookResponse[].class);
+    return Arrays.asList(response.getBody());
+  }
 
       public BookResponse getBookById(UUID bookId) {
         log.info(BookConstants.LOG_GETTING_BOOK, bookId);
@@ -64,6 +76,13 @@ public class BookQueryService {
     
     // DISABLE CACHE - DIRECT DATABASE QUERY
     return performSearch(params);
+  }
+
+  public List<BookResponse> getAllBooks() {
+        return bookRepository.findAll()
+                .stream()
+                .map(BookResponse::fromEntity)
+                .collect(Collectors.toList());
   }
   
   private PagedResponse<BookResponse> performSearch(BookSearchParams params) {

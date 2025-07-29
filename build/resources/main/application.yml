@@ -45,7 +45,7 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-  
+
   # Redis Configuration
   data:
     redis:
@@ -53,7 +53,7 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       timeout: 2000ms
-  
+
 
 
 # Server Configuration
@@ -86,4 +86,29 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
-    operations-sorter: method 
+    operations-sorter: method
+
+
+gemini:
+  api-key: AIzaSyAoVorOFX8l6JBgR9CAgG3frAYjnQlpOqg
+  base-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+
+openai:
+  api-key: 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
+  base-url: https://api.openai.com/v1
+  embedding-model: text-embedding-3-large
+
+huggingface:
+  api-key: Bearer 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
+  embedding-model: sentence-transformers/all-MiniLM-L6-v2
+#  base-url: https://api-inference.huggingface.co/models
+
+cohere:
+  api-key: YO1CuxXz0v6d7xJsarBwIj57WKLddBsvfaXIWFGx
+  embedding-model: embed-multilingual-v3.0
+  base-url: https://api.cohere.ai
+
+
+
+
+

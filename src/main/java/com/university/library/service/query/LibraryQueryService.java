@@ -2,6 +2,7 @@ package com.university.library.service.query;
 
 import com.university.library.base.PagedResponse;
 import com.university.library.constants.LibraryConstants;
+import com.university.library.dto.BookResponse;
 import com.university.library.dto.LibraryResponse;
 import com.university.library.dto.LibrarySearchParams;
 import com.university.library.entity.Library;
@@ -11,9 +12,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -24,8 +28,7 @@ import java.util.stream.Collectors;
 public class LibraryQueryService {
     
     private final LibraryRepository libraryRepository;
-    
-    
+
     public LibraryResponse getLibraryById(UUID libraryId) {
         log.info("Getting library by ID: {}", libraryId);
         

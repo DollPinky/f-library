@@ -44,6 +44,11 @@ public class BookFacade {
         return bookQueryService.searchBooks(params);
     }
 
+    public List<BookResponse> getAllBooks() {
+        log.info("BookFacade: Getting all books");
+        return bookQueryService.getAllBooks();
+    }
+
     /**
      * Kiểm tra xem book có trong cache không
      */
