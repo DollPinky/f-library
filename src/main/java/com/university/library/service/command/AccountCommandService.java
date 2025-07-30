@@ -2,6 +2,7 @@ package com.university.library.service.command;
 
 import com.university.library.dto.AccountResponse;
 import com.university.library.dto.RegisterRequest;
+import com.university.library.dto.UpdateAccountRoleRequest;
 
 import java.util.UUID;
 
@@ -16,6 +17,11 @@ public interface AccountCommandService {
      * Update an existing account
      */
     AccountResponse updateAccount(UUID accountId, RegisterRequest request);
+    
+    /**
+     * Update account role
+     */
+    AccountResponse updateAccountRole(UUID accountId, UpdateAccountRoleRequest request);
     
     /**
      * Delete an account

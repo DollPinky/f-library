@@ -8,6 +8,7 @@ import TableView from '../../../../components/ui/TableView';
 import ActionButton from '../../../../components/ui/ActionButton';
 import NotificationToast from '../../../../components/ui/NotificationToast';
 import DarkModeToggle from '../../../../components/ui/DarkModeToggle';
+import { useDebounce } from '../../../hooks/useDebounce';
 
 const OverdueBooksPage = () => {
   const router = useRouter();
@@ -22,7 +23,7 @@ const OverdueBooksPage = () => {
   const [searchParams, setSearchParams] = useState({
     search: '',
     library: '',
-    overdueDays: ''
+    sortBy: 'dueDate,asc'
   });
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [stats, setStats] = useState({
@@ -31,10 +32,19 @@ const OverdueBooksPage = () => {
     averageOverdueDays: 0
   });
 
+  // Debounce search term to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(searchParams.search, 500);
+
   useEffect(() => {
     fetchOverdueBooks();
     fetchOverdueStats();
   }, [pagination.currentPage, searchParams]);
+
+  // Effect to trigger search when debounced search term changes
+  useEffect(() => {
+    setSearchParams(prev => ({ ...prev, search: debouncedSearchTerm }));
+    setPagination(prev => ({ ...prev, currentPage: 0 }));
+  }, [debouncedSearchTerm]);
 
   const fetchOverdueBooks = async () => {
     try {
@@ -92,7 +102,7 @@ const OverdueBooksPage = () => {
 
   const handleSearch = (searchTerm) => {
     setSearchParams(prev => ({ ...prev, search: searchTerm }));
-    setPagination(prev => ({ ...prev, currentPage: 0 }));
+    // Don't reset pagination here as it will be handled by the debounced effect
   };
 
   const handleFilterChange = (filters) => {

@@ -13,6 +13,7 @@ import {
   UserIcon,
   BookOpenIcon
 } from '@heroicons/react/24/outline';
+import { useDebounce } from '../../../hooks/useDebounce';
 
 const SearchPage = () => {
   const router = useRouter();
@@ -21,6 +22,9 @@ const SearchPage = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState('all'); // all, user, book
+
+  // Debounce search query to avoid excessive API calls
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -54,15 +58,22 @@ const SearchPage = () => {
     }
   };
 
+  // Effect to trigger search when debounced search query changes
+  useEffect(() => {
+    if (debouncedSearchQuery.trim()) {
+      handleSearch();
+    }
+  }, [debouncedSearchQuery]);
+
   const handleAction = async (action, borrowingId) => {
     try {
       let response;
       switch (action) {
         case 'confirm':
-          response = await borrowingService.confirmBorrowing(borrowingId);
+          response = await borrowingService.librarianConfirmBorrowing(borrowingId);
           break;
         case 'return':
-          response = await borrowingService.returnBook(borrowingId);
+          response = await borrowingService.librarianConfirmReturn(borrowingId);
           break;
         case 'cancel':
           response = await borrowingService.cancelReservation(borrowingId);

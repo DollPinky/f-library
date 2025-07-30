@@ -87,10 +87,10 @@ const LibrarianDashboard = () => {
       let response;
       switch (action) {
         case 'confirm':
-          response = await borrowingService.confirmBorrowing(borrowingId);
+          response = await borrowingService.librarianConfirmBorrowing(borrowingId);
           break;
         case 'return':
-          response = await borrowingService.returnBook(borrowingId);
+          response = await borrowingService.librarianConfirmReturn(borrowingId);
           break;
         case 'cancel':
           response = await borrowingService.cancelReservation(borrowingId);

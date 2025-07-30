@@ -1,29 +1,39 @@
 package com.university.library.repository;
 
 import com.university.library.entity.Account;
+import com.university.library.entity.Account.AccountRole;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.Optional;
-import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface AccountRepository extends JpaRepository<Account, Long> {
-    Optional<Account> findByUsername(String username);
+import java.util.Optional;
+import java.util.UUID;
 
-    @Query("SELECT CASE " +
-            "WHEN COUNT(CASE WHEN a.username = :username THEN 1 END) > 0 THEN 'USERNAME_EXISTS' " +
-            "WHEN COUNT(CASE WHEN a.email = :email THEN 1 END) > 0 THEN 'EMAIL_EXISTS' " +
-            "WHEN COUNT(CASE WHEN a.phone = :phone THEN 1 END) > 0 THEN 'PHONE_EXISTS' " +
-            "ELSE 'VALID' END " +
-            "FROM Account a WHERE a.username = :username OR a.email = :email OR a.phone = :phone")
-    String validateAccountUniqueness(@Param("username") String username,
-                                     @Param("email") String email,
-                                     @Param("phone") String phone);
-  Optional<Account> findByEmail(String email);
-  Optional<Account> findByEmployeeCode(String employeeCode);
-  boolean existsByEmail(String email);
-  boolean existsByEmployeeCode(String employeeCode);
-
-    Account findByAccountId(UUID accountId);
+public interface AccountRepository extends JpaRepository<Account, UUID> {
+    Optional<Account> findByEmail(String email);
+    boolean existsByEmail(String email);
+    boolean existsByEmployeeCode(String employeeCode);
+    
+    @Query("SELECT a FROM Account a WHERE " +
+           "(:search IS NULL OR :search = '' OR " +
+           "LOWER(a.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(a.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(a.employeeCode) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+           "(:department IS NULL OR :department = '' OR LOWER(a.department) LIKE LOWER(CONCAT('%', :department, '%'))) AND " +
+           "(:position IS NULL OR :position = '' OR LOWER(a.position) LIKE LOWER(CONCAT('%', :position, '%'))) AND " +
+           "(:role IS NULL OR a.role = :role) AND " +
+           "(:isActive IS NULL OR a.isActive = :isActive) AND " +
+           "(:campusId IS NULL OR a.campus.campusId = :campusId)")
+    Page<Account> searchAccounts(
+        @Param("search") String search,
+        @Param("department") String department,
+        @Param("position") String position,
+        @Param("role") AccountRole role,
+        @Param("isActive") Boolean isActive,
+        @Param("campusId") UUID campusId,
+        Pageable pageable
+    );
 }
 

@@ -16,10 +16,8 @@ import { UserGroupIcon, BookOpenIcon, MagnifyingGlassIcon } from "@heroicons/rea
 const Dashboard = () => {
   const router = useRouter()
 
-  // Get dashboard data with stable hook
   const { dashboardStats, recentBooks, books, loading, error, refreshData, showNotification } = useDashboardData()
 
-  // Local state for search and UI
   const [searchResults, setSearchResults] = useState([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -27,7 +25,6 @@ const Dashboard = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [notification, setNotification] = useState({ show: false, message: "", type: "info" })
 
-  // Memoize icons to prevent re-creation
   const icons = useMemo(
       () => ({
         books: (
@@ -74,7 +71,6 @@ const Dashboard = () => {
       [],
   )
 
-  // Stable search handler with proper debouncing
   const handleRealTimeSearch = useCallback(
       (searchTerm) => {
         console.log("Dashboard: Search triggered for:", searchTerm)
@@ -94,7 +90,6 @@ const Dashboard = () => {
             return
           }
 
-          // Filter books based on search term
           const results = books.filter(
               (book) =>
                   book.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -115,14 +110,12 @@ const Dashboard = () => {
       [books, showNotification],
   )
 
-  // Stable result click handler
   const handleSearchResultClick = useCallback((book) => {
     console.log("Dashboard: Search result clicked:", book.title)
     setSelectedBook(book)
     setIsDrawerOpen(true)
   }, [])
 
-  // Memoize book columns to prevent re-creation
   const bookColumns = useMemo(
       () => [
         {
@@ -174,7 +167,6 @@ const Dashboard = () => {
       [],
   )
 
-  // Debug logging (remove in production)
   useEffect(() => {
     console.log("Dashboard render:", {
       booksCount: books?.length,
@@ -436,6 +428,9 @@ const Dashboard = () => {
             isVisible={notification.show}
             onClose={() => setNotification({ ...notification, show: false })}
         />
+        
+        {/* Chat Bot is now globally available from layout.jsx */}
+        {/* <ChatBot /> */}
       </div>
   )
 }

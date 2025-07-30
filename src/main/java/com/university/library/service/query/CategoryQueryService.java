@@ -43,8 +43,6 @@ public class CategoryQueryService {
      * Tìm kiếm danh mục
      */
     public PagedResponse<CategoryResponse> searchCategories(CategorySearchParams params) {
-        log.info("Searching categories with params: {}", params);
-        
         Specification<Category> spec = createSearchSpecification(params);
         
         Pageable pageable = PageRequest.of(
@@ -61,7 +59,6 @@ public class CategoryQueryService {
         List<CategoryResponse> categoryResponses = categories.getContent().stream()
             .map(category -> {
                 CategoryResponse response = CategoryResponse.fromEntitySimple(category);
-                // Get book count for each category
                 Long bookCount = categoryRepository.countBooksByCategoryId(category.getCategoryId());
                 response.setBookCount(bookCount);
                 return response;

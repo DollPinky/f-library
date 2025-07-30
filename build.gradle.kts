@@ -64,6 +64,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.session:spring-session-core")
     implementation("io.hypersistence:hypersistence-utils-hibernate-60:3.7.0")
 
 

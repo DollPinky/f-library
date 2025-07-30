@@ -138,44 +138,5 @@ public class BookController {
                 .body(StandardResponse.error(BookConstants.ERROR_DELETE_FAILED));
         }
     }
-
-    // ==================== INNER CLASSES ====================
-
-    public static class BookCacheStatus {
-        private final UUID bookId;
-        private final boolean isCached;
-        private final Long ttlSeconds;
-
-        public BookCacheStatus(UUID bookId, boolean isCached, Long ttlSeconds) {
-            this.bookId = bookId;
-            this.isCached = isCached;
-            this.ttlSeconds = ttlSeconds;
-        }
-
-        public UUID getBookId() { return bookId; }
-        public boolean isCached() { return isCached; }
-        public Long getTtlSeconds() { return ttlSeconds; }
-    }
-
-    public static class HealthStatus {
-        private final String serviceName;
-        private final boolean healthy;
-        private final long timestamp;
-
-        public HealthStatus(String serviceName, boolean healthy, long timestamp) {
-            this.serviceName = serviceName;
-            this.healthy = healthy;
-            this.timestamp = timestamp;
-        }
-
-        public String getServiceName() { return serviceName; }
-        public boolean isHealthy() { return healthy; }
-        public long getTimestamp() { return timestamp; }
-    }
-
-    @GetMapping("/all")
-    public ResponseEntity<List<BookResponse>> getAllBooks() {
-        return ResponseEntity.ok(bookFacade.getAllBooks());
-    }
 }
 

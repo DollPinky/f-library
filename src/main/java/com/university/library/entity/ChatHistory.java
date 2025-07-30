@@ -34,5 +34,9 @@ public class ChatHistory {
     @Column(columnDefinition = "vector(1024)")
     private float[] embedding;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private Account account;
+
     private LocalDateTime createdAt;
 }

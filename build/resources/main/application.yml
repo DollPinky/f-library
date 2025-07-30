@@ -101,11 +101,6 @@ openai:
   base-url: https://api.openai.com/v1
   embedding-model: text-embedding-3-large
 
-huggingface:
-  api-key: Bearer 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
-  embedding-model: sentence-transformers/all-MiniLM-L6-v2
-#  base-url: https://api-inference.huggingface.co/models
-
 cohere:
   api-key: YO1CuxXz0v6d7xJsarBwIj57WKLddBsvfaXIWFGx
   embedding-model: embed-multilingual-v3.0

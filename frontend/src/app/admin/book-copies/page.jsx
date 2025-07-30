@@ -9,6 +9,7 @@ import DetailDrawer from '../../../components/ui/DetailDrawer';
 import Pagination from '../../../components/ui/Pagination';
 import { useBookCopies } from '../../../hooks/useBookCopies';
 import { useBookCopyForm } from '../../../hooks/useBookCopyForm';
+import { useDebounce } from '../../../hooks/useDebounce';
 import { 
   PlusIcon,
   PencilIcon,
@@ -69,12 +70,23 @@ const AdminBookCopiesPage = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [statusFilter, setStatusFilter] = useState('');
 
+  // Debounce search term to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
 
   useEffect(() => {
     fetchBooks();
     fetchLibraries();
     searchBookCopies();
   }, [fetchBooks, fetchLibraries, searchBookCopies]);
+
+  // Effect to trigger search when debounced search term changes
+  useEffect(() => {
+    searchBookCopies({
+      query: debouncedSearchTerm,
+      status: statusFilter || undefined
+    });
+  }, [debouncedSearchTerm, statusFilter, searchBookCopies]);
 
   useEffect(() => {
     if (error) {
@@ -87,18 +99,10 @@ const AdminBookCopiesPage = () => {
 
   const handleSearch = (term) => {
     setSearchTerm(term);
-    searchBookCopies({
-      query: term,
-      status: statusFilter || undefined
-    });
   };
 
   const handleStatusFilter = (status) => {
     setStatusFilter(status);
-    searchBookCopies({
-      query: searchTerm,
-      status: status || undefined
-    });
   };
 
   // ==================== CRUD OPERATIONS ====================
@@ -321,11 +325,6 @@ const AdminBookCopiesPage = () => {
                     onChange={(e) => handleSearch(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2.5 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent text-sm sm:text-base"
                     placeholder="Tìm kiếm theo QR code, tên sách, tác giả, vị trí..."
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSearch(e.target.value);
-                      }
-                    }}
                   />
                 </div>
                 <div className="sm:w-48">

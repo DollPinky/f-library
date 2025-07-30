@@ -4,6 +4,7 @@ import com.university.library.dto.AccountResponse;
 import com.university.library.dto.LoginRequest;
 import com.university.library.dto.RegisterRequest;
 import com.university.library.entity.Account;
+import com.university.library.repository.AccountRepository;
 import com.university.library.service.command.AccountCommandService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +16,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AccountServiceImpl implements AccountService {
     private final AccountCommandService accountCommandService;
     private final AuthenticationManager authenticationManager;
+    private final AccountRepository accountRepository;
 
     @Transactional
     @Override
@@ -55,4 +59,12 @@ public class AccountServiceImpl implements AccountService {
         Account account = (Account) authentication.getPrincipal();
         return AccountResponse.fromEntity(account);
     }
-} 
+    
+    @Override
+    public AccountResponse getAccountById(UUID accountId) {
+        Account account = accountRepository.findById(accountId)
+            .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
+        return AccountResponse.fromEntity(account);
+    }
+}
+ 

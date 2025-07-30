@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ActionButton from './ActionButton';
 
 const SearchCard = ({ onSearch, filters = [], placeholder = "Tìm kiếm...", className = "" }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({});
 
-  const handleSearch = () => {
-    onSearch({ searchTerm, filters: selectedFilters });
-  };
+  // Debounce search term to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Effect to trigger search when debounced search term changes
+  useEffect(() => {
+    onSearch({ searchTerm: debouncedSearchTerm, filters: selectedFilters });
+  }, [debouncedSearchTerm, selectedFilters, onSearch]);
 
   const handleFilterChange = (key, value) => {
     setSelectedFilters(prev => ({
@@ -18,7 +22,7 @@ const SearchCard = ({ onSearch, filters = [], placeholder = "Tìm kiếm...", cl
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
-      handleSearch();
+      // Search is now handled by debounced effect
     }
   };
 
@@ -70,7 +74,7 @@ const SearchCard = ({ onSearch, filters = [], placeholder = "Tìm kiếm...", cl
         <div className="flex gap-2">
           <ActionButton
             variant="primary"
-            onClick={handleSearch}
+            onClick={() => onSearch({ searchTerm, filters: selectedFilters })}
             className="whitespace-nowrap"
           >
             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -93,6 +97,23 @@ const SearchCard = ({ onSearch, filters = [], placeholder = "Tìm kiếm...", cl
       </div>
     </div>
   );
+};
+
+// Debounce hook implementation
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
 };
 
 export default SearchCard; 

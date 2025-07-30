@@ -26,6 +26,18 @@ class BorrowingService {
   }
 
   /**
+   * Thủ thư xác nhận mượn sách (chuyển từ RESERVED/PENDING_LIBRARIAN sang BORROWED)
+   */
+  async librarianConfirmBorrowing(borrowingId) {
+    try {
+      const response = await api.put(`/borrowings/${borrowingId}/librarian-confirm`);
+      return response;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể xác nhận mượn sách');
+    }
+  }
+
+  /**
    * Trả sách
    */
   async returnBook(borrowingId) {
@@ -34,6 +46,18 @@ class BorrowingService {
       return response;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể trả sách');
+    }
+  }
+
+  /**
+   * Thủ thư xác nhận trả sách (chuyển từ PENDING_RETURN sang RETURNED)
+   */
+  async librarianConfirmReturn(borrowingId) {
+    try {
+      const response = await api.put(`/borrowings/${borrowingId}/librarian-confirm-return`);
+      return response;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể xác nhận trả sách');
     }
   }
 

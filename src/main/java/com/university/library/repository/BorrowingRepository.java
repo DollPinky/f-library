@@ -93,4 +93,9 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
      */
     @Query("SELECT b FROM Borrowing b WHERE b.bookCopy.library.libraryId = :libraryId")
     List<Borrowing> findByLibraryId(@Param("libraryId") UUID libraryId);
+    
+    /**
+     * Tìm tất cả borrowings với pagination
+     */
+    Page<Borrowing> findAll(Pageable pageable);
 } 

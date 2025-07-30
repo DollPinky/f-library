@@ -68,7 +68,7 @@ const BorrowedPage = () => {
       let response;
       switch (action) {
         case 'return':
-          response = await borrowingService.returnBook(borrowingId);
+          response = await borrowingService.librarianConfirmReturn(borrowingId);
           break;
         case 'lost':
           response = await borrowingService.reportLost(borrowingId);

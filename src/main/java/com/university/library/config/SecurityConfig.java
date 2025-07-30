@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -43,6 +44,7 @@ public class SecurityConfig {
                                 "/api/v1/libraries/**",
                                 "/api/v1/borrowings",
                                 "/api/v1/borrowings/**",
+                                "/api/v1/**",
                                 "/v3/api-docs",
                                 "/v3/api-docs/**",
                                 "/api-docs/**",
@@ -56,10 +58,16 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
+                        .invalidSessionUrl("/login?invalid=true")
                         .maximumSessions(1)
-                        .expiredUrl("/login?expired=true")
-                )
+                        .maxSessionsPreventsLogin(false)
+                        .expiredUrl("/login?expired=true"))
+                .logout(logout -> logout
+                        .logoutUrl("/api/v1/accounts/logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()))
                 .exceptionHandling()
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setContentType("application/json");

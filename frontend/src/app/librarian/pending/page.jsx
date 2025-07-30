@@ -69,7 +69,7 @@ const PendingPage = () => {
       let response;
       switch (action) {
         case 'confirm':
-          response = await borrowingService.confirmBorrowing(borrowingId);
+          response = await borrowingService.librarianConfirmBorrowing(borrowingId);
           break;
         case 'cancel':
           response = await borrowingService.cancelReservation(borrowingId);
@@ -81,7 +81,7 @@ const PendingPage = () => {
       if (response.success) {
         const actionMessages = {
           confirm: 'Xác nhận mượn sách thành công',
-          cancel: 'Hủy đặt sách thành công'
+          cancel: 'Hủy mượn sách thành công'
         };
         showSuccess(actionMessages[action]);
         loadBorrowings(); // Reload data immediately

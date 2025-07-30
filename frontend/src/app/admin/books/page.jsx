@@ -23,6 +23,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline"
 import RealTimeSearch from "../../../components/ui/RealTimeSearch"
+import { useDebounce } from '../../../hooks/useDebounce';
 
 const AdminBooksPage = () => {
   const router = useRouter()
@@ -51,11 +52,14 @@ const AdminBooksPage = () => {
     categoryId: "",
   })
   const [filters, setFilters] = useState({
-    search: "",
-    status: "",
-    library: "",
-    category: "",
-  })
+    search: '',
+    status: '',
+    page: 0,
+    size: 10
+  });
+
+  // Debounce search term to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(filters.search, 500);
 
   // Real-time search state
   const [searchResults, setSearchResults] = useState([])
@@ -129,6 +133,15 @@ const AdminBooksPage = () => {
     }
   }, [updateFilters])
 
+  // Effect to trigger search when debounced search term changes
+  useEffect(() => {
+    if (updateFilters) {
+      const newFilters = { ...filters, search: debouncedSearchTerm };
+      setFilters(newFilters);
+      updateFilters(newFilters);
+    }
+  }, [debouncedSearchTerm, updateFilters]);
+
   // Debug: Log books data
   useEffect(() => {
     console.log("AdminBooksPage: Books data updated", {
@@ -150,7 +163,7 @@ const AdminBooksPage = () => {
 
         const newFilters = { ...filters, search: searchTerm }
         setFilters(newFilters)
-        updateFilters(newFilters)
+        // Don't call updateFilters here as it will be handled by the debounced effect
       },
       [filters, updateFilters],
   )

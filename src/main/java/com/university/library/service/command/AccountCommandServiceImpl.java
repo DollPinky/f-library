@@ -2,6 +2,7 @@ package com.university.library.service.command;
 
 import com.university.library.dto.AccountResponse;
 import com.university.library.dto.RegisterRequest;
+import com.university.library.dto.UpdateAccountRoleRequest;
 import com.university.library.entity.Account;
 import com.university.library.entity.Campus;
 import com.university.library.repository.AccountRepository;
@@ -112,6 +113,21 @@ public class AccountCommandServiceImpl implements AccountCommandService {
     
     @Override
     @Transactional
+    public AccountResponse updateAccountRole(UUID accountId, UpdateAccountRoleRequest request) {
+        log.info("Updating account role: {} to {}", accountId, request.getRole());
+        
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
+        
+        account.setRole(request.getRole());
+        Account updatedAccount = accountRepository.save(account);
+        log.info("Account role updated successfully: {}", updatedAccount.getAccountId());
+        
+        return AccountResponse.fromEntity(updatedAccount);
+    }
+    
+    @Override
+    @Transactional
     public void deleteAccount(UUID accountId) {
         log.info("Deleting account: {}", accountId);
         
@@ -122,4 +138,5 @@ public class AccountCommandServiceImpl implements AccountCommandService {
         accountRepository.deleteById(accountId);
         log.info("Account deleted successfully: {}", accountId);
     }
-} 
+}
+ 

@@ -32,19 +32,23 @@ public class BookSearchParams {
     
     @Schema(description = "Số trang (bắt đầu từ 0)", example = "0", defaultValue = "0")
     @Min(value = 0, message = "Page phải >= 0")
+    @Builder.Default
     private Integer page = 0;
     
     @Schema(description = "Kích thước trang", example = "10", defaultValue = "10")
     @Min(value = 1, message = "Size phải >= 1")
+    @Builder.Default
     private Integer size = 10;
     
     @Schema(description = "Sắp xếp theo trường", example = "title", defaultValue = "title", allowableValues = {"title", "author", "publisher", "year", "isbn", "createdAt", "updatedAt"})
     @Pattern(regexp = "^(title|author|publisher|year|isbn|createdAt|updatedAt)?$", 
              message = "SortBy phải là một trong các giá trị: title, author, publisher, year, isbn, createdAt, updatedAt")
+    @Builder.Default
     private String sortBy = "title";
     
     @Schema(description = "Thứ tự sắp xếp", example = "ASC", defaultValue = "ASC", allowableValues = {"ASC", "DESC"})
     @Pattern(regexp = "^(ASC|DESC)$", message = "SortDirection phải là ASC hoặc DESC")
+    @Builder.Default
     private String sortDirection = "ASC";
 
     public enum SortDirection {

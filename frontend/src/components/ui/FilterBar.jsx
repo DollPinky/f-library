@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MagnifyingGlassIcon, 
   FunnelIcon,
@@ -9,6 +9,20 @@ import {
 
 const FilterBar = ({ onFilterChange, onSearch, filters, searchQuery }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery || '');
+
+  // Debounce search query to avoid excessive API calls
+  const debouncedSearchQuery = useDebounce(localSearchQuery, 500);
+
+  // Effect to trigger search when debounced search query changes
+  useEffect(() => {
+    onSearch(debouncedSearchQuery);
+  }, [debouncedSearchQuery, onSearch]);
+
+  // Effect to sync local search query with prop
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery || '');
+  }, [searchQuery]);
 
   const statusOptions = [
     { value: '', label: 'Tất cả trạng thái' },
@@ -49,8 +63,8 @@ const FilterBar = ({ onFilterChange, onSearch, filters, searchQuery }) => {
           <input
             type="text"
             placeholder="Tìm kiếm theo tên sách, tác giả, người mượn..."
-            value={searchQuery}
-            onChange={(e) => onSearch(e.target.value)}
+            value={localSearchQuery}
+            onChange={(e) => setLocalSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-3 border border-sage-200 dark:border-sage-700 rounded-xl bg-sage-50 dark:bg-neutral-800 text-sage-900 dark:text-sage-100 placeholder-sage-500 dark:placeholder-sage-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent transition-all duration-200"
           />
         </div>
@@ -130,6 +144,23 @@ const FilterBar = ({ onFilterChange, onSearch, filters, searchQuery }) => {
       )}
     </div>
   );
+};
+
+// Debounce hook implementation
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
 };
 
 export default FilterBar; 

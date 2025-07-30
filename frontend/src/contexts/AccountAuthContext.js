@@ -97,11 +97,25 @@ export const AccountAuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('account');
-    router.push('/login');
-    return { success: true, message: 'Đăng xuất thành công' };
+    try {
+      // Call backend logout endpoint
+      await fetch('http://localhost:8080/api/v1/accounts/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (error) {
+      console.error('Error calling backend logout:', error);
+    } finally {
+      // Clear local state regardless of backend call success
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('account');
+      router.push('/login');
+      return { success: true, message: 'Đăng xuất thành công' };
+    }
   };
 
   const value = {
@@ -119,4 +133,4 @@ export const AccountAuthProvider = ({ children }) => {
       {children}
     </AccountAuthContext.Provider>
   );
-}; 
+};

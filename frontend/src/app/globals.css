@@ -212,6 +212,48 @@
     @apply cursor-pointer;
   }
   
+  /* Navigation styles */
+  .nav-item {
+    @apply relative flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 min-h-[44px] touch-manipulation text-sage-600 dark:text-sage-400 hover:bg-sage-50 dark:hover:bg-sage-800 hover:text-sage-700 dark:hover:text-sage-300;
+  }
+
+  .nav-item svg {
+    @apply flex-shrink-0 w-5 h-5;
+  }
+
+  .nav-item.active {
+    @apply bg-sage-100 dark:bg-sage-800 text-sage-700 dark:text-sage-300;
+  }
+
+  .nav-item:hover {
+    @apply transform translate-x-1;
+  }
+
+  /* User info styles */
+  .user-info {
+    @apply flex items-center space-x-3 px-4 py-3 rounded-xl bg-sage-50 dark:bg-sage-800 min-h-[60px];
+  }
+
+  .user-info > div:first-child {
+    @apply flex-shrink-0;
+  }
+
+  .user-info svg {
+    @apply w-5 h-5;
+  }
+
+  .user-actions {
+    @apply flex items-center space-x-2 mt-3;
+  }
+
+  .user-action-btn {
+    @apply flex items-center justify-center p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200 min-h-[44px] min-w-[44px] touch-manipulation;
+  }
+
+  .user-action-btn svg {
+    @apply w-5 h-5;
+  }
+
   /* Mobile navigation */
   .mobile-nav {
     @apply fixed inset-0 z-50 lg:hidden;
@@ -228,6 +270,10 @@
   /* Mobile navigation improvements */
   .mobile-nav-item {
     @apply flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 min-h-[44px] touch-manipulation;
+  }
+
+  .mobile-nav-item svg {
+    @apply flex-shrink-0 w-5 h-5;
   }
 
   .mobile-nav-item.active {
@@ -248,7 +294,11 @@
   }
 
   .mobile-header-close {
-    @apply p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200 min-h-[44px] min-w-[44px] touch-manipulation;
+    @apply flex items-center justify-center p-2 rounded-xl bg-sage-100 dark:bg-sage-800 text-sage-600 dark:text-sage-400 hover:bg-sage-200 dark:hover:bg-sage-700 transition-all duration-200 min-h-[44px] min-w-[44px] touch-manipulation;
+  }
+
+  .mobile-header-close svg {
+    @apply w-5 h-5;
   }
 
   /* Mobile footer improvements */
@@ -260,8 +310,16 @@
     @apply flex items-center space-x-3 px-4 py-3 rounded-xl bg-sage-50 dark:bg-sage-800 min-h-[60px];
   }
 
+  .mobile-user-info > div:first-child {
+    @apply flex-shrink-0;
+  }
+
   .mobile-logout-btn {
     @apply flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 w-full min-h-[44px] touch-manipulation;
+  }
+
+  .mobile-logout-btn svg {
+    @apply w-5 h-5 flex-shrink-0;
   }
   
   .mobile-nav-content.open {
