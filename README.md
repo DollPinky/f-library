@@ -1,87 +1,325 @@
-# Hệ Thống Quản Lý Thư Viện Đại Học
+# University Library Management System
 
-Hệ thống quản lý thư viện hiện đại cho môi trường đại học đa phân hiệu với multi-layer caching và event-driven architecture
+A comprehensive, production-ready library management solution designed for multi-campus university environments. This system features a modern microservices architecture with event-driven design patterns, multi-layer caching, and real-time capabilities.
 
-## 🏗️ Kiến Trúc Hệ Thống
+[![Java](https://img.shields.io/badge/Java-21-orange?logo=java&logoColor=white)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-6DB33F?logo=spring&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Next.js](https://img.shields.io/badge/Next.js-14.0.4-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-24.0-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
-### Công Nghệ Sử Dụng
-- **Backend:** Java 21 + Spring Boot 3.2.0
-- **Frontend:** Next.js 14 + TypeScript + Tailwind CSS
-- **Database:** PostgreSQL 15 (production), H2 (development)
-- **Cache:** Redis + Caffeine (multi-layer caching)
-- **Message Queue:** Apache Kafka
-- **Build Tool:** Gradle 8.5+
-- **Container:** Docker + Docker Compose
+## 🚀 Key Features
+
+### 📚 Core Functionality
+- **Comprehensive Book Management**
+  - Multi-attribute book catalog with advanced search
+  - Barcode/QR code generation for physical copies
+  - Batch import/export capabilities
+  - Digital asset management for e-books and resources
+
+- **User & Access Control**
+  - Multi-role authentication (Admin, Librarian, Faculty, Student)
+  - OAuth 2.0 and JWT token-based authentication
+  - Fine-grained permission system
+  - Self-service account management
+
+- **Loan & Circulation**
+  - Flexible loan policies based on user roles
+  - Automated fine calculation and notifications
+  - Real-time availability tracking
+  - Multi-branch inventory management
+
+### 🛠️ Technical Highlights
+- **Performance Optimizations**
+  - Multi-layer caching (Caffeine + Redis)
+  - Database query optimization
+  - Asynchronous processing for heavy operations
+  - Connection pooling with HikariCP
+
+- **Architecture**
+  - Clean Architecture principles
+  - CQRS pattern implementation
+  - Event-driven microservices
+  - API Gateway pattern
+
+- **Integration & Extensibility**
+  - RESTful APIs with OpenAPI documentation
+  - WebSocket for real-time updates
+  - Webhook support for external systems
+  - Plugin system for custom extensions
+
+## 🏗️ System Architecture
+
+### Technology Stack
+
+#### Backend
+- **Core Framework:** Spring Boot 3.2.0 (Java 21)
+- **Persistence:** 
+  - JPA/Hibernate 6.2
+  - QueryDSL for type-safe queries
+  - Flyway for database migrations
+- **Caching:** 
+  - Caffeine (L1 cache)
+  - Redis (L2 cache)
+  - Spring Cache abstraction
+- **Messaging:**
+  - Apache Kafka for event streaming
+  - Spring Cloud Stream
+- **Security:**
+  - Spring Security 6.1
+  - JWT authentication
+  - OAuth 2.0 integration
+- **API Documentation:**
+  - SpringDoc OpenAPI 3.0
+  - Swagger UI
+- **Monitoring:**
+  - Spring Boot Actuator
+  - Micrometer + Prometheus
+  - Distributed tracing with OpenTelemetry
+
+#### Frontend
+- **Framework:** Next.js 14 with React 18
+- **State Management:** React Query + Zustand
+- **Styling:** Tailwind CSS + Headless UI
+- **Data Visualization:** Chart.js
+- **Form Handling:** React Hook Form
+- **Internationalization:** next-i18next
+- **Testing:** Jest, React Testing Library, Cypress
+
+#### Infrastructure
+- **Containerization:** Docker + Docker Compose
+- **CI/CD:** GitHub Actions
+- **Code Quality:** SonarQube, Checkstyle
+- **Logging:** ELK Stack (Elasticsearch, Logstash, Kibana)
+- **Monitoring:** Grafana, Prometheus
+- **Documentation:** MkDocs + Material for MkDocs
 
 ### Cấu Trúc Thư Mục
 ```
 Library-Management/
-├── src/main/java/com/university/library/
-│   ├── annotation/              # Custom annotations
-│   │   ├── MultiLayerCache.java
-│   │   ├── MultiLayerCacheEvict.java
-│   │   └── MultiLayerCachePut.java
-│   ├── aspect/                  # AOP aspects
-│   │   └── MultiLayerCacheAspect.java
-│   ├── base/                    # Base classes và utilities
-│   ├── config/                  # Cấu hình Spring
-│   ├── constants/               # Constants và enums
-│   ├── controller/              # REST Controllers
-│   ├── dto/                     # Data Transfer Objects
-│   ├── entity/                  # JPA Entities
-│   ├── event/                   # Event classes
-│   ├── facade/                  # Facade layer (CQRS)
-│   ├── service/                 # Business logic services
-│   │   ├── command/            # Command services (CUD operations)
-│   │   └── query/              # Query services (R operations)
-│   ├── repository/              # Data access layer
-│   └── mapper/                  # Object mapping
-├── frontend/                    # Next.js frontend
-└── docker-compose.yml          # Infrastructure services
+├── src/main/
+│   ├── java/com/university/library/
+│   │   ├── annotation/          # Custom annotations
+│   │   ├── aspect/              # AOP aspects
+│   │   ├── base/                # Base classes and utilities
+│   │   ├── config/              # Spring configurations
+│   │   ├── constants/           # Application constants
+│   │   ├── controller/          # REST API endpoints
+│   │   ├── dto/                 # Data Transfer Objects
+│   │   │   ├── request/        # API request DTOs
+│   │   │   ├── response/       # API response DTOs
+│   │   │   └── event/          # Event DTOs
+│   │   ├── entity/             # JPA entities
+│   │   ├── event/              # Domain events
+│   │   ├── exception/          # Custom exceptions
+│   │   ├── mapper/             # Object mapping (MapStruct)
+│   │   ├── repository/         # Data access layer
+│   │   └── service/            # Business logic
+│   │       ├── command/        # Command services (CUD operations)
+│   │       ├── query/          # Query services (R operations)
+│   │       └── impl/           # Service implementations
+│   └── resources/
+│       ├── db/migration/      # Database migrations
+│       ├── i18n/              # Internationalization files
+│       ├── static/            # Static resources
+│       └── templates/         # Email templates
+│
+├── frontend/                   # Next.js application
+│   ├── public/                # Static files
+│   ├── src/
+│   │   ├── app/              # App router
+│   │   ├── components/       # Reusable components
+│   │   ├── contexts/         # React contexts
+│   │   ├── hooks/            # Custom React hooks
+│   │   ├── lib/              # Utility functions
+│   │   ├── services/         # API services
+│   │   ├── stores/           # State management
+│   │   └── styles/           # Global styles
+│   └── tests/                # Test files
+│
+├── docs/                      # Project documentation
+├── scripts/                   # Utility scripts
+└── docker/                    # Docker-related files
 ```
 
-## 🚀 Cách Chạy Dự Án
+## 🏛 Domain Model
 
-### Yêu Cầu Hệ Thống
-- Java 21 trở lên
-- Docker Desktop
-- Node.js 18+ (cho frontend)
+### Core Entities
 
-### Bước 1: Khởi động Infrastructure
+#### 1. Book & BookCopy
+- **Book**: Represents a title in the catalog
+  - ISBN, title, authors, publisher, publication year
+  - Categories, tags, and subjects
+  - Digital content and metadata
+- **BookCopy**: Physical or digital instance of a book
+  - Barcode/QR code
+  - Location and status tracking
+  - Condition and maintenance history
+
+#### 2. User Management
+- **Account**: User authentication and profile
+- **Roles**: Fine-grained access control
+- **Preferences**: UI/UX customization
+
+#### 3. Loan System
+- **Borrowing**: Loan records
+- **Reservations**: Hold management
+- **Fines**: Automated calculation and tracking
+
+#### 4. Library Infrastructure
+- **Campus**: Multi-campus support
+- **Library**: Physical locations
+- **Inventory**: Stock management
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+#### Development Environment
+- **Java Development Kit (JDK) 21**
+  - [Eclipse Temurin](https://adoptium.net/)
+  - [Amazon Corretto](https://aws.amazon.com/corretto/)
+  - [Oracle JDK](https://www.oracle.com/java/technologies/downloads/)
+
+#### Containerization
+- **Docker Desktop** (v24.0+)
+  - [Download for Windows/Mac](https://www.docker.com/products/docker-desktop/)
+  - Minimum 4GB RAM allocated to Docker
+
+#### Frontend Development
+- **Node.js** (v18+ LTS)
+  - [Official Installer](https://nodejs.org/)
+  - nvm (Node Version Manager) recommended
+
+#### Database
+- **PostgreSQL 15** (or use Docker)
+  - [PostgreSQL Downloads](https://www.postgresql.org/download/)
+  - pgAdmin 4 for database management
+
+#### Build Tools
+- **Gradle 8.5+**
+  - Included in the project (gradle-wrapper)
+  - [Manual Installation](https://gradle.org/install/)
+
+#### Recommended IDEs
+- **Backend**: IntelliJ IDEA Ultimate, VS Code with Java extensions
+- **Frontend**: VS Code, WebStorm
+- **Database**: DBeaver, TablePlus
+
+## 🏃‍♂️ Running the Application
+
+### 1. Infrastructure Setup
+
+#### Using Docker Compose (Recommended)
 ```bash
-# Khởi động PostgreSQL, Redis, Kafka, Zookeeper
+# Start all services
 docker-compose up -d
 
-# Kiểm tra services
+# Verify all containers are running
 docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
 
-### Bước 2: Chạy Backend
+#### Manual Setup (Alternative)
+1. **Database**: Install and configure PostgreSQL 15
+2. **Cache**: Set up Redis server
+3. **Message Broker**: Configure Apache Kafka with Zookeeper
+
+### 2. Backend Application
+
+#### Development Mode
 ```bash
-# Build project
-./gradlew build
+# Build and run with development profile
+./gradlew bootRun --args='--spring.profiles.active=dev'
 
-# Chạy với profile docker
-./gradlew bootRun --args='--spring.profiles.active=docker'
+# Run tests with coverage report
+./gradlew test jacocoTestReport
+
+# Build Docker image
+docker build -t library-management .
 ```
 
-### Bước 3: Chạy Frontend
+#### Production Mode
+```bash
+# Build production JAR
+./gradlew bootJar
+
+# Run with production profile
+java -Dspring.profiles.active=prod -jar build/libs/library-management-*.jar
+```
+
+### 3. Frontend Application
+
+#### Development
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
+
+# Run tests
+npm test
+
+# Build for production
+npm run build
 ```
 
-### Truy Cập Hệ Thống
-- **Backend API:** http://localhost:8080
-- **Frontend:** http://localhost:3002
-- **API Docs:** http://localhost:8080/swagger-ui.html
-- **Kafka UI:** http://localhost:8081
-- **Redis Commander:** http://localhost:8082
+### 4. Access the System
 
-## 📊 Mô Hình Dữ Liệu
+#### Development Environment
+- **Frontend Application**: http://localhost:3002
+- **Backend API**: http://localhost:8080
+- **API Documentation**: http://localhost:8080/api-docs
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
 
-### Entities Chính
+#### Admin Credentials
+- **Username**: admin@university.edu
+- **Password**: admin123
+
+#### Monitoring & Management
+- **Kafka UI**: http://localhost:8081
+- **Redis Commander**: http://localhost:8082
+- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3001
+- **Elasticsearch**: http://localhost:9200
+- **Kibana**: http://localhost:5601
+
+## 🏛 Domain Model
+
+### Core Entities
+
+#### 1. Book & BookCopy
+- **Book**: Represents a title in the catalog
+  - ISBN, title, authors, publisher, publication year
+  - Categories, tags, and subjects
+  - Digital content and metadata
+- **BookCopy**: Physical or digital instance of a book
+  - Barcode/QR code
+  - Location and status tracking
+  - Condition and maintenance history
+
+#### 2. User Management
+- **Account**: User authentication and profile
+- **Roles**: Fine-grained access control
+- **Preferences**: UI/UX customization
+
+#### 3. Loan System
+- **Borrowing**: Loan records
+- **Reservations**: Hold management
+- **Fines**: Automated calculation and tracking
+
+#### 4. Library Infrastructure
+- **Campus**: Multi-campus support
+- **Library**: Physical locations
+- **Inventory**: Stock management
 
 #### 1. BaseEntity (Abstract)
 
@@ -1046,18 +1284,108 @@ spring:
 
 ## 🤝 Contributing
 
-1. Fork repository
-2. Tạo feature branch
-3. Commit changes
-4. Push to branch
-5. Tạo Pull Request
+We welcome contributions from the community! Here's how you can help:
+
+1. **Report Bugs**
+   - Check existing issues to avoid duplicates
+   - Provide detailed reproduction steps
+   - Include environment details and logs
+
+2. **Suggest Enhancements**
+   - Open an issue with the `enhancement` label
+   - Describe the use case and benefits
+   - Include mockups if applicable
+
+3. **Submit Code Changes**
+   ```bash
+   # Fork the repository
+   git clone https://github.com/your-username/Library-Management.git
+   cd Library-Management
+   
+   # Create a feature branch
+   git checkout -b feature/amazing-feature
+   
+   # Make your changes
+   git add .
+   git commit -m "Add amazing feature"
+   
+   # Push to the branch
+   git push origin feature/amazing-feature
+   
+   # Open a Pull Request
+   ```
+
+4. **Code Review Process**
+   - All PRs require at least two approvals
+   - Ensure all tests pass
+   - Update documentation as needed
+   - Follow the code style guide
+
+## 📚 Documentation
+
+- [API Reference](/docs/api/README.md)
+- [Deployment Guide](/docs/deployment/README.md)
+- [Developer Guide](/docs/development/README.md)
+- [Architecture Decision Records](/docs/adr/README.md)
+
+## 🛠️ Development Workflow
+
+### Branching Strategy
+- `main`: Production-ready code
+- `develop`: Integration branch
+- `feature/*`: New features
+- `bugfix/*`: Bug fixes
+- `release/*`: Release preparation
+
+### Commit Message Convention
+```
+<type>(<scope>): <subject>
+<BLANK LINE>
+[optional body]
+<BLANK LINE>
+[optional footer]
+```
+
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes
+- `refactor`: Code changes that neither fixes a bug nor adds a feature
+- `test`: Adding missing tests or correcting existing tests
+- `chore`: Changes to the build process or auxiliary tools
+
+## 📈 Monitoring & Operations
+
+### Health Checks
+- Application Health: `GET /actuator/health`
+- Database Health: `GET /actuator/health/db`
+- Disk Space: `GET /actuator/health/diskSpace`
+
+### Metrics
+- Prometheus: `GET /actuator/prometheus`
+- Metrics Dashboard: `GET /actuator/metrics`
+
+### Logging
+- Log Levels: `POST /actuator/loggers/{logger.name}
+- Logfile: `GET /actuator/logfile`
 
 ## 📞 Support
 
-- **Issues:** Tạo issue trên GitHub
-- **Documentation:** Xem docs trong thư mục docs/
-- **Email:** library-support@university.edu.vn
+### Need Help?
+- **Documentation**: Check our [documentation site](https://library-docs.university.edu)
+- **Community**: Join our [Discord server](https://discord.gg/library-community)
+- **Email**: support@library.university.edu
+- **Office Hours**: Monday-Friday, 9AM-5PM (GMT+7)
+
+### Security Issues
+Please report security vulnerabilities to security@library.university.edu. We appreciate your efforts to responsibly disclose your findings.
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**Phát triển bởi Đội ngũ Công nghệ Thông tin Đại học**
+**Developed with ❤️ by University IT Team**  
+© 2025 University Library Management System. All rights reserved.
