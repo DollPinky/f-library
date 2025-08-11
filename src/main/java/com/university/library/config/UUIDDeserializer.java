@@ -19,19 +19,14 @@ public class UUIDDeserializer extends JsonDeserializer<UUID> {
             return null;
         }
         
-        // If it's already a valid UUID, return it
         try {
             return UUID.fromString(value);
         } catch (IllegalArgumentException e) {
-            // If it's a simple string ID, generate a deterministic UUID
-            // This is a simple hash-based approach - in production you might want a more sophisticated mapping
             return generateUUIDFromString(value);
         }
     }
     
     private UUID generateUUIDFromString(String value) {
-        // Generate a deterministic UUID based on the string value
-        // This ensures the same string always generates the same UUID
         String hash = String.valueOf(value.hashCode());
         String paddedHash = String.format("%032d", Math.abs(Long.parseLong(hash)));
         

@@ -7,8 +7,8 @@ services:
     container_name: library-postgres
     environment:
       POSTGRES_DB: library
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -102,14 +102,14 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/library
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: password
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: 
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      SERVER_PORT: ${SERVER_PORT}
     networks:
       - library-network
     healthcheck:
@@ -156,18 +156,18 @@ services:
   #     - library-network
 
   # Redis Commander (optional)
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: library-redis-commander
-    depends_on:
-      redis:
-        condition: service_healthy
-    ports:
-      - "8082:8081"
-    environment:
-      REDIS_HOSTS: local:redis:6379
-    networks:
-      - library-network
+#  redis-commander:
+#    image: rediscommander/redis-commander:latest
+#    container_name: library-redis-commander
+#    depends_on:
+#      redis:
+#        condition: service_healthy
+#    ports:
+#      - "8082:8081"
+#    environment:
+#      REDIS_HOSTS: local:redis:6379
+#    networks:
+#      - library-network
 
 volumes:
   postgres_data:

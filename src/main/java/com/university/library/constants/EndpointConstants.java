@@ -1,7 +1,9 @@
 package com.university.library.constants;
 
+import org.springframework.beans.factory.annotation.Value;
+
 public final class EndpointConstants {
-  public static final String BACKEND_URL = "http://localhost:8080";
+  @Value("spring.application.url") public static String BACKEND_URL;
   public static final String API_VERSION = "/v1";
   public static final String API = "/api" + API_VERSION;
   public static final String AUTH_ENDPOINT = API + "/auth";

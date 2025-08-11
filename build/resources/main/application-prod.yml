@@ -4,9 +4,9 @@ spring:
   
   # PostgreSQL Database Configuration
   datasource:
-    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/library}
-    username: ${JDBC_DATABASE_USERNAME:postgres}
-    password: ${JDBC_DATABASE_PASSWORD:password}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -40,7 +40,7 @@ spring:
   
   # Kafka Configuration for Production
   kafka:
-    bootstrap-servers: ${KAFKA_URL:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: library-prod-group
       auto-offset-reset: latest
@@ -58,9 +58,9 @@ spring:
   # Redis Configuration for Production
   data:
     redis:
-      host: ${REDIS_URL:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
       timeout: 2000ms
       lettuce:
         pool:
@@ -87,7 +87,7 @@ logging:
 
 # Server Configuration for Production
 server:
-  port: ${PORT:8080}
+  port: ${SERVER_PORT}
   compression:
     enabled: true
     mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
@@ -106,4 +106,19 @@ management:
   metrics:
     export:
       prometheus:
-        enabled: true 
+        enabled: true
+
+
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  base-url: ${GEMINI_BASE_URL}
+
+openai:
+  api-key: ${OPENAI_API_KEY}
+  base-url: ${OPENAI_BASE_URL}
+  embedding-model: ${OPENAI_EMBEDDING_MODEL}
+
+cohere:
+  api-key: ${COHERE_API_KEY}
+  embedding-model: ${COHERE_EMBEDDING_MODEL}
+  base-url: ${COHERE_BASE_URL}
