@@ -1,11 +1,10 @@
 package com.university.library.config;
-
-import com.university.library.constants.EndpointConstants;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,15 +12,17 @@ import java.util.List;
 
 @Configuration
 public class SwaggerConfig {
+    @Value("${app.public-base-url:${APP_PUBLIC_BASE_URL:http://localhost:8080}}")
+    private String appPublicBaseUrl;
 
     @Bean
     public OpenAPI libraryManagementOpenAPI() {
         Server localServer = new Server();
-        localServer.setUrl(EndpointConstants.BACKEND_URL);
+        localServer.setUrl(appPublicBaseUrl);
         localServer.setDescription("Local Development Server");
 
         Server dockerServer = new Server();
-        dockerServer.setUrl(EndpointConstants.BACKEND_URL);
+        dockerServer.setUrl(appPublicBaseUrl);
         dockerServer.setDescription("Docker Development Server");
 
         Contact contact = new Contact();

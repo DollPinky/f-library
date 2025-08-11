@@ -7,6 +7,8 @@ import ActionButton from '../../../../components/ui/ActionButton';
 import NotificationToast from '../../../../components/ui/NotificationToast';
 import DarkModeToggle from '../../../../components/ui/DarkModeToggle';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+
 const BorrowingDetailsPage = () => {
   const params = useParams();
   const router = useRouter();
@@ -24,7 +26,7 @@ const BorrowingDetailsPage = () => {
   const fetchBorrowingDetails = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/v1/borrowings/${params.id}`, {
+      const response = await fetch(`${API_BASE_URL}/borrowings/${params.id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -47,7 +49,7 @@ const BorrowingDetailsPage = () => {
   const handleReturnBook = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/v1/borrowings/${params.id}/return`, {
+      const response = await fetch(`${API_BASE_URL}/borrowings/${params.id}/return`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -77,7 +79,7 @@ const BorrowingDetailsPage = () => {
   const handleProcessFine = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/v1/borrowings/${params.id}/fine`, {
+      const response = await fetch(`${API_BASE_URL}/borrowings/${params.id}/fine`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

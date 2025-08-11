@@ -8,6 +8,8 @@ import ActionButton from '../../components/ui/ActionButton';
 import NotificationToast from '../../components/ui/NotificationToast';
 import DarkModeToggle from '../../components/ui/DarkModeToggle';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+
 const RegisterPage = () => {
   const router = useRouter();
   const { register, isAuthenticated } = useAccountAuth();
@@ -29,7 +31,7 @@ const RegisterPage = () => {
   useEffect(() => {
     const fetchCampuses = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/v1/campuses/all');
+        const res = await fetch(`${API_BASE_URL}/campuses/all`);
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
           setCampuses(data.data);

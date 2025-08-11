@@ -1,8 +1,10 @@
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+
 class ChatService {
     async sendMessage(prompt) {
       try {
-        // Use the same base URL as defined in api.js
-        const response = await fetch('http://localhost:8080/api/v1/chat', {
+        // Use the same base URL as defined in env
+        const response = await fetch(`${API_BASE_URL}/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'text/plain',

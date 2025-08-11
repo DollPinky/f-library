@@ -97,7 +97,7 @@ The frontend supports all search parameters defined in `BookSearchParams`:
 Set the following environment variables:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
 ```
 
 ### Usage

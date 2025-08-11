@@ -6,6 +6,8 @@ import accountAuthService from '../services/accountAuthService';
 
 const AccountAuthContext = createContext();
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+
 export const useAccountAuth = () => {
   const context = useContext(AccountAuthContext);
   if (!context) {
@@ -99,7 +101,7 @@ export const AccountAuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       // Call backend logout endpoint
-      await fetch('http://localhost:8080/api/v1/accounts/logout', {
+      await fetch(`${API_BASE_URL}/accounts/logout`, {
         method: 'POST',
         credentials: 'include',
         headers: {

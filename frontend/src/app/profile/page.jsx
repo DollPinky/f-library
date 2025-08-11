@@ -14,6 +14,8 @@ import {
   XCircleIcon
 } from '@heroicons/react/24/outline';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+
 const ProfilePage = () => {
   const { user } = useAccountAuth();
   const [borrowings, setBorrowings] = useState([]);
@@ -110,7 +112,7 @@ const ProfilePage = () => {
 
   const handleRequestReturn = async (borrowingId) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/borrowings/${borrowingId}/request-return`, {
+      const response = await fetch(`${API_BASE_URL}/borrowings/${borrowingId}/request-return`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

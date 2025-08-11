@@ -10,6 +10,8 @@ import NotificationToast from '../../../../components/ui/NotificationToast';
 import DarkModeToggle from '../../../../components/ui/DarkModeToggle';
 import { useDebounce } from '../../../hooks/useDebounce';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+
 const OverdueBooksPage = () => {
   const router = useRouter();
   const [overdueBooks, setOverdueBooks] = useState([]);
@@ -56,7 +58,7 @@ const OverdueBooksPage = () => {
         ...searchParams
       });
 
-      const response = await fetch(`/api/v1/borrowings?${params.toString()}`, {
+      const response = await fetch(`${API_BASE_URL}/borrowings?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -84,7 +86,7 @@ const OverdueBooksPage = () => {
 
   const fetchOverdueStats = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/v1/borrowings/overdue/stats', {
+      const response = await fetch(`${API_BASE_URL}/borrowings/overdue/stats`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -116,7 +118,7 @@ const OverdueBooksPage = () => {
 
   const sendReminderEmail = async (borrowingId) => {
     try {
-      const response = await fetch(`/api/v1/borrowings/${borrowingId}/remind`, {
+      const response = await fetch(`${API_BASE_URL}/borrowings/${borrowingId}/remind`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -139,7 +141,7 @@ const OverdueBooksPage = () => {
   const sendBulkReminders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/api/v1/borrowings/overdue/bulk-remind', {
+      const response = await fetch(`${API_BASE_URL}/borrowings/overdue/bulk-remind`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

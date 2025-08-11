@@ -16,6 +16,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,10 +33,13 @@ public class BookQueryService {
   private final BookRepository bookRepository;
   private final RestTemplate restTemplate;
 
+  @Value("${app.api-base-url:${APP_API_BASE_URL:http://localhost:8080/api/v1}}")
+  private String appApiBaseUrl;
+
 
 
   public List<BookResponse> getAllBooksFromApi() {
-    String apiUrl = "http://localhost:8080/api/v1/books/all";
+    String apiUrl = appApiBaseUrl + "/books/all";
     ResponseEntity<BookResponse[]> response = restTemplate.getForEntity(apiUrl, BookResponse[].class);
     return Arrays.asList(response.getBody());
   }
