@@ -2,7 +2,6 @@
 -- LIBRARY MANAGEMENT SYSTEM - INITIALIZATION SCRIPT
 -- =====================================================
 
--- Drop existing tables if they exist (in reverse dependency order)
 DROP TABLE IF EXISTS borrowings CASCADE;
 DROP TABLE IF EXISTS book_copies CASCADE;
 DROP TABLE IF EXISTS books CASCADE;
@@ -25,7 +24,6 @@ CREATE TABLE chat_history (
                               embedding vector(1024),
                               created_at TIMESTAMP
 );
-
 
 -- =====================================================
 -- CREATE TABLES

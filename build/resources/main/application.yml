@@ -56,7 +56,7 @@ spring:
 
 # Server Configuration
 server:
-  port: 8080
+  port: ${APP_PORT:8080}
 
 # Actuator Configuration
 management:
@@ -91,18 +91,25 @@ springdoc:
 
 
 gemini:
-  api-key: AIzaSyAoVorOFX8l6JBgR9CAgG3frAYjnQlpOqg
-  base-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+  api-key: ${GEMINI_API_KEY:}
+  base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent}
 
 openai:
-  api-key: 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
-  base-url: https://api.openai.com/v1
-  embedding-model: text-embedding-3-large
+  api-key: ${OPENAI_API_KEY:}
+  base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+  embedding-model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-large}
 
 cohere:
-  api-key: YO1CuxXz0v6d7xJsarBwIj57WKLddBsvfaXIWFGx
-  embedding-model: embed-multilingual-v3.0
-  base-url: https://api.cohere.ai
+  api-key: ${COHERE_API_KEY:}
+  embedding-model: ${COHERE_EMBEDDING_MODEL:embed-multilingual-v3.0}
+  base-url: ${COHERE_BASE_URL:https://api.cohere.ai}
+
+# Application Configuration
+app:
+  public-base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
+  api-base-url: ${APP_API_BASE_URL:http://localhost:8080/api/v1}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
 
 

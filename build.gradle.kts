@@ -71,7 +71,6 @@ dependencies {
 
 
 
-    runtimeOnly("com.h2database:h2")
     runtimeOnly("org.postgresql:postgresql")
 
     implementation("com.github.ben-manes.caffeine:caffeine")

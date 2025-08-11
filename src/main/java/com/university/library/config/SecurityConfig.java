@@ -20,6 +20,8 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.List;
+
 @Configuration
 @EnableMethodSecurity
 @EnableWebSecurity
@@ -108,16 +110,18 @@ public class SecurityConfig {
 
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
-        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        java.util.List<String> patterns = java.util.Arrays.stream(corsAllowedOrigins.split(","))
+        var cfg = new org.springframework.web.cors.CorsConfiguration();
+        var origins = java.util.Arrays.stream(corsAllowedOrigins.split(","))
                 .map(String::trim)
-                .collect(java.util.stream.Collectors.toList());
-        configuration.setAllowedOriginPatterns(patterns);
-        configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
-        configuration.setAllowCredentials(true);
+                .toList();
+
+        // Use exact origins, not patterns, to avoid falling back to *
+        cfg.setAllowedOriginPatterns(List.of("*"));
+        cfg.addAllowedMethod("*");
+        cfg.addAllowedHeader("*");
+        cfg.setAllowCredentials(true);
         org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", cfg);
         return source;
     }
 
