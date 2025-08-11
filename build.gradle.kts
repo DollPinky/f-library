@@ -67,6 +67,9 @@ dependencies {
     implementation("org.springframework.session:spring-session-core")
     implementation("io.hypersistence:hypersistence-utils-hibernate-60:3.7.0")
 
+    implementation("io.github.cdimascio:java-dotenv:5.2.2")
+
+
 
     runtimeOnly("com.h2database:h2")
     runtimeOnly("org.postgresql:postgresql")
