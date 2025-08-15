@@ -12,12 +12,11 @@ import java.util.List;
 
 @Configuration
 public class SwaggerConfig {
-    @Value("${app.public-base-url:${APP_PUBLIC_BASE_URL:http://localhost:8080}}")
-    private String appPublicBaseUrl;
 
     @Bean
     public OpenAPI libraryManagementOpenAPI() {
         Server localServer = new Server();
+        String appPublicBaseUrl = "http://localhost:8080";
         localServer.setUrl(appPublicBaseUrl);
         localServer.setDescription("Local Development Server");
 
@@ -28,7 +27,6 @@ public class SwaggerConfig {
         Contact contact = new Contact();
         contact.setName("Library Management Team");
         contact.setEmail("support@library.edu.vn");
-        contact.setUrl("https://library.edu.vn");
 
         License license = new License()
                 .name("MIT License")
