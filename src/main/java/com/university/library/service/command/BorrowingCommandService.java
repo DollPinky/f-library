@@ -17,6 +17,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
+import static com.university.library.entity.Borrowing.BorrowingStatus.BORROWED;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -29,6 +31,55 @@ public class BorrowingCommandService {
     /**
      * Tạo yêu cầu mượn sách hoặc đặt sách
      */
+    @Transactional
+    public BorrowingResponse scanAndBorrow(String qrCode, UUID borrowerId) {
+        log.info("Processing scan and borrow for QR: {} by user: {}", qrCode, borrowerId);
+
+        // Tìm bản sao sách bằng QR code
+        BookCopy bookCopy = bookCopyRepository.findByQrCode(qrCode);
+        if (bookCopy == null) {
+            throw new RuntimeException("Không tìm thấy sách với mã QR: " + qrCode);
+        }
+
+        Account borrower = accountRepository.findById(borrowerId)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        if (!bookCopy.getStatus().equals(BookCopy.BookStatus.AVAILABLE)) {
+            throw new RuntimeException("Book copy is not available for borrowing");
+        }
+
+        long activeBorrowings = borrowingRepository.countActiveBorrowingsByBorrower(borrowerId);
+        if (activeBorrowings >= 5) {
+            throw new RuntimeException("User has reached maximum number of active borrowings (5)");
+        }
+
+
+        // Tạo lệnh mượn sách
+        CreateBorrowingCommand command = new CreateBorrowingCommand();
+        command.setBookCopyId(bookCopy.getBookCopyId());
+        command.setBorrowerId(borrowerId);
+
+        Instant borrowedDate = command.getBorrowedDate() != null ?
+                command.getBorrowedDate() : Instant.now();
+        Instant dueDate = command.getDueDate() != null ?
+                command.getDueDate() : Instant.now().plus(30, ChronoUnit.DAYS);
+
+
+        // Tạo giao dịch mượn sách
+        Borrowing borrowing = Borrowing.builder()
+                .bookCopy(bookCopy)
+                .borrower(borrower)
+                .borrowedDate(borrowedDate)
+                .dueDate(dueDate)
+                .status(BORROWED)
+                .notes(command.getNotes())
+                .build();
+
+        Borrowing savedBorrowing = borrowingRepository.save(borrowing);
+
+        return BorrowingResponse.fromEntity(savedBorrowing);
+    }
+
     @Transactional
     public BorrowingResponse createBorrowing(CreateBorrowingCommand command) {
         log.info("Creating borrowing for book copy: {} by user: {}", command.getBookCopyId(), command.getBorrowerId());
@@ -94,12 +145,12 @@ public class BorrowingCommandService {
         Borrowing borrowing = borrowingRepository.findById(borrowingId)
             .orElseThrow(() -> new RuntimeException("Borrowing not found with ID: " + borrowingId));
         
-        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.PENDING_LIBRARIAN) && 
+        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.PENDING_LIBRARIAN) &&
             !borrowing.getStatus().equals(Borrowing.BorrowingStatus.RESERVED)) {
             throw new RuntimeException("Borrowing is not in PENDING_LIBRARIAN or RESERVED status");
         }
         
-        borrowing.setStatus(Borrowing.BorrowingStatus.BORROWED);
+        borrowing.setStatus(BORROWED);
         borrowing.setBorrowedDate(Instant.now());
         
         BookCopy bookCopy = borrowing.getBookCopy();
@@ -122,7 +173,7 @@ public class BorrowingCommandService {
         Borrowing borrowing = borrowingRepository.findById(borrowingId)
             .orElseThrow(() -> new RuntimeException("Borrowing not found with ID: " + borrowingId));
         
-        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.BORROWED)) {
+        if (!borrowing.getStatus().equals(BORROWED)) {
             throw new RuntimeException("Borrowing is not in BORROWED status");
         }
         
@@ -173,7 +224,7 @@ public class BorrowingCommandService {
         Borrowing borrowing = borrowingRepository.findById(borrowingId)
             .orElseThrow(() -> new RuntimeException("Borrowing not found with ID: " + borrowingId));
         
-        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.BORROWED)) {
+        if (!borrowing.getStatus().equals(BORROWED)) {
             throw new RuntimeException("Borrowing is not in BORROWED status");
         }
         
@@ -228,7 +279,7 @@ public class BorrowingCommandService {
         Borrowing borrowing = borrowingRepository.findById(borrowingId)
             .orElseThrow(() -> new RuntimeException("Borrowing not found with ID: " + borrowingId));
         
-        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.BORROWED)) {
+        if (!borrowing.getStatus().equals(BORROWED)) {
             throw new RuntimeException("Borrowing is not in BORROWED status");
         }
         

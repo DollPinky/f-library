@@ -3,6 +3,8 @@ package com.university.library.repository;
 import com.university.library.entity.BookCopy;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -44,11 +46,9 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, UUID>, JpaSp
      * Kiểm tra xem có bản sao nào có QR code này không
      */
     boolean existsByQrCode(String qrCode);
-    
-    /**
-     * Tìm bản sao sách theo QR code
-     */
-    BookCopy findByQrCode(String qrCode);
+
+    @Query("SELECT bc FROM BookCopy bc WHERE bc.qrCode = :qrCode")
+    BookCopy findByQrCode(@Param("qrCode") String qrCode);
     
     /**
      * Tìm bản sao sách theo vị trí kệ
