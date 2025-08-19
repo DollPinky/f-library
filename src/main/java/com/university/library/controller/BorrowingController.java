@@ -3,11 +3,14 @@ package com.university.library.controller;
 import com.university.library.dto.BorrowingResponse;
 import com.university.library.dto.CreateBorrowingCommand;
 import com.university.library.base.StandardResponse;
+import com.university.library.dto.ScanAndBorrowCommand;
+import com.university.library.entity.Account;
 import com.university.library.service.command.BorrowingCommandService;
 import com.university.library.service.query.BorrowingQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +28,32 @@ public class BorrowingController {
     /**
      * Tạo yêu cầu mượn sách hoặc đặt sách
      */
+    @PostMapping("/scan-and-borrow")
+    public ResponseEntity<StandardResponse<BorrowingResponse>> scanAndBorrow(
+            @RequestBody ScanAndBorrowCommand command,
+            @AuthenticationPrincipal Account userPrincipal) {
+
+        try {
+            log.info("Scan and borrow for QR code: {}", command.getQrCode());
+
+            // Lấy ID người dùng từ authentication
+            UUID borrowerId = userPrincipal.getAccountId();
+
+            BorrowingResponse borrowing = borrowingCommandService.scanAndBorrow(
+                    command.getQrCode(),
+                    borrowerId
+            );
+
+            return ResponseEntity.ok(StandardResponse.success(
+                    borrowing
+            ));
+        } catch (Exception e) {
+            log.error("Error in scan and borrow: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(StandardResponse.error("Không thể xử lý yêu cầu: " + e.getMessage()));
+        }
+    }
+
     @PostMapping
     public ResponseEntity<StandardResponse<BorrowingResponse>> createBorrowing(@RequestBody CreateBorrowingCommand command) {
         try {

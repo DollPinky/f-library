@@ -6,6 +6,8 @@ import com.university.library.dto.BookResponse;
 import com.university.library.dto.BookSearchParams;
 import com.university.library.dto.CreateBookCommand;
 import com.university.library.dto.UpdateBookCommand;
+import com.university.library.entity.BookCopy;
+import com.university.library.repository.BookCopyRepository;
 import com.university.library.service.command.BookCommandService;
 import com.university.library.service.query.BookQueryService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class BookFacade {
     private final BookQueryService bookQueryService;
     private final BookCommandService bookCommandService;
 
+
     // ==================== QUERY OPERATIONS ====================
 
     /**
@@ -35,6 +38,10 @@ public class BookFacade {
         log.info("BookFacade: Getting book by ID: {}", bookId);
         return bookQueryService.getBookById(bookId);
     }
+
+
+
+
 
     /**
      * Tìm kiếm sách với cache

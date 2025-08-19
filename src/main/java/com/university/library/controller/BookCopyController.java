@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,19 @@ public class BookCopyController {
     private final BookCopyFacade bookCopyFacade;
 
     // ==================== QUERY ENDPOINTS ====================
+
+    @GetMapping(value = "/generate-qr/{bookCopyid}", produces = MediaType.IMAGE_PNG_VALUE)
+    @Operation(summary = "Generate QR code image for booking")
+    public ResponseEntity<byte[]> generateQRCode(@PathVariable UUID bookCopyid) {
+        try {
+            byte[] qrImage = bookCopyFacade.generateQRCodeImage(bookCopyid);
+            return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(qrImage);
+        } catch (Exception e) {
+            log.error("Failed to generate QR code", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 
     @GetMapping("/{bookCopyId}")
     @Operation(summary = "Get book copy by ID", description = "Retrieve detailed information about a specific book copy")
@@ -49,6 +63,9 @@ public class BookCopyController {
                 .body(StandardResponse.error("Book copy not found"));
         }
     }
+
+
+
 
     @GetMapping
     @Operation(summary = "Search book copies", description = "Search book copies with pagination and filters")

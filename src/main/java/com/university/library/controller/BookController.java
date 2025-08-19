@@ -3,11 +3,10 @@ package com.university.library.controller;
 import com.university.library.base.PagedResponse;
 import com.university.library.base.StandardResponse;
 import com.university.library.constants.BookConstants;
-import com.university.library.dto.BookResponse;
-import com.university.library.dto.BookSearchParams;
-import com.university.library.dto.CreateBookCommand;
-import com.university.library.dto.UpdateBookCommand;
+import com.university.library.dto.*;
+import com.university.library.service.BookCopyFacade;
 import com.university.library.service.BookFacade;
+import com.university.library.service.query.BookCopyQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +31,8 @@ public class BookController {
     private final BookFacade bookFacade;
 
     // ==================== QUERY ENDPOINTS ====================
+
+
 
     @GetMapping("/{bookId}")
     @Operation(summary = "Get book by ID", description = "Retrieve detailed information about a specific book")

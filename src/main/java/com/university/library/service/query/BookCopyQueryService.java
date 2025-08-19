@@ -6,6 +6,8 @@ import com.university.library.dto.BookCopySearchParams;
 import com.university.library.entity.BookCopy;
 import com.university.library.repository.BookCopyRepository;
 
+import com.university.library.service.BookCopyFacade;
+import com.university.library.service.QRCodeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -23,7 +25,7 @@ import jakarta.persistence.criteria.Predicate;
 public class BookCopyQueryService {
     
     private final BookCopyRepository bookCopyRepository;
-    
+
     public BookCopyResponse getBookCopyById(UUID bookCopyId) {
         log.info("Getting book copy by ID: {}", bookCopyId);
         
@@ -35,7 +37,8 @@ public class BookCopyQueryService {
         log.info("Book copy retrieved successfully: {}", bookCopyId);
         return response;
     }
-    
+
+
     public PagedResponse<BookCopyResponse> searchBookCopies(BookCopySearchParams params) {
         log.info("Searching book copies with params: {}", params);
         

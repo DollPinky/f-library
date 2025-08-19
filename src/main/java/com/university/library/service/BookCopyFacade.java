@@ -6,10 +6,13 @@ import com.university.library.dto.BookCopyResponse;
 import com.university.library.dto.BookCopySearchParams;
 import com.university.library.dto.CreateBookCopyCommand;
 import com.university.library.dto.CreateBookCopyFromBookCommand;
+import com.university.library.entity.BookCopy;
+import com.university.library.repository.BookCopyRepository;
 import com.university.library.service.command.BookCopyCommandService;
 import com.university.library.service.query.BookCopyQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,9 +28,19 @@ public class BookCopyFacade {
 
     private final BookCopyQueryService bookCopyQueryService;
     private final BookCopyCommandService bookCopyCommandService;
-    
+    private final BookCopyRepository bookCopyRepository;
+    private final QRCodeService qrCodeService;
+
+    @Value("${app.cors.allowed-origins:*}")
+    private String corsAllowedOrigins;
 
     // ==================== QUERY OPERATIONS ====================
+    public byte[] generateQRCodeImage(UUID bookCopyID) throws Exception {
+        BookCopy bookCopy = bookCopyRepository.findById(bookCopyID)
+                .orElseThrow(() -> new RuntimeException("Book copy not found with ID: " + bookCopyID));
+        String idBookCopy = corsAllowedOrigins + "/api/v1/borrowings/scan-and-borrow/" + bookCopy.getQrCode();
+        return qrCodeService.generateQRCodeImage(idBookCopy, 250, 250);
+    }
 
     /**
      * Lấy thông tin book copy theo ID với cache

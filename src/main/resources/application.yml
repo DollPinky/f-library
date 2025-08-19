@@ -4,7 +4,7 @@ spring:
     url: ${SPRING_BACKEND_URL}
   # PostgreSQL Database Configuration
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/library}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/library}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
@@ -50,8 +50,8 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      port: ${REDIS_PORT:6380}
+      password:
       timeout: 2000ms
 
 # Server Configuration
@@ -109,7 +109,7 @@ app:
   public-base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
   api-base-url: ${APP_API_BASE_URL:http://localhost:8080/api/v1}
   cors:
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+    allowed-origins: http://localhost:3000/
 
 
 

@@ -66,6 +66,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.session:spring-session-core")
     implementation("io.hypersistence:hypersistence-utils-hibernate-60:3.7.0")
+    implementation ("com.google.zxing:core:3.5.3")
+    implementation ("com.google.zxing:javase:3.5.3")
 
     implementation("io.github.cdimascio:java-dotenv:5.2.2")
 
