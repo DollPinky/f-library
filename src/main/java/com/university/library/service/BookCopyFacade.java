@@ -45,7 +45,7 @@ public class BookCopyFacade {
     public byte[] generateQRCodeImage(UUID bookCopyID) throws Exception {
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyID)
                 .orElseThrow(() -> new RuntimeException("Book copy not found with ID: " + bookCopyID));
-        String idBookCopy = corsAllowedOrigins + "/api/v1/borrowings/scan-and-borrow/" + bookCopy.getQrCode();
+        String idBookCopy = corsAllowedOrigins + "/api/v1/bookDetail/" + bookCopy.getQrCode();
         return qrCodeService.generateQRCodeImage(idBookCopy, 250, 250);
     }
 
