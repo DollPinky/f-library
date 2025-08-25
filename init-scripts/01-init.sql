@@ -2,6 +2,7 @@
 -- LIBRARY MANAGEMENT SYSTEM - INITIALIZATION SCRIPT
 -- =====================================================
 
+-- Drop existing tables if they exist (in reverse dependency order)
 DROP TABLE IF EXISTS borrowings CASCADE;
 DROP TABLE IF EXISTS book_copies CASCADE;
 DROP TABLE IF EXISTS books CASCADE;
@@ -24,6 +25,7 @@ CREATE TABLE chat_history (
                               embedding vector(1024),
                               created_at TIMESTAMP
 );
+
 
 -- =====================================================
 -- CREATE TABLES
@@ -201,19 +203,19 @@ INSERT INTO categories (category_id, name, description, color) VALUES
 -- Insert sample accounts with hashed passwords (password: 12345678)
 INSERT INTO accounts (account_id, full_name, email, phone, department, position, employee_code, password_hash, role, campus_id) VALUES
 -- Admin accounts
-('880e8400-e29b-41d4-a716-446655440001', 'Nguyễn Văn Admin', 'admin@company.com', '0123456789', 'IT', 'System Administrator', 'EMP001', '$2a$10$Ydvo/MrcOPK0SSck2ZtBROdjGYAl2pAyPIhJsWmdliVR1Kv2kDTv.', 'ADMIN', '550e8400-e29b-41d4-a716-446655440001'),
-
+('880e8400-e29b-41d4-a716-446655440001', 'Nguyễn Văn Admin', 'admin@company.com', '0123456789', 'IT', 'System Administrator', 'EMP001', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'ADMIN', '550e8400-e29b-41d4-a716-446655440001'),
 -- Librarian accounts
-('880e8400-e29b-41d4-a716-446655440002', 'Trần Thị Thủ thư HN', 'librarian.hn@company.com', '0123456790', 'Thư viện', 'Thủ thư', 'EMP002', '$2a$10$Ydvo/MrcOPK0SSck2ZtBROdjGYAl2pAyPIhJsWmdliVR1Kv2kDTv.', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440001'),
-('880e8400-e29b-41d4-a716-446655440003', 'Lê Văn Thủ thư HCM', 'librarian.hcm@company.com', '0123456791', 'Thư viện', 'Thủ thư', 'EMP003', '$2a$10$Ydvo/MrcOPK0SSck2ZtBROdjGYAl2pAyPIhJsWmdliVR1Kv2kDTv.', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440002'),
-('880e8400-e29b-41d4-a716-446655440004', 'Phạm Thị Thủ thư DN', 'librarian.dn@company.com', '0123456792', 'Thư viện', 'Thủ thư', 'EMP004', '$2a$10$Ydvo/MrcOPK0SSck2ZtBROdjGYAl2pAyPIhJsWmdliVR1Kv2kDTv.', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440003'),
+('880e8400-e29b-41d4-a716-446655440002', 'Trần Thị Thủ thư HN', 'librarian.hn@company.com', '0123456790', 'Thư viện', 'Thủ thư', 'EMP002', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440003', 'Lê Văn Thủ thư HCM', 'librarian.hcm@company.com', '0123456791', 'Thư viện', 'Thủ thư', 'EMP003', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440002'),
+('880e8400-e29b-41d4-a716-446655440004', 'Phạm Thị Thủ thư DN', 'librarian.dn@company.com', '0123456792', 'Thư viện', 'Thủ thư', 'EMP004', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440003'),
 
 -- Reader accounts (employees)
-('880e8400-e29b-41d4-a716-446655440005', 'Hoàng Văn Nhân viên HN', 'employee.hn1@company.com', '0123456793', 'Marketing', 'Nhân viên Marketing', 'EMP005', '$2a$10$Ydvo/MrcOPK0SSck2ZtBROdjGYAl2pAyPIhJsWmdliVR1Kv2kDTv.', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
-('880e8400-e29b-41d4-a716-446655440006', 'Vũ Thị Nhân viên HN', 'employee.hn2@company.com', '0123456794', 'Sales', 'Nhân viên Sales', 'EMP006', '$2a$10$Ydvo/MrcOPK0SSck2ZtBROdjGYAl2pAyPIhJsWmdliVR1Kv2kDTv.', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
-('880e8400-e29b-41d4-a716-446655440007', 'Đỗ Văn Nhân viên HCM', 'employee.hcm1@company.com', '0123456795', 'IT', 'Lập trình viên', 'EMP007', '$2a$10$Ydvo/MrcOPK0SSck2ZtBROdjGYAl2pAyPIhJsWmdliVR1Kv2kDTv.', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
-('880e8400-e29b-41d4-a716-446655440008', 'Ngô Thị Nhân viên HCM', 'employee.hcm2@company.com', '0123456796', 'HR', 'Nhân viên HR', 'EMP008', '$2a$10$Ydvo/MrcOPK0SSck2ZtBROdjGYAl2pAyPIhJsWmdliVR1Kv2kDTv.', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
-('880e8400-e29b-41d4-a716-446655440009', 'Bùi Văn Nhân viên DN', 'employee.dn1@company.com', '0123456797', 'Finance', 'Kế toán', 'EMP009', '$2a$10$Ydvo/MrcOPK0SSck2ZtBROdjGYAl2pAyPIhJsWmdliVR1Kv2kDTv.', 'READER', '550e8400-e29b-41d4-a716-446655440003');
+('880e8400-e29b-41d4-a716-446655440005', 'Hoàng Văn Nhân viên HN', 'employee.hn1@company.com', '0123456793', 'Marketing', 'Nhân viên Marketing', 'EMP005', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440006', 'Vũ Thị Nhân viên HN', 'employee.hn2@company.com', '0123456794', 'Sales', 'Nhân viên Sales', 'EMP006', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440007', 'Đỗ Văn Nhân viên HCM', 'employee.hcm1@company.com', '0123456795', 'IT', 'Lập trình viên', 'EMP007', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
+('880e8400-e29b-41d4-a716-446655440008', 'Ngô Thị Nhân viên HCM', 'employee.hcm2@company.com', '0123456796', 'HR', 'Nhân viên HR', 'EMP008', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
+('880e8400-e29b-41d4-a716-446655440009', 'Bùi Văn Nhân viên DN', 'employee.dn1@company.com', '0123456797', 'Finance', 'Kế toán', 'EMP009', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440003'),
+('880e8400-e29b-41d4-a716-446655440010', 'Lê Văn Nhân viên DN', 'employee.dn2@company.com', '0123456798', 'Finance', 'Kế toán', 'EMP010', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440003');
 
 -- Insert staff records (linking accounts to libraries)
 INSERT INTO staff (staff_id, library_id, account_id, hire_date, salary) VALUES
@@ -230,8 +232,8 @@ INSERT INTO books (book_id, category_id, title, author, publisher, year, isbn, d
 ('aa0e8400-e29b-41d4-a716-446655440005', '770e8400-e29b-41d4-a716-446655440005', 'Lịch sử Việt Nam', 'Trần Trọng Kim', 'NXB Văn hóa', 1920, '978-604-0-00005-5', 'Lịch sử Việt Nam từ thời cổ đại');
 -- --- Sample Accounts (Staff)
 -- INSERT INTO accounts (account_id, username, email, password_hash, full_name, phone, user_type, status, campus_id, library_id, is_deleted, created_at, updated_at) VALUES
--- (gen_random_uuid(), 'admin1', 'admin1@library.edu.vn', '$2a$10$Ydvo/MrcOPK0SSck2ZtBROdjGYAl2pAyPIhJsWmdliVR1Kv2kDTv.', 'Admin User 1', '0123456789', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HN'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
--- (gen_random_uuid(), 'librarian1', 'librarian1@library.edu.vn', '$2a$10$Ydvo/MrcOPK0SSck2ZtBROdjGYAl2pAyPIhJsWmdliVR1Kv2kDTv.', 'Librarian User 1', '0123456790', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HCM'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- (gen_random_uuid(), 'admin1', 'admin1@library.edu.vn', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'Admin User 1', '0123456789', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HN'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- (gen_random_uuid(), 'librarian1', 'librarian1@library.edu.vn', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'Librarian User 1', '0123456790', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HCM'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 --
 -- --- Sample Staff
 -- INSERT INTO staffs (staff_id, account_id, library_id, employee_id, staff_role, department, position, is_active, can_manage_books, can_manage_users, can_manage_staff, can_view_reports, can_process_borrowings, is_deleted, created_at, updated_at) VALUES
