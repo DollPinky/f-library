@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,25 @@ import java.util.UUID;
 public class BookCopyController {
 
     private final BookCopyFacade bookCopyFacade;
+
+    @GetMapping(value = "/generate-all-qr-codes", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(summary = "Generate PDF with all QR codes", description = "Generate a PDF file containing all QR codes with book information")
+    public ResponseEntity<byte[]> generateAllQRCodesPDF() {
+        log.info("Generating PDF with all QR codes");
+
+        try {
+            byte[] pdfBytes = bookCopyFacade.generateAllQRCodesPDF();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=all-book-qr-codes.pdf")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            log.error("Error generating QR codes PDF: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(("Failed to generate PDF: " + e.getMessage()).getBytes());
+        }
+    }
 
     // ==================== QUERY ENDPOINTS ====================
 

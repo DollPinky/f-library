@@ -34,11 +34,18 @@ public class BookCopyFacade {
     @Value("${app.cors.allowed-origins:*}")
     private String corsAllowedOrigins;
 
+    private final BookCopyQRPDFService bookCopyQRPDFService;
+
+    public byte[] generateAllQRCodesPDF() throws Exception {
+        log.info("BookCopyFacade: Generating PDF with all QR codes");
+        return bookCopyQRPDFService.generateAllQRCodesPDF();
+    }
+
     // ==================== QUERY OPERATIONS ====================
     public byte[] generateQRCodeImage(UUID bookCopyID) throws Exception {
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyID)
                 .orElseThrow(() -> new RuntimeException("Book copy not found with ID: " + bookCopyID));
-        String idBookCopy = corsAllowedOrigins + "/api/v1/borrowings/scan-and-borrow/" + bookCopy.getQrCode();
+        String idBookCopy = corsAllowedOrigins + "/api/v1/bookDetail/" + bookCopy.getQrCode();
         return qrCodeService.generateQRCodeImage(idBookCopy, 250, 250);
     }
 

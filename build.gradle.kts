@@ -68,7 +68,8 @@ dependencies {
     implementation("io.hypersistence:hypersistence-utils-hibernate-60:3.7.0")
     implementation ("com.google.zxing:core:3.5.3")
     implementation ("com.google.zxing:javase:3.5.3")
-
+    implementation("org.apache.pdfbox:pdfbox:2.0.27")
+    // Add a font that supports Vietnamese
     implementation("io.github.cdimascio:java-dotenv:5.2.2")
 
 
