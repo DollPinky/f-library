@@ -6,8 +6,6 @@ import com.university.library.dto.BookCopySearchParams;
 import com.university.library.entity.BookCopy;
 import com.university.library.repository.BookCopyRepository;
 
-import com.university.library.service.BookCopyFacade;
-import com.university.library.service.QRCodeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
