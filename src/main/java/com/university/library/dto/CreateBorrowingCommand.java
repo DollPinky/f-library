@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.university.library.config.UUIDDeserializer;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -28,10 +29,10 @@ public class CreateBorrowingCommand {
     private UUID borrowerId;
     
     @NotNull(message = "Ngày mượn không được để trống")
-    private Instant borrowedDate;
+    private LocalDateTime borrowedDate;
     
     @NotNull(message = "Ngày hẹn trả không được để trống")
-    private Instant dueDate;
+    private LocalDateTime dueDate;
     
     private String notes;
     

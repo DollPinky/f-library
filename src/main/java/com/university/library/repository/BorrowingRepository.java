@@ -108,4 +108,10 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
             BookCopy bookCopy,
             Borrowing.BorrowingStatus status
     );
+
+    boolean existsByBorrowerAccountIdAndBookCopyBookCopyIdAndStatus(
+            UUID borrowerId,
+            UUID bookCopyId,
+            Borrowing.BorrowingStatus status
+    );
 } 

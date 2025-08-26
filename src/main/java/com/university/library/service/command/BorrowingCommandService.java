@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
@@ -35,52 +36,42 @@ public class BorrowingCommandService {
     public BorrowingResponse Borrow(String qrCode, UUID borrowerId) {
         log.info("Processing scan and borrow for QR: {} by user: {}", qrCode, borrowerId);
 
-        // Tìm bản sao sách bằng QR code
-        BookCopy bookCopy = bookCopyRepository.findByQrCode(qrCode);
+        // Tìm bản sao sách bằng QR code với lock để tránh race condition
+        BookCopy bookCopy = bookCopyRepository.findByQrCodeWithLock(qrCode);
         if (bookCopy == null) {
             throw new RuntimeException("Không tìm thấy sách với mã QR: " + qrCode);
         }
 
+        // Kiểm tra trạng thái sách
+        if (!bookCopy.getStatus().equals(BookCopy.BookStatus.AVAILABLE)) {
+            throw new RuntimeException("Sách không có sẵn để mượn");
+        }
+
         Account borrower = accountRepository.findById(borrowerId)
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
-
-        if (!bookCopy.getStatus().equals(BookCopy.BookStatus.AVAILABLE)) {
-            throw new RuntimeException("Book copy is not available for borrowing");
-        }
 
         long activeBorrowings = borrowingRepository.countActiveBorrowingsByBorrower(borrowerId);
         if (activeBorrowings >= 5) {
             throw new RuntimeException("User has reached maximum number of active borrowings (5)");
         }
 
-
-        // Tạo lệnh mượn sách
-        CreateBorrowingCommand command = new CreateBorrowingCommand();
-        command.setBookCopyId(bookCopy.getBookCopyId());
-        command.setBorrowerId(borrowerId);
-
-        Instant borrowedDate = command.getBorrowedDate() != null ?
-                command.getBorrowedDate() : Instant.now();
-        Instant dueDate = command.getDueDate() != null ?
-                command.getDueDate() : Instant.now().plus(30, ChronoUnit.DAYS);
-
-
         // Tạo giao dịch mượn sách
         Borrowing borrowing = Borrowing.builder()
                 .bookCopy(bookCopy)
                 .borrower(borrower)
-                .borrowedDate(borrowedDate)
-                .dueDate(dueDate)
+                .borrowedDate(LocalDateTime.now())
+                .dueDate(LocalDateTime.now().plusDays(30))
                 .status(BORROWED)
-                .notes(command.getNotes())
                 .build();
 
         Borrowing savedBorrowing = borrowingRepository.save(borrowing);
 
+        // Cập nhật trạng thái sách thành BORROWED
+        bookCopy.setStatus(BookCopy.BookStatus.BORROWED);
+        bookCopyRepository.save(bookCopy);
+
         return BorrowingResponse.fromEntity(savedBorrowing);
     }
-
-
     
 
     /**
@@ -111,7 +102,7 @@ public class BorrowingCommandService {
         double fine = borrowing.calculateFine();
 
         borrowing.setStatus(Borrowing.BorrowingStatus.RETURNED);
-        borrowing.setReturnedDate(Instant.now());
+        borrowing.setReturnedDate(LocalDateTime.now());
         borrowing.setFineAmount(fine);
 
         bookCopy.setStatus(BookCopy.BookStatus.AVAILABLE);

@@ -3,6 +3,8 @@ package com.university.library.controller;
 import com.university.library.dto.*;
 import com.university.library.base.StandardResponse;
 import com.university.library.entity.Account;
+import com.university.library.entity.Borrowing;
+import com.university.library.repository.BorrowingRepository;
 import com.university.library.service.command.BorrowingCommandService;
 import com.university.library.service.query.BorrowingQueryService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,35 @@ public class BorrowingController {
 
     private final BorrowingCommandService borrowingCommandService;
     private final BorrowingQueryService borrowingQueryService;
+    private final BorrowingRepository borrowingRepository;
+
+    @GetMapping("/check-borrowed")
+    public ResponseEntity<StandardResponse<Boolean>> checkIfUserBorrowedBookCopy(
+            @RequestParam UUID bookCopyId,
+            @AuthenticationPrincipal Account userPrincipal) {
+        try {
+            log.info("Checking if user has borrowed book copy: {}", bookCopyId);
+
+            UUID userId = userPrincipal.getAccountId();
+
+            // Kiểm tra xem user có đang mượn sách này không
+            boolean hasBorrowed = borrowingRepository.existsByBorrowerAccountIdAndBookCopyBookCopyIdAndStatus(
+                    userId,
+                    bookCopyId,
+                    Borrowing.BorrowingStatus.BORROWED
+            );
+
+            String message = hasBorrowed ?
+                    "Người dùng đã mượn sách này" :
+                    "Người dùng chưa mượn sách này";
+
+            return ResponseEntity.ok(StandardResponse.success(message, hasBorrowed));
+        } catch (Exception e) {
+            log.error("Error checking borrowing status: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest()
+                    .body(StandardResponse.error("Không thể kiểm tra trạng thái mượn sách: " + e.getMessage()));
+        }
+    }
 
     /**
      * Tạo yêu cầu mượn sách hoặc đặt sách

@@ -1,10 +1,8 @@
 package com.university.library.repository;
 
 import com.university.library.entity.BookCopy;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -69,4 +67,8 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, UUID>, JpaSp
     @EntityGraph(attributePaths = {"book"})
     @Query("SELECT bc FROM BookCopy bc")
     List<BookCopy> findAllBookCopiesWithBook();
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT bc FROM BookCopy bc WHERE bc.qrCode = :qrCode")
+    BookCopy findByQrCodeWithLock(String qrCode);
 }
