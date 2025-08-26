@@ -1,6 +1,6 @@
 package com.university.library.dto;
 
-import com.university.library.entity.Account;
+import com.university.library.entity.User;
 import lombok.*;
 
 import java.time.Instant;
@@ -18,18 +18,18 @@ public class AccountResponse {
     private String department;
     private String position;
     private String employeeCode;
-    private Account.AccountRole role;
+    private User.AccountRole role;
     private CampusResponse campus;
     private Instant createdAt;
     private Instant updatedAt;
 
-    public static AccountResponse fromEntity(Account account) {
+    public static AccountResponse fromEntity(User account) {
         if (account == null) {
             return null;
         }
 
         return AccountResponse.builder()
-                .accountId(account.getAccountId())
+                .accountId(account.getUserId())
                 .fullName(account.getFullName())
                 .email(account.getEmail())
                 .phone(account.getPhone())

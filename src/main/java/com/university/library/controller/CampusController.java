@@ -7,6 +7,7 @@ import com.university.library.entity.Campus;
 import com.university.library.service.CampusFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @RequestMapping(CampusConstants.API_BASE_PATH)
 @RequiredArgsConstructor
 @Tag(name = "Campus Management", description = "APIs for managing campuses in the library system")
+@SecurityRequirement(name = "api")
 public class CampusController {
 
     private final CampusFacade campusFacade;

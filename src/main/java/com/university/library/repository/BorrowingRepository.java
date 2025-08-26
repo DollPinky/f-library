@@ -21,7 +21,7 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
     /**
      * Tìm tất cả borrowings của một người dùng
      */
-    List<Borrowing> findByBorrowerAccountId(UUID borrowerId);
+    List<Borrowing> findByBorrowerUserId(UUID borrowerId);
     
     /**
      * Tìm borrowings theo trạng thái
@@ -82,13 +82,13 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
     /**
      * Đếm số sách đang mượn của một người dùng (bao gồm cả chờ xác nhận)
      */
-    @Query("SELECT COUNT(b) FROM Borrowing b WHERE b.borrower.accountId = :borrowerId AND b.status IN ('BORROWED', 'PENDING_LIBRARIAN')")
+    @Query("SELECT COUNT(b) FROM Borrowing b WHERE b.borrower.userId = :borrowerId AND b.status IN ('BORROWED', 'PENDING_LIBRARIAN')")
     long countActiveBorrowingsByBorrower(@Param("borrowerId") UUID borrowerId);
     
     /**
      * Tìm borrowings với pagination
      */
-    Page<Borrowing> findByBorrowerAccountId(UUID borrowerId, Pageable pageable);
+    Page<Borrowing> findByBorrowerUserId(UUID borrowerId, Pageable pageable);
     
     /**
      * Tìm borrowings theo thư viện
@@ -109,7 +109,7 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
             Borrowing.BorrowingStatus status
     );
 
-    boolean existsByBorrowerAccountIdAndBookCopyBookCopyIdAndStatus(
+    boolean existsByBorrowerUserIdAndBookCopyBookCopyIdAndStatus(
             UUID borrowerId,
             UUID bookCopyId,
             Borrowing.BorrowingStatus status

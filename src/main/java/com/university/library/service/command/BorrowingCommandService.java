@@ -1,21 +1,18 @@
 package com.university.library.service.command;
 
 import com.university.library.dto.BorrowingResponse;
-import com.university.library.dto.CreateBorrowingCommand;
 import com.university.library.entity.Borrowing;
 import com.university.library.entity.BookCopy;
-import com.university.library.entity.Account;
+import com.university.library.entity.User;
 import com.university.library.repository.BorrowingRepository;
 import com.university.library.repository.BookCopyRepository;
-import com.university.library.repository.AccountRepository;
+import com.university.library.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static com.university.library.entity.Borrowing.BorrowingStatus.BORROWED;
@@ -27,7 +24,7 @@ public class BorrowingCommandService {
 
     private final BorrowingRepository borrowingRepository;
     private final BookCopyRepository bookCopyRepository;
-    private final AccountRepository accountRepository;
+    private final UserRepository userRepository;
 
     /**
      * Tạo yêu cầu mượn sách hoặc đặt sách
@@ -47,7 +44,7 @@ public class BorrowingCommandService {
             throw new RuntimeException("Sách không có sẵn để mượn");
         }
 
-        Account borrower = accountRepository.findById(borrowerId)
+        User borrower = userRepository.findById(borrowerId)
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
         long activeBorrowings = borrowingRepository.countActiveBorrowingsByBorrower(borrowerId);

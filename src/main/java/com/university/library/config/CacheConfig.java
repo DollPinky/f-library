@@ -47,11 +47,11 @@ public class CacheConfig {
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(config)
-                .withCacheConfiguration("books", 
+                .withCacheConfiguration("books",
                     RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(15)))
-                .withCacheConfiguration("categories", 
+                .withCacheConfiguration("categories",
                     RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)))
-                .withCacheConfiguration("libraries", 
+                .withCacheConfiguration("libraries",
                     RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(60)))
                 .build();
     }
@@ -78,5 +78,5 @@ public class CacheConfig {
         template.afterPropertiesSet();
         return template;
     }
-} 
+}
 

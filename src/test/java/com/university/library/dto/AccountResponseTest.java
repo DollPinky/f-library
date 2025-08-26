@@ -1,10 +1,9 @@
 package com.university.library.dto;
 
-import com.university.library.entity.Account;
+import com.university.library.entity.User;
 import com.university.library.entity.Campus;
 import com.university.library.dto.AccountResponse.CampusResponse;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -23,7 +22,7 @@ class AccountResponseTest {
         String department = "IT";
         String position = "Developer";
         String employeeCode = "EMP123";
-        Account.AccountRole role = Account.AccountRole.LIBRARIAN;
+        User.AccountRole role = User.AccountRole.LIBRARIAN;
         Instant createdAt = Instant.now();
         Instant updatedAt = Instant.now();
 
@@ -34,7 +33,7 @@ class AccountResponseTest {
         when(campus.getCode()).thenReturn("MC001");
         when(campus.getAddress()).thenReturn("123 Main St");
 
-        Account account = mock(Account.class);
+        User account = mock(User.class);
         when(account.getAccountId()).thenReturn(accountId);
         when(account.getFullName()).thenReturn(fullName);
         when(account.getEmail()).thenReturn(email);
@@ -92,7 +91,7 @@ class AccountResponseTest {
 
     @Test
     void testFromEntityIncludesCampusResponseWhenCampusPresent() {
-        Account account = mock(Account.class);
+        User account = mock(User.class);
         Campus campus = mock(Campus.class);
 
         when(account.getCampus()).thenReturn(campus);
@@ -118,7 +117,7 @@ class AccountResponseTest {
 
     @Test
     void testFromEntityHandlesNullCampus() {
-        Account account = mock(Account.class);
+        User account = mock(User.class);
         when(account.getCampus()).thenReturn(null);
 
         AccountResponse response = AccountResponse.fromEntity(account);
@@ -129,7 +128,7 @@ class AccountResponseTest {
 
     @Test
     void testFromEntityHandlesNullOptionalFields() {
-        Account account = mock(Account.class);
+        User account = mock(User.class);
         when(account.getAccountId()).thenReturn(UUID.randomUUID());
         when(account.getFullName()).thenReturn("Jane Smith");
         when(account.getEmail()).thenReturn("jane.smith@example.com");
@@ -137,7 +136,7 @@ class AccountResponseTest {
         when(account.getDepartment()).thenReturn(null);
         when(account.getPosition()).thenReturn(null);
         when(account.getEmployeeCode()).thenReturn("EMP456");
-        when(account.getRole()).thenReturn(Account.AccountRole.READER);
+        when(account.getRole()).thenReturn(User.AccountRole.READER);
         when(account.getCampus()).thenReturn(null);
         when(account.getCreatedAt()).thenReturn(Instant.now());
         when(account.getUpdatedAt()).thenReturn(Instant.now());
@@ -152,6 +151,6 @@ class AccountResponseTest {
         assertEquals("jane.smith@example.com", response.getEmail());
         assertEquals("0987654321", response.getPhone());
         assertEquals("EMP456", response.getEmployeeCode());
-        assertEquals(Account.AccountRole.READER, response.getRole());
+        assertEquals(User.AccountRole.READER, response.getRole());
     }
 }

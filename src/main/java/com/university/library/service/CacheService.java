@@ -135,5 +135,5 @@ public class CacheService {
         redisTemplate.expire(key, ttl);
         log.debug("Set TTL for Redis key: {} - {}", key, ttl);
     }
-} 
+}
 

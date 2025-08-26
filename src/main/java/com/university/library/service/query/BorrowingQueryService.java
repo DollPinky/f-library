@@ -77,7 +77,7 @@ public class BorrowingQueryService {
         log.info("Getting borrowings for user: {} with pagination: page={}, size={}", userId, page, size);
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Borrowing> borrowingPage = borrowingRepository.findByBorrowerAccountId(userId, pageable);
+        Page<Borrowing> borrowingPage = borrowingRepository.findByBorrowerUserId(userId, pageable);
         
         List<BorrowingResponse> borrowings = borrowingPage.getContent().stream()
             .map(BorrowingResponse::fromEntity)

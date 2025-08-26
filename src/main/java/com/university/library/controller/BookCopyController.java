@@ -10,6 +10,7 @@ import com.university.library.dto.CreateBookCopyFromBookCommand;
 import com.university.library.service.BookCopyFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/book-copies")
 @RequiredArgsConstructor
 @Tag(name = "Book Copy Management", description = "APIs for managing book copies in the library system")
+@SecurityRequirement(name = "api")
 public class BookCopyController {
 
     private final BookCopyFacade bookCopyFacade;

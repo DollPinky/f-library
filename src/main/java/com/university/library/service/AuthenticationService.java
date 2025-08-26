@@ -1,14 +1,16 @@
 package com.university.library.service;
 
+
 import com.university.library.dto.AccountResponse;
 import com.university.library.dto.LoginRequest;
 import com.university.library.dto.RegisterRequest;
+import com.university.library.dto.UserResponse;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
-import java.util.UUID;
-
-public interface AccountService {
+public interface AuthenticationService extends UserDetailsService {
     AccountResponse register(RegisterRequest request);
-    AccountResponse login(LoginRequest request);
-    AccountResponse getCurrentAccount();
-    AccountResponse getAccountById(UUID accountId);
+
+    UserResponse login(LoginRequest loginRequest);
+
+
 }

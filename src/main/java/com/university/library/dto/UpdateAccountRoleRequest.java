@@ -1,6 +1,6 @@
 package com.university.library.dto;
 
-import com.university.library.entity.Account;
+import com.university.library.entity.User;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,5 +13,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateAccountRoleRequest {
     @NotNull(message = "Vai trò không được để trống")
-    private Account.AccountRole role;
+    private User.AccountRole role;
 }

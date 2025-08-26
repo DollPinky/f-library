@@ -9,6 +9,7 @@ import com.university.library.service.BookFacade;
 import com.university.library.service.query.BookCopyQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/books")
 @RequiredArgsConstructor
 @Tag(name = "Book Management", description = "APIs for managing books in the library system")
+@SecurityRequirement(name = "api")
 public class BookController {
 
     private final BookFacade bookFacade;

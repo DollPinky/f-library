@@ -26,7 +26,14 @@ spring:
         jdbc:
           time_zone: Asia/Ho_Chi_Minh
     defer-datasource-initialization: true
-  
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}
+      password:
+      timeout: 2000ms
+
   # Cache Configuration
   cache:
     type: redis
@@ -47,14 +54,6 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-
-  # Redis Configuration
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6380}
-      password:
-      timeout: 2000ms
 
 # Server Configuration
 server:
@@ -113,7 +112,13 @@ app:
   cors:
     allowed-origins: http://localhost:3000/
 
-
+jwt:
+  secret : a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90
+  expiration:
+    ms: 3600000
+  refresh:
+    expiration:
+      ms: 84600000
 
 
 

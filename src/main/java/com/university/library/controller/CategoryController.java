@@ -9,6 +9,7 @@ import com.university.library.dto.CreateCategoryCommand;
 import com.university.library.service.CategoryFacade;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 @Tag(name = "Category Management", description = "APIs for managing categories in the library system")
+@SecurityRequirement(name = "api")
 public class CategoryController {
 
     private final CategoryFacade categoryFacade;

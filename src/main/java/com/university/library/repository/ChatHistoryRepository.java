@@ -12,7 +12,6 @@ import java.util.UUID;
 
 @Repository
 public interface ChatHistoryRepository extends JpaRepository<ChatHistory, UUID> {
-    @Query("SELECT ch.prompt FROM ChatHistory ch WHERE ch.account.accountId = :accountId AND ch.response IS NOT NULL ORDER BY ch.createdAt DESC LIMIT 10")
-    List<String> findTop5Prompts(@Param("accountId") UUID accountId);
+
 
 }

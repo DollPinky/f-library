@@ -2,11 +2,12 @@ package com.university.library.controller;
 
 import com.university.library.dto.*;
 import com.university.library.base.StandardResponse;
-import com.university.library.entity.Account;
+import com.university.library.entity.User;
 import com.university.library.entity.Borrowing;
 import com.university.library.repository.BorrowingRepository;
 import com.university.library.service.command.BorrowingCommandService;
 import com.university.library.service.query.BorrowingQueryService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/borrowings")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "api")
 public class BorrowingController {
 
     private final BorrowingCommandService borrowingCommandService;
@@ -29,14 +31,14 @@ public class BorrowingController {
     @GetMapping("/check-borrowed")
     public ResponseEntity<StandardResponse<Boolean>> checkIfUserBorrowedBookCopy(
             @RequestParam UUID bookCopyId,
-            @AuthenticationPrincipal Account userPrincipal) {
+            @AuthenticationPrincipal User userPrincipal) {
         try {
             log.info("Checking if user has borrowed book copy: {}", bookCopyId);
 
-            UUID userId = userPrincipal.getAccountId();
+            UUID userId = userPrincipal.getUserId();
 
             // Kiểm tra xem user có đang mượn sách này không
-            boolean hasBorrowed = borrowingRepository.existsByBorrowerAccountIdAndBookCopyBookCopyIdAndStatus(
+            boolean hasBorrowed = borrowingRepository.existsByBorrowerUserIdAndBookCopyBookCopyIdAndStatus(
                     userId,
                     bookCopyId,
                     Borrowing.BorrowingStatus.BORROWED
@@ -60,13 +62,13 @@ public class BorrowingController {
     @PostMapping("/borrow")
     public ResponseEntity<StandardResponse<BorrowingResponse>> scanAndBorrow(
             @RequestBody ScanAndBorrowCommand command,
-            @AuthenticationPrincipal Account userPrincipal) {
+            @AuthenticationPrincipal User userPrincipal) {
 
         try {
             log.info("Scan and borrow for QR code: {}", command.getQrCode());
 
             // Lấy ID người dùng từ authentication
-            UUID borrowerId = userPrincipal.getAccountId();
+            UUID borrowerId = userPrincipal.getUserId();
 
             BorrowingResponse borrowing = borrowingCommandService.Borrow(
                     command.getQrCode(),

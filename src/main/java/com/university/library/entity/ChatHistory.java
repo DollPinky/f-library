@@ -35,8 +35,8 @@ public class ChatHistory {
     private float[] embedding;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id")
-    private Account account;
+    @JoinColumn(name = "user_id")
+    private User account;
 
     private LocalDateTime createdAt;
 }

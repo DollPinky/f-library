@@ -3,12 +3,19 @@ package com.university.library.entity;
 import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Entity
 @Table(name = "accounts")
@@ -17,11 +24,11 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Account extends BaseEntity implements org.springframework.security.core.userdetails.UserDetails {
+public class User extends BaseEntity implements org.springframework.security.core.userdetails.UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "account_id")
-    private UUID accountId;
+    @Column(name = "userId")
+    private UUID userId;
 
     @Column(name = "full_name", nullable = false, length = 255)
     private String fullName;
@@ -67,6 +74,19 @@ public class Account extends BaseEntity implements org.springframework.security.
         READER
     }
 
+    private int tokenVersion;
+
+    public void incrementTokenVersion() {
+        this.tokenVersion++;
+    }
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_name"))
+    private Set<Role> roles = new HashSet<>();
+
     @Override
     public String getUsername() {
         return email;
@@ -96,9 +116,25 @@ public class Account extends BaseEntity implements org.springframework.security.
     public boolean isEnabled() {
         return isActive != null ? isActive : true;
     }
-
+    public Set<String> getAllPermissions() {
+        return roles.stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getCode)
+                .collect(Collectors.toSet());
+    }
     @Override
-    public java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> getAuthorities() {
-        return java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role.name()));
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+
+        // Thêm roles dưới dạng "ROLE_ADMIN"
+        authorities.addAll(roles.stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                .collect(Collectors.toSet()));
+
+        // Thêm trực tiếp permissions
+        authorities.addAll(
+                getAllPermissions().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toSet()));
+
+        return authorities;
     }
 } 
