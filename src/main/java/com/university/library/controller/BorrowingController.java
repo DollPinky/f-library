@@ -1,9 +1,7 @@
 package com.university.library.controller;
 
-import com.university.library.dto.BorrowingResponse;
-import com.university.library.dto.CreateBorrowingCommand;
+import com.university.library.dto.*;
 import com.university.library.base.StandardResponse;
-import com.university.library.dto.ScanAndBorrowCommand;
 import com.university.library.entity.Account;
 import com.university.library.service.command.BorrowingCommandService;
 import com.university.library.service.query.BorrowingQueryService;
@@ -39,7 +37,7 @@ public class BorrowingController {
             // Lấy ID người dùng từ authentication
             UUID borrowerId = userPrincipal.getAccountId();
 
-            BorrowingResponse borrowing = borrowingCommandService.scanAndBorrow(
+            BorrowingResponse borrowing = borrowingCommandService.Borrow(
                     command.getQrCode(),
                     borrowerId
             );
@@ -57,22 +55,23 @@ public class BorrowingController {
     /**
      * Trả sách
      */
-    @PutMapping("/{borrowingId}/return")
-    public ResponseEntity<StandardResponse<BorrowingResponse>> returnBook(@PathVariable UUID borrowingId) {
+    @PutMapping("/return")
+    public ResponseEntity<StandardResponse<BorrowingResponse>> returnBook(
+            @RequestBody ReturnBookCommand command) {
         try {
-            log.info("Returning book for borrowing: {}", borrowingId);
-            
-            BorrowingResponse borrowing = borrowingCommandService.returnBook(borrowingId);
-            
-            String message = borrowing.getFineAmount() > 0 ? 
-                "Trả sách thành công. Phí phạt: " + borrowing.getFineAmount() + " VND" :
-                "Trả sách thành công";
-            
+            log.info("Returning book for QR code: {}", command.getQrCode());
+
+            BorrowingResponse borrowing = borrowingCommandService.returnBook(command.getQrCode());
+
+            String message = borrowing.getFineAmount() > 0 ?
+                    "Trả sách thành công. Phí phạt: " + borrowing.getFineAmount() + " VND" :
+                    "Trả sách thành công";
+
             return ResponseEntity.ok(StandardResponse.success(message, borrowing));
         } catch (Exception e) {
             log.error("Error returning book: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
-                .body(StandardResponse.error("Không thể trả sách: " + e.getMessage()));
+                    .body(StandardResponse.error("Không thể trả sách: " + e.getMessage()));
         }
     }
 
@@ -80,19 +79,20 @@ public class BorrowingController {
     /**
      * Báo mất sách
      */
-    @PutMapping("/{borrowingId}/lost")
-    public ResponseEntity<StandardResponse<BorrowingResponse>> reportLost(@PathVariable UUID borrowingId) {
+    @PutMapping("/lost")
+    public ResponseEntity<StandardResponse<BorrowingResponse>> reportLost(
+            @RequestBody ReportLostCommand command) {
         try {
-            log.info("Reporting lost book for borrowing: {}", borrowingId);
-            
-            BorrowingResponse borrowing = borrowingCommandService.reportLost(borrowingId);
-            
+            log.info("Reporting lost book for QR code: {}", command.getQrCode());
+
+            BorrowingResponse borrowing = borrowingCommandService.reportLost(command.getQrCode());
+
             return ResponseEntity.ok(StandardResponse.success(
-                "Đã báo mất sách. Phí phạt: " + borrowing.getFineAmount() + " VND", borrowing));
+                    "Đã báo mất sách. Phí phạt: " + borrowing.getFineAmount() + " VND", borrowing));
         } catch (Exception e) {
             log.error("Error reporting lost book: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
-                .body(StandardResponse.error("Không thể báo mất sách: " + e.getMessage()));
+                    .body(StandardResponse.error("Không thể báo mất sách: " + e.getMessage()));
         }
     }
 
