@@ -94,9 +94,14 @@ public class BorrowingController {
 
             BorrowingResponse borrowing = borrowingCommandService.returnBook(command.getQrCode());
 
-            String message = borrowing.getFineAmount() > 0 ?
-                    "Trả sách thành công. Phí phạt: " + borrowing.getFineAmount() + " VND" :
-                    "Trả sách thành công";
+            String message;
+            if (borrowing.getStatus() == Borrowing.BorrowingStatus.OVERDUE) {
+                message = "Trả sách thành công (QUÁ HẠN). Phí phạt: " + borrowing.getFineAmount() + " VND";
+            } else {
+                message = borrowing.getFineAmount() > 0 ?
+                        "Trả sách thành công. Phí phạt: " + borrowing.getFineAmount() + " VND" :
+                        "Trả sách thành công";
+            }
 
             return ResponseEntity.ok(StandardResponse.success(message, borrowing));
         } catch (Exception e) {

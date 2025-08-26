@@ -61,31 +61,34 @@ public class Borrowing extends BaseEntity {
      * Kiểm tra xem có quá hạn không
      */
     public boolean isOverdue() {
-        return status == BorrowingStatus.BORROWED && LocalDateTime.now().isAfter(dueDate);
+        if (status == BorrowingStatus.RETURNED || status == BorrowingStatus.OVERDUE) {
+            // Đã trả rồi thì kiểm tra ngày trả
+            return returnedDate != null && returnedDate.isAfter(dueDate);
+        } else if (status == BorrowingStatus.BORROWED) {
+            // Đang mượn thì kiểm tra hiện tại
+            return LocalDateTime.now().isAfter(dueDate);
+        }
+        return false;
     }
+
     /**
      * Tính số ngày quá hạn
      */
     public long getOverdueDays() {
-        if (!isActuallyOverdue()) {
+        if (!isOverdue()) {
             return 0;
         }
 
-        LocalDateTime compareDate = (returnedDate != null) ? returnedDate : LocalDateTime.now();
+        LocalDateTime compareDate;
+        if (returnedDate != null) {
+            // Đã trả: tính từ ngày trả
+            compareDate = returnedDate;
+        } else {
+            // Chưa trả: tính đến hiện tại
+            compareDate = LocalDateTime.now();
+        }
 
         return ChronoUnit.DAYS.between(dueDate, compareDate);
-    }
-
-    private boolean isActuallyOverdue() {
-        if (status == BorrowingStatus.BORROWED && LocalDateTime.now().isAfter(dueDate)) {
-            return true;
-        }
-
-        if (returnedDate != null && returnedDate.isAfter(dueDate)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -97,14 +100,12 @@ public class Borrowing extends BaseEntity {
             return 0.0;
         }
 
-
         final double DAILY_FINE = 10000.0; // 10,000 VND per day
         final long MAX_FINE_DAYS = 30; // Tối đa tính phí 30 ngày
 
         long chargingDays = Math.min(overdueDays, MAX_FINE_DAYS);
         return chargingDays * DAILY_FINE;
     }
-
 
 } 
 

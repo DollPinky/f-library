@@ -95,23 +95,30 @@ public class BorrowingCommandService {
                 )
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch mượn sách cho sách này"));
 
-        if (!borrowing.getStatus().equals(BORROWED)) {
+        if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.BORROWED)) {
             throw new RuntimeException("Sách không trong trạng thái đang mượn");
         }
 
+        LocalDateTime returnDate = LocalDateTime.now();
         double fine = borrowing.calculateFine();
 
-        borrowing.setStatus(Borrowing.BorrowingStatus.RETURNED);
-        borrowing.setReturnedDate(LocalDateTime.now());
+        if (returnDate.isAfter(borrowing.getDueDate())) {
+            borrowing.setStatus(Borrowing.BorrowingStatus.OVERDUE);
+        } else {
+            borrowing.setStatus(Borrowing.BorrowingStatus.RETURNED);
+        }
+
+        borrowing.setReturnedDate(returnDate);
         borrowing.setFineAmount(fine);
 
+        // Cập nhật trạng thái book copy
         bookCopy.setStatus(BookCopy.BookStatus.AVAILABLE);
         bookCopyRepository.save(bookCopy);
 
         Borrowing savedBorrowing = borrowingRepository.save(borrowing);
 
-        log.info("Successfully returned book for borrowing: {} with fine: {}",
-                borrowing.getBorrowingId(), fine);
+        log.info("Successfully returned book for borrowing: {} with status: {} and fine: {}",
+                borrowing.getBorrowingId(), borrowing.getStatus(), fine);
         return BorrowingResponse.fromEntity(savedBorrowing);
     }
 
