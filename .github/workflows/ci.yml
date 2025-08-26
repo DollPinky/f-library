@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, cicd ]
   pull_request:
     branches: [ main ]
 
@@ -115,6 +115,12 @@ jobs:
         echo "Stopping project infrastructure..."
         docker-compose down -v
 
+    - name: Deploy project to server
+      if: always()
+      run: |
+        echo "Deploy project to server"
+        docker-compose up -d
+
     - name: Build status
       run: |
         if [ ${{ job.status }} == 'success' ]; then
@@ -122,6 +128,7 @@ jobs:
           echo "✅ Docker Compose infrastructure working"
           echo "✅ Database initialization verified"
           echo "✅ API endpoints responding"
+          echo "✅ Deploy project to server"
         else
           echo "❌ Project test failed!"
           exit 1
