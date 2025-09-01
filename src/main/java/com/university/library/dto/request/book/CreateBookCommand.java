@@ -38,28 +38,8 @@ public class CreateBookCommand {
     private UUID categoryId;
     
     private String description;
-    
-    private List<BookCopyInfo> copies;
-    
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class BookCopyInfo {
-        @JsonDeserialize(using = UUIDDeserializer.class)
-        private UUID libraryId;
-        
-        @Positive(message = "Số lượng phải là số dương")
-        private Integer quantity;
-        
-        private String location;
-        
-        public boolean isValid() {
-            if (libraryId != null && quantity != null) {
-                return quantity > 0;
-            }
-            return true; 
-        }
-    }
+
+
+
 } 
 

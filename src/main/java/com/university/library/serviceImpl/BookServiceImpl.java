@@ -7,9 +7,7 @@ import com.university.library.dto.request.book.CreateBookCommand;
 import com.university.library.dto.request.book.UpdateBookCommand;
 import com.university.library.dto.response.book.BookResponse;
 import com.university.library.entity.Book;
-import com.university.library.entity.BookCopy;
 import com.university.library.entity.Category;
-import com.university.library.entity.Library;
 import com.university.library.repository.BookCopyRepository;
 import com.university.library.repository.BookRepository;
 import com.university.library.repository.CategoryRepository;
@@ -36,8 +34,7 @@ import java.util.stream.Collectors;
 public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final CategoryRepository categoryRepository;
-    private final BookCopyRepository bookCopyRepository;
-    private final LibraryRepository libraryRepository;
+
     /**
      QueryBook
      */
@@ -160,9 +157,6 @@ public class BookServiceImpl implements BookService {
 
         Book savedBook = bookRepository.save(book);
 
-        if (command.getCopies() != null && !command.getCopies().isEmpty()) {
-            createBookCopies(savedBook, command.getCopies());
-        }
 
         BookResponse bookResponse = BookResponse.fromEntity(savedBook);
 
@@ -221,40 +215,6 @@ public class BookServiceImpl implements BookService {
         bookRepository.deleteById(bookId);
 
         log.info(BookConstants.LOG_BOOK_DELETED, bookId);
-    }
-
-
-
-
-
-    /**
-     * Tạo book copies cho một book
-     */
-    private void createBookCopies(Book book, List<CreateBookCommand.BookCopyInfo> copyInfos) {
-        log.info("Creating {} book copies for book: {}", copyInfos.size(), book.getBookId());
-
-        List<BookCopy> bookCopies = new ArrayList<>();
-
-        for (CreateBookCommand.BookCopyInfo copyInfo : copyInfos) {
-            Library library = libraryRepository.findById(copyInfo.getLibraryId())
-                    .orElseThrow(() -> new RuntimeException("Library not found with ID: " + copyInfo.getLibraryId()));
-
-            for (int i = 0; i < copyInfo.getQuantity(); i++) {
-
-                BookCopy bookCopy = BookCopy.builder()
-                        .book(book)
-                        .library(library)
-                        .shelfLocation(copyInfo.getLocation())
-                        .status(BookCopy.BookStatus.AVAILABLE)
-                        .build();
-
-                bookCopies.add(bookCopy);
-            }
-        }
-
-        bookCopyRepository.saveAll(bookCopies);
-
-        log.info("Successfully created {} book copies for book: {}", bookCopies.size(), book.getBookId());
     }
 
 
