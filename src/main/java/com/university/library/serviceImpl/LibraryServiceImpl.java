@@ -229,8 +229,9 @@ public class LibraryServiceImpl implements LibraryService {
             throw new RuntimeException(LibraryConstants.ERROR_LIBRARY_IN_USE);
         }
 
-        libraryRepository.delete(library);
+        library.setIsDeleted(true);
 
+        libraryRepository.save(library);
 
         log.info(LibraryConstants.LOG_LIBRARY_DELETED, libraryId);
     }
