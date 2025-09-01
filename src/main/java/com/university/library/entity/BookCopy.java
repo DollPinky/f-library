@@ -29,8 +29,8 @@ public class BookCopy extends BaseEntity {
     private Book book;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "library_id", nullable = false)
-    private Library library;
+    @JoinColumn(name = "campus_id", nullable = false)
+    private Campus campus;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)

@@ -62,7 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         // Check if employee code already exists
-        if (userRepository.existsByEmployeeCode(request.getEmployeeCode())) {
+        if (userRepository.existsByEmployeeCode(request.getCompanyAccount())) {
             throw new RuntimeException("Mã nhân viên đã tồn tại trong hệ thống");
         }
 
@@ -77,7 +77,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .phone(request.getPhone())
                 .department(request.getDepartment())
                 .position(request.getPosition())
-                .employeeCode(request.getEmployeeCode())
+                .companyAccount(request.getCompanyAccount())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(User.AccountRole.READER) // Default role for new registrations
                 .campus(campus)

@@ -2,7 +2,6 @@ package com.university.library.entity;
 
 import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,8 +30,11 @@ public class Campus extends BaseEntity {
     
     @Column(name = "address", nullable = false, columnDefinition = "TEXT")
     private String address;
-    
+
     @OneToMany(mappedBy = "campus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Library> libraries = new ArrayList<>();
+    private List<BookCopy> bookCopies = new ArrayList<>();
+
+    @OneToMany(mappedBy = "campus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<User> users = new ArrayList<>();
 } 
 

@@ -80,11 +80,7 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
      */
     Page<Borrowing> findByBorrowerUserId(UUID borrowerId, Pageable pageable);
     
-    /**
-     * Tìm borrowings theo thư viện
-     */
-    @Query("SELECT b FROM Borrowing b WHERE b.bookCopy.library.libraryId = :libraryId")
-    List<Borrowing> findByLibraryId(@Param("libraryId") UUID libraryId);
+
     
     /**
      * Tìm tất cả borrowings với pagination

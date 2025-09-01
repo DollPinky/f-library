@@ -176,7 +176,6 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = Category.builder()
                 .name(command.getName())
                 .description(command.getDescription())
-                .color(command.getColor() != null ? command.getColor() : "#5a735a")
                 .parentCategory(parentCategory)
                 .build();
 
@@ -215,7 +214,6 @@ public class CategoryServiceImpl implements CategoryService {
 
         existingCategory.setName(command.getName());
         existingCategory.setDescription(command.getDescription());
-        existingCategory.setColor(command.getColor() != null ? command.getColor() : "#5a735a");
         existingCategory.setParentCategory(parentCategory);
 
         Category updatedCategory = categoryRepository.save(existingCategory);

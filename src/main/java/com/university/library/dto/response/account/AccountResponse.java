@@ -17,7 +17,7 @@ public class AccountResponse {
     private String phone;
     private String department;
     private String position;
-    private String employeeCode;
+    private String companyAccount;
     private User.AccountRole role;
     private CampusResponse campus;
     private Instant createdAt;
@@ -35,7 +35,7 @@ public class AccountResponse {
                 .phone(account.getPhone())
                 .department(account.getDepartment())
                 .position(account.getPosition())
-                .employeeCode(account.getEmployeeCode())
+                .companyAccount(account.getCompanyAccount())
                 .role(account.getRole())
                 .campus(CampusResponse.fromEntity(account.getCampus()))
                 .createdAt(account.getCreatedAt())

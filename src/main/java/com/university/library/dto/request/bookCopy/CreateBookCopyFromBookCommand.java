@@ -33,7 +33,7 @@ public class CreateBookCopyFromBookCommand {
     public static class BookCopyInfo {
         @NotNull(message = "Thư viện không được để trống")
         @JsonDeserialize(using = UUIDDeserializer.class)
-        private UUID libraryId;
+        private UUID campusId;
         
         @NotNull(message = "Số lượng không được để trống")
         @Positive(message = "Số lượng phải là số dương")

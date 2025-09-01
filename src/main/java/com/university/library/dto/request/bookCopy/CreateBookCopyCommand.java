@@ -25,9 +25,9 @@ public class CreateBookCopyCommand {
     
     @NotNull(message = "ID thư viện không được để trống")
     @JsonDeserialize(using = UUIDDeserializer.class)
-    private UUID libraryId;
+    private UUID campusId;
 
-    
+
     @Size(max = 100, message = "Vị trí kệ không được vượt quá 100 ký tự")
     private String shelfLocation;
     

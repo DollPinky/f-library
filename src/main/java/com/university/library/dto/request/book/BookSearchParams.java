@@ -23,7 +23,7 @@ public class BookSearchParams {
     private UUID categoryId;
     
     @Schema(description = "ID thư viện (optional - nếu không có sẽ search tất cả thư viện)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
-    private UUID libraryId;
+    private UUID campusId;
     
     @Schema(description = "Trạng thái sách (optional)", example = "AVAILABLE", allowableValues = {"AVAILABLE", "BORROWED", "RESERVED", "LOST", "DAMAGED"})
     @Pattern(regexp = "^(AVAILABLE|BORROWED|RESERVED|LOST|DAMAGED)?$", 

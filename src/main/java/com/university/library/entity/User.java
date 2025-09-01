@@ -52,8 +52,8 @@ public class User extends BaseEntity implements org.springframework.security.cor
     @Column(name = "position", length = 255)
     private String position;
 
-    @Column(name = "employee_code", nullable = false, unique = true, length = 50)
-    private String employeeCode;
+    @Column(name = "company_account", nullable = false, unique = true, length = 50)
+    private String companyAccount;
 
     @Column(name = "is_active")
     private Boolean isActive;

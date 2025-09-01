@@ -16,7 +16,6 @@ import java.util.*;
 public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final CampusRepository campusRepository;
-    private final LibraryRepository libraryRepository;
     private final CategoryRepository categoryRepository;
     private final BookRepository bookRepository;
     private final BookCopyRepository bookCopyRepository;
@@ -26,7 +25,6 @@ public class DataInitializer implements CommandLineRunner {
 
     // Maps to store references to entities by their natural keys
     private Map<String, Campus> campusMap = new HashMap<>();
-    private Map<String, Library> libraryMap = new HashMap<>();
     private Map<String, Category> categoryMap = new HashMap<>();
     private Map<String, Book> bookMap = new HashMap<>();
 
@@ -45,9 +43,6 @@ public class DataInitializer implements CommandLineRunner {
 
         // 3. Create Campuses
         createCampuses();
-
-        // 4. Create Libraries
-        createLibraries();
 
         // 5. Create Categories
         createCategories();
@@ -123,20 +118,26 @@ public class DataInitializer implements CommandLineRunner {
     private void createCampuses() {
         Campus[] campuses = {
                 Campus.builder()
-                        .name("Chi nhánh Hà Nội")
-                        .code("HN")
-                        .address("123 Đường Lê Lợi, Quận Hoàn Kiếm, Hà Nội")
-                        .build(),
-                Campus.builder()
                         .name("Chi nhánh TP.HCM")
-                        .code("HCM")
+                        .code("HCM-F-Town-1")
                         .address("456 Đường Nguyễn Huệ, Quận 1, TP.HCM")
                         .build(),
                 Campus.builder()
-                        .name("Chi nhánh Đà Nẵng")
-                        .code("DN")
-                        .address("789 Đường Trần Phú, Quận Hải Châu, Đà Nẵng")
-                        .build()
+                        .name("Chi nhánh TP.HCM")
+                        .code("HCM-F-Town-2")
+                        .address("456 Đường Nguyễn Huệ, Quận 1, TP.HCM")
+                        .build(),
+                Campus.builder()
+                        .name("Chi nhánh Hà Nội")
+                        .code("HN-F-Town-3")
+                        .address("123 Đường Lê Lợi, Quận Hoàn Kiếm, Hà Nội")
+                        .build(),
+                Campus.builder()
+                        .name("Chi nhánh Hà Nội")
+                        .code("HN-F-Town-4")
+                        .address("124 Đường Lê Lợi, Quận Hoàn Kiếm, Hà Nội")
+                        .build(),
+
         };
 
         for (Campus campus : campuses) {
@@ -149,76 +150,28 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private void createLibraries() {
-        Library[] libraries = {
-                Library.builder()
-                        .campus(campusMap.get("HN"))
-                        .name("Thư viện Hà Nội - Tầng 1")
-                        .code("HN_LIB_1")
-                        .address("Tầng 1, Tòa A, Chi nhánh Hà Nội")
-                        .build(),
-                Library.builder()
-                        .campus(campusMap.get("HN"))
-                        .name("Thư viện Hà Nội - Tầng 2")
-                        .code("HN_LIB_2")
-                        .address("Tầng 2, Tòa A, Chi nhánh Hà Nội")
-                        .build(),
-                Library.builder()
-                        .campus(campusMap.get("HCM"))
-                        .name("Thư viện TP.HCM - Tầng 1")
-                        .code("HCM_LIB_1")
-                        .address("Tầng 1, Tòa B, Chi nhánh TP.HCM")
-                        .build(),
-                Library.builder()
-                        .campus(campusMap.get("HCM"))
-                        .name("Thư viện TP.HCM - Tầng 2")
-                        .code("HCM_LIB_2")
-                        .address("Tầng 2, Tòa B, Chi nhánh TP.HCM")
-                        .build(),
-                Library.builder()
-                        .campus(campusMap.get("DN"))
-                        .name("Thư viện Đà Nẵng")
-                        .code("DN_LIB_1")
-                        .address("Tầng 1, Tòa C, Chi nhánh Đà Nẵng")
-                        .build()
-        };
-
-        for (Library library : libraries) {
-            if (!libraryRepository.existsByCode(library.getCode())) {
-                Library savedLibrary = libraryRepository.save(library);
-                libraryMap.put(savedLibrary.getCode(), savedLibrary);
-            } else {
-                libraryMap.put(library.getCode(), libraryRepository.findByCode(library.getCode()));
-            }
-        }
-    }
 
     private void createCategories() {
         Category[] categories = {
                 Category.builder()
                         .name("Văn học")
                         .description("Sách văn học Việt Nam và thế giới")
-                        .color("#5a735a")
                         .build(),
                 Category.builder()
                         .name("Khoa học")
                         .description("Sách khoa học tự nhiên và xã hội")
-                        .color("#7a907a")
                         .build(),
                 Category.builder()
                         .name("Công nghệ")
                         .description("Sách về công nghệ thông tin và kỹ thuật")
-                        .color("#a3b3a3")
                         .build(),
                 Category.builder()
                         .name("Kinh tế")
                         .description("Sách về kinh tế, tài chính và quản lý")
-                        .color("#c7d0c7")
                         .build(),
                 Category.builder()
                         .name("Lịch sử")
                         .description("Sách lịch sử Việt Nam và thế giới")
-                        .color("#e3e7e3")
                         .build()
         };
 
@@ -294,9 +247,9 @@ public class DataInitializer implements CommandLineRunner {
                         .role(User.AccountRole.ADMIN)
                         .department("IT")
                         .position("System Administrator")
-                        .employeeCode("EMP001")
+                        .companyAccount("EMP001")
                         .isActive(true)
-                        .campus(campusMap.get("HN"))
+                        .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(adminRole))
                         .createdAt(now)
                         .updatedAt(now)
@@ -311,9 +264,9 @@ public class DataInitializer implements CommandLineRunner {
                         .role(User.AccountRole.LIBRARIAN)
                         .department("Thư viện")
                         .position("Thủ thư")
-                        .employeeCode("EMP002")
+                        .companyAccount("EMP002")
                         .isActive(true)
-                        .campus(campusMap.get("HN"))
+                        .campus(campusMap.get("HCM-F-Town-2"))
                         .roles(Set.of(librarianRole))
                         .createdAt(now)
                         .updatedAt(now)
@@ -326,9 +279,9 @@ public class DataInitializer implements CommandLineRunner {
                         .role(User.AccountRole.LIBRARIAN)
                         .department("Thư viện")
                         .position("Thủ thư")
-                        .employeeCode("EMP003")
+                        .companyAccount("EMP003")
                         .isActive(true)
-                        .campus(campusMap.get("HCM"))
+                        .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(librarianRole))
                         .createdAt(now)
                         .updatedAt(now)
@@ -341,9 +294,9 @@ public class DataInitializer implements CommandLineRunner {
                         .role(User.AccountRole.LIBRARIAN)
                         .department("Thư viện")
                         .position("Thủ thư")
-                        .employeeCode("EMP004")
+                        .companyAccount("EMP004")
                         .isActive(true)
-                        .campus(campusMap.get("DN"))
+                        .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(librarianRole))
                         .createdAt(now)
                         .updatedAt(now)
@@ -358,9 +311,9 @@ public class DataInitializer implements CommandLineRunner {
                         .role(User.AccountRole.READER)
                         .department("Marketing")
                         .position("Nhân viên Marketing")
-                        .employeeCode("EMP005")
+                        .companyAccount("EMP005")
                         .isActive(true)
-                        .campus(campusMap.get("HN"))
+                        .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
                         .createdAt(now)
                         .updatedAt(now)
@@ -373,9 +326,9 @@ public class DataInitializer implements CommandLineRunner {
                         .role(User.AccountRole.READER)
                         .department("Sales")
                         .position("Nhân viên Sales")
-                        .employeeCode("EMP006")
+                        .companyAccount("EMP006")
                         .isActive(true)
-                        .campus(campusMap.get("HN"))
+                        .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
                         .createdAt(now)
                         .updatedAt(now)
@@ -388,9 +341,9 @@ public class DataInitializer implements CommandLineRunner {
                         .role(User.AccountRole.READER)
                         .department("IT")
                         .position("Lập trình viên")
-                        .employeeCode("EMP007")
+                        .companyAccount("EMP007")
                         .isActive(true)
-                        .campus(campusMap.get("HCM"))
+                        .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
                         .createdAt(now)
                         .updatedAt(now)
@@ -403,9 +356,9 @@ public class DataInitializer implements CommandLineRunner {
                         .role(User.AccountRole.READER)
                         .department("HR")
                         .position("Nhân viên HR")
-                        .employeeCode("EMP008")
+                        .companyAccount("EMP008")
                         .isActive(true)
-                        .campus(campusMap.get("HCM"))
+                        .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
                         .createdAt(now)
                         .updatedAt(now)
@@ -418,9 +371,9 @@ public class DataInitializer implements CommandLineRunner {
                         .role(User.AccountRole.READER)
                         .department("Finance")
                         .position("Kế toán")
-                        .employeeCode("EMP009")
+                        .companyAccount("EMP009")
                         .isActive(true)
-                        .campus(campusMap.get("DN"))
+                        .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
                         .createdAt(now)
                         .updatedAt(now)
@@ -433,9 +386,9 @@ public class DataInitializer implements CommandLineRunner {
                         .role(User.AccountRole.READER)
                         .department("Finance")
                         .position("Kế toán")
-                        .employeeCode("EMP010")
+                        .companyAccount("EMP010")
                         .isActive(true)
-                        .campus(campusMap.get("DN"))
+                        .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
                         .createdAt(now)
                         .updatedAt(now)
@@ -453,42 +406,40 @@ public class DataInitializer implements CommandLineRunner {
         // Helper class to store book copy information
         class BookCopyInfo {
             String bookTitle;
-            String libraryCode;
-            String qrCode;
+            String campus;
             String shelfLocation;
 
-            BookCopyInfo(String bookTitle, String libraryCode, String qrCode, String shelfLocation) {
+            BookCopyInfo(String bookTitle, String campus, String shelfLocation) {
                 this.bookTitle = bookTitle;
-                this.libraryCode = libraryCode;
-                this.qrCode = qrCode;
+                this.campus = campus;
                 this.shelfLocation = shelfLocation;
             }
         }
 
         List<BookCopyInfo> bookCopyInfos = Arrays.asList(
                 // HN Library copies
-                new BookCopyInfo("Truyện Kiều", "HN_LIB_1", "BK_9786040000011_HN_LIB_1_001", "A1-R1-S1"),
-                new BookCopyInfo("Vũ trụ trong lòng bàn tay", "HN_LIB_1", "BK_9786040000022_HN_LIB_1_001", "A2-R1-S1"),
-                new BookCopyInfo("Clean Code", "HN_LIB_1", "BK_9786040000033_HN_LIB_1_001", "A3-R1-S1"),
+                new BookCopyInfo("Truyện Kiều", "HN_LIB_1" , "A1-R1-S1"),
+                new BookCopyInfo("Vũ trụ trong lòng bàn tay", "HN_LIB_1",  "A2-R1-S1"),
+                new BookCopyInfo("Clean Code", "HN_LIB_1",  "A3-R1-S1"),
 
                 // HCM Library copies
-                new BookCopyInfo("Truyện Kiều", "HCM_LIB_1", "BK_9786040000011_HCM_LIB_1_001", "B1-R1-S1"),
-                new BookCopyInfo("Nghĩ giàu làm giàu", "HCM_LIB_1", "BK_9786040000044_HCM_LIB_1_001", "B2-R1-S1"),
-                new BookCopyInfo("Lịch sử Việt Nam", "HCM_LIB_1", "BK_9786040000055_HCM_LIB_1_001", "B3-R1-S1"),
+                new BookCopyInfo("Truyện Kiều", "HCM_LIB_1",  "B1-R1-S1"),
+                new BookCopyInfo("Nghĩ giàu làm giàu", "HCM_LIB_1",  "B2-R1-S1"),
+                new BookCopyInfo("Lịch sử Việt Nam", "HCM_LIB_1",  "B3-R1-S1"),
 
                 // DN Library copies
-                new BookCopyInfo("Vũ trụ trong lòng bàn tay", "DN_LIB_1", "BK_9786040000022_DN_LIB_1_001", "C1-R1-S1"),
-                new BookCopyInfo("Clean Code", "DN_LIB_1", "BK_9786040000033_DN_LIB_1_001", "C2-R1-S1")
+                new BookCopyInfo("Vũ trụ trong lòng bàn tay", "DN_LIB_1",  "C1-R1-S1"),
+                new BookCopyInfo("Clean Code", "DN_LIB_1",  "C2-R1-S1")
         );
 
         for (BookCopyInfo info : bookCopyInfos) {
             Book book = bookMap.get(info.bookTitle);
-            Library library = libraryMap.get(info.libraryCode);
+            Campus campus = campusMap.get(info.campus);
 
-            if (book != null && library != null) {
+            if (book != null && campus != null) {
                 BookCopy bookCopy = BookCopy.builder()
                         .book(book)
-                        .library(library)
+                        .campus(campus)
                         .status(BookCopy.BookStatus.AVAILABLE)
                         .shelfLocation(info.shelfLocation)
                         .createdAt(now)
