@@ -18,11 +18,7 @@ import java.util.UUID;
 @Repository
 public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, JpaSpecificationExecutor<Borrowing> {
     
-    /**
-     * Tìm tất cả borrowings của một người dùng
-     */
-    List<Borrowing> findByBorrowerUserId(UUID borrowerId);
-    
+
     /**
      * Tìm borrowings theo trạng thái
      */
@@ -40,8 +36,7 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
            "LOWER(b.bookCopy.book.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(b.bookCopy.book.author) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(b.borrower.fullName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(b.borrower.email) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(b.bookCopy.qrCode) LIKE LOWER(CONCAT('%', :query, '%'))")
+           "LOWER(b.borrower.email) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<Borrowing> findByQuery(@Param("query") String query, Pageable pageable);
     
     /**
@@ -51,8 +46,7 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
            "LOWER(b.bookCopy.book.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(b.bookCopy.book.author) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(b.borrower.fullName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(b.borrower.email) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(b.bookCopy.qrCode) LIKE LOWER(CONCAT('%', :query, '%')))")
+           "LOWER(b.borrower.email) LIKE LOWER(CONCAT('%', :query, '%')) )")
     Page<Borrowing> findByStatusAndQuery(@Param("status") Borrowing.BorrowingStatus status, 
                                         @Param("query") String query, Pageable pageable);
     
@@ -62,11 +56,7 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
     @Query("SELECT b FROM Borrowing b WHERE b.status = 'BORROWED' AND b.dueDate < :now")
     List<Borrowing> findOverdueBorrowings(@Param("now") Instant now);
     
-    /**
-     * Tìm borrowings của một book copy
-     */
-    List<Borrowing> findByBookCopyBookCopyId(UUID bookCopyId);
-    
+
     /**
      * Kiểm tra xem book copy có đang được mượn không
      */

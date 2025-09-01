@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -237,7 +236,6 @@ public class DataInitializer implements CommandLineRunner {
                         .author("Nguyễn Du")
                         .publisher("NXB Văn học")
                         .year(1820)
-                        .isbn("978-604-0-00001-1")
                         .description("Tác phẩm văn học kinh điển của Việt Nam")
                         .build(),
                 Book.builder()
@@ -246,7 +244,6 @@ public class DataInitializer implements CommandLineRunner {
                         .author("Neil deGrasse Tyson")
                         .publisher("NXB Khoa học")
                         .year(2017)
-                        .isbn("978-604-0-00002-2")
                         .description("Khám phá vũ trụ qua góc nhìn khoa học")
                         .build(),
                 Book.builder()
@@ -255,7 +252,6 @@ public class DataInitializer implements CommandLineRunner {
                         .author("Robert C. Martin")
                         .publisher("Prentice Hall")
                         .year(2008)
-                        .isbn("978-604-0-00003-3")
                         .description("Hướng dẫn viết code sạch và dễ bảo trì")
                         .build(),
                 Book.builder()
@@ -264,7 +260,6 @@ public class DataInitializer implements CommandLineRunner {
                         .author("Napoleon Hill")
                         .publisher("NXB Tổng hợp")
                         .year(1937)
-                        .isbn("978-604-0-00004-4")
                         .description("Sách về tư duy làm giàu")
                         .build(),
                 Book.builder()
@@ -273,7 +268,6 @@ public class DataInitializer implements CommandLineRunner {
                         .author("Trần Trọng Kim")
                         .publisher("NXB Văn hóa")
                         .year(1920)
-                        .isbn("978-604-0-00005-5")
                         .description("Lịch sử Việt Nam từ thời cổ đại")
                         .build()
         };
@@ -495,7 +489,6 @@ public class DataInitializer implements CommandLineRunner {
                 BookCopy bookCopy = BookCopy.builder()
                         .book(book)
                         .library(library)
-                        .qrCode(info.qrCode)
                         .status(BookCopy.BookStatus.AVAILABLE)
                         .shelfLocation(info.shelfLocation)
                         .createdAt(now)

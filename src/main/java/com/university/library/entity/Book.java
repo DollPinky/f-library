@@ -36,9 +36,6 @@ public class Book extends BaseEntity {
     @Column(name = "year")
     private Integer year;
     
-    @Column(name = "isbn", length = 20)
-    private String isbn;
-    
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     

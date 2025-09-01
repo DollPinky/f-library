@@ -2,7 +2,7 @@ package com.university.library.config;
 
 import com.university.library.entity.User;
 import com.university.library.exception.exceptions.UnauthorizedException;
-import com.university.library.service.TokenService;
+import com.university.library.serviceImpl.TokenServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.annotation.Nonnull;
@@ -27,10 +27,10 @@ import java.util.List;
 public class Filter extends OncePerRequestFilter {
 
     private final HandlerExceptionResolver resolver;
-    private final TokenService tokenService;
+    private final TokenServiceImpl tokenService;
 
     @Autowired
-    public Filter(@Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver, TokenService tokenService) {
+    public Filter(@Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver, TokenServiceImpl tokenService) {
         this.resolver = resolver;
         this.tokenService = tokenService;
     }

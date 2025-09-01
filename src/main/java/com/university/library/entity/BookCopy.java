@@ -32,9 +32,6 @@ public class BookCopy extends BaseEntity {
     @JoinColumn(name = "library_id", nullable = false)
     private Library library;
     
-    @Column(name = "qr_code", unique = true, length = 255)
-    private String qrCode;
-    
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
     private BookStatus status = BookStatus.AVAILABLE;

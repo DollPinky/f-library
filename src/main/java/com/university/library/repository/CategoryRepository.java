@@ -27,17 +27,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID>, JpaSp
      * Kiểm tra xem có danh mục nào có tên này không
      */
     boolean existsByName(String name);
-    
-    /**
-     * Tìm danh mục theo tên
-     */
-    List<Category> findByNameContainingIgnoreCase(String name);
-    
-    /**
-     * Tìm danh mục theo mô tả
-     */
-    List<Category> findByDescriptionContainingIgnoreCase(String description);
-    
+
     /**
      * Đếm số sách trong một danh mục
      */

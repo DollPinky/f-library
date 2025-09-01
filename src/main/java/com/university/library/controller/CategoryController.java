@@ -3,10 +3,10 @@ package com.university.library.controller;
 import com.university.library.base.PagedResponse;
 import com.university.library.base.StandardResponse;
 import com.university.library.constants.CategoryConstants;
-import com.university.library.dto.CategoryResponse;
-import com.university.library.dto.CategorySearchParams;
-import com.university.library.dto.CreateCategoryCommand;
-import com.university.library.service.CategoryFacade;
+import com.university.library.dto.response.category.CategoryResponse;
+import com.university.library.dto.request.category.CategorySearchParams;
+import com.university.library.dto.request.category.CreateCategoryCommand;
+import com.university.library.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -29,7 +29,7 @@ import java.util.UUID;
 @SecurityRequirement(name = "api")
 public class CategoryController {
 
-    private final CategoryFacade categoryFacade;
+    private final CategoryService categoryService;
 
     // ==================== QUERY ENDPOINTS ====================
 
@@ -42,7 +42,7 @@ public class CategoryController {
         log.info(CategoryConstants.API_GET_CATEGORY, categoryId);
         
         try {
-            CategoryResponse category = categoryFacade.getCategoryById(categoryId);
+            CategoryResponse category = categoryService.getCategoryById(categoryId);
             return ResponseEntity.ok(StandardResponse.success("Lấy danh mục thành công", category));
         } catch (Exception e) {
             log.error("Error getting category by ID: {} - {}", categoryId, e.getMessage());
@@ -60,7 +60,7 @@ public class CategoryController {
         log.info(CategoryConstants.API_SEARCH_CATEGORIES, params);
         
         try {
-            PagedResponse<CategoryResponse> result = categoryFacade.searchCategories(params);
+            PagedResponse<CategoryResponse> result = categoryService.searchCategories(params);
             return ResponseEntity.ok(StandardResponse.success("Lấy danh sách danh mục thành công", result));
         } catch (Exception e) {
             log.error("Error searching categories: {}", e.getMessage());
@@ -76,7 +76,7 @@ public class CategoryController {
         log.info(CategoryConstants.API_GET_HIERARCHY);
         
         try {
-            List<CategoryResponse> hierarchy = categoryFacade.getCategoryHierarchy();
+            List<CategoryResponse> hierarchy = categoryService.getCategoryHierarchy();
             return ResponseEntity.ok(StandardResponse.success("Category hierarchy retrieved successfully", hierarchy));
         } catch (Exception e) {
             log.error("Error getting category hierarchy: {}", e.getMessage());
@@ -94,7 +94,7 @@ public class CategoryController {
         log.info(CategoryConstants.API_GET_CHILDREN, categoryId);
         
         try {
-            List<CategoryResponse> children = categoryFacade.getCategoryChildren(categoryId);
+            List<CategoryResponse> children = categoryService.getCategoryChildren(categoryId);
             return ResponseEntity.ok(StandardResponse.success("Category children retrieved successfully", children));
         } catch (Exception e) {
             log.error("Error getting category children: {}", e.getMessage());
@@ -114,7 +114,7 @@ public class CategoryController {
         log.info(CategoryConstants.API_CREATE_CATEGORY, command.getName());
         
         try {
-            CategoryResponse created = categoryFacade.createCategory(command);
+            CategoryResponse created = categoryService.createCategory(command);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(StandardResponse.success(CategoryConstants.SUCCESS_CATEGORY_CREATED, created));
         } catch (Exception e) {
@@ -135,7 +135,7 @@ public class CategoryController {
         log.info(CategoryConstants.API_UPDATE_CATEGORY, categoryId);
         
         try {
-            CategoryResponse updated = categoryFacade.updateCategory(categoryId, command);
+            CategoryResponse updated = categoryService.updateCategory(categoryId, command);
             return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CATEGORY_UPDATED, updated));
         } catch (Exception e) {
             log.error("Error updating category: {} - {}", categoryId, e.getMessage());
@@ -153,7 +153,7 @@ public class CategoryController {
         log.info(CategoryConstants.API_DELETE_CATEGORY, categoryId);
         
         try {
-            categoryFacade.deleteCategory(categoryId);
+            categoryService.deleteCategory(categoryId);
             return ResponseEntity.ok(StandardResponse.success(CategoryConstants.SUCCESS_CATEGORY_DELETED, null));
         } catch (Exception e) {
             log.error("Error deleting category: {} - {}", categoryId, e.getMessage());
@@ -161,38 +161,7 @@ public class CategoryController {
                 .body(StandardResponse.error(e.getMessage()));
         }
     }
-    // ==================== INNER CLASSES ====================
 
-    public static class CategoryCacheStatus {
-        private final UUID categoryId;
-        private final boolean isCached;
-        private final Long ttlSeconds;
 
-        public CategoryCacheStatus(UUID categoryId, boolean isCached, Long ttlSeconds) {
-            this.categoryId = categoryId;
-            this.isCached = isCached;
-            this.ttlSeconds = ttlSeconds;
-        }
-
-        public UUID getCategoryId() { return categoryId; }
-        public boolean isCached() { return isCached; }
-        public Long getTtlSeconds() { return ttlSeconds; }
-    }
-
-    public static class HealthStatus {
-        private final String serviceName;
-        private final boolean healthy;
-        private final long timestamp;
-
-        public HealthStatus(String serviceName, boolean healthy, long timestamp) {
-            this.serviceName = serviceName;
-            this.healthy = healthy;
-            this.timestamp = timestamp;
-        }
-
-        public String getServiceName() { return serviceName; }
-        public boolean isHealthy() { return healthy; }
-        public long getTimestamp() { return timestamp; }
-    }
 } 
 

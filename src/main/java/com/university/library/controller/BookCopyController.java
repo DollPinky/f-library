@@ -2,12 +2,12 @@ package com.university.library.controller;
 
 import com.university.library.base.PagedResponse;
 import com.university.library.base.StandardResponse;
-import com.university.library.constants.BookCopyConstants;
-import com.university.library.dto.BookCopyResponse;
-import com.university.library.dto.BookCopySearchParams;
-import com.university.library.dto.CreateBookCopyCommand;
-import com.university.library.dto.CreateBookCopyFromBookCommand;
-import com.university.library.service.BookCopyFacade;
+import com.university.library.dto.response.bookCopy.BookCopyResponse;
+import com.university.library.dto.request.bookCopy.BookCopySearchParams;
+import com.university.library.dto.request.bookCopy.CreateBookCopyCommand;
+import com.university.library.dto.request.bookCopy.CreateBookCopyFromBookCommand;
+import com.university.library.service.BookCopyService;
+import com.university.library.serviceImpl.QRCodeServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -32,7 +32,7 @@ import java.util.UUID;
 @SecurityRequirement(name = "api")
 public class BookCopyController {
 
-    private final BookCopyFacade bookCopyFacade;
+    private final BookCopyService bookCopyService;
 
     @GetMapping(value = "/generate-all-qr-codes", produces = MediaType.APPLICATION_PDF_VALUE)
     @Operation(summary = "Generate PDF with all QR codes", description = "Generate a PDF file containing all QR codes with book information")
@@ -40,7 +40,7 @@ public class BookCopyController {
         log.info("Generating PDF with all QR codes");
 
         try {
-            byte[] pdfBytes = bookCopyFacade.generateAllQRCodesPDF();
+            byte[] pdfBytes = bookCopyService.generateAllQRCodesPDF();
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=all-book-qr-codes.pdf")
@@ -59,7 +59,7 @@ public class BookCopyController {
     @Operation(summary = "Generate QR code image for booking")
     public ResponseEntity<byte[]> generateQRCode(@PathVariable UUID bookCopyid) {
         try {
-            byte[] qrImage = bookCopyFacade.generateQRCodeImage(bookCopyid);
+            byte[] qrImage = bookCopyService.generateQRCodeImage(bookCopyid);
             return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(qrImage);
         } catch (Exception e) {
             log.error("Failed to generate QR code", e);
@@ -77,7 +77,7 @@ public class BookCopyController {
         log.info("Getting book copy by ID: {}", bookCopyId);
         
         try {
-            BookCopyResponse bookCopy = bookCopyFacade.getBookCopyById(bookCopyId);
+            BookCopyResponse bookCopy = bookCopyService.getBookCopyById(bookCopyId);
             return ResponseEntity.ok(StandardResponse.success("Book copy retrieved successfully", bookCopy));
         } catch (Exception e) {
             log.error("Error getting book copy {}: {}", bookCopyId, e.getMessage());
@@ -98,7 +98,7 @@ public class BookCopyController {
         log.info("Searching book copies with params: {}", params);
         
         try {
-            PagedResponse<BookCopyResponse> result = bookCopyFacade.searchBookCopies(params);
+            PagedResponse<BookCopyResponse> result = bookCopyService.searchBookCopies(params);
             return ResponseEntity.ok(StandardResponse.success("Book copies retrieved successfully", result));
         } catch (Exception e) {
             log.error("Error searching book copies: {}", e.getMessage());
@@ -116,7 +116,7 @@ public class BookCopyController {
         log.info("Getting book copies for book: {}", bookId);
         
         try {
-            List<BookCopyResponse> bookCopies = bookCopyFacade.getBookCopiesByBookId(bookId);
+            List<BookCopyResponse> bookCopies = bookCopyService.getBookCopiesByBookId(bookId);
             return ResponseEntity.ok(StandardResponse.success("Book copies retrieved successfully", bookCopies));
         } catch (Exception e) {
             log.error("Error getting book copies for book {}: {}", bookId, e.getMessage());
@@ -134,7 +134,7 @@ public class BookCopyController {
         log.info("Getting available book copies for book: {}", bookId);
         
         try {
-            List<BookCopyResponse> bookCopies = bookCopyFacade.getAvailableBookCopiesByBookId(bookId);
+            List<BookCopyResponse> bookCopies = bookCopyService.getAvailableBookCopiesByBookId(bookId);
             return ResponseEntity.ok(StandardResponse.success("Available book copies retrieved successfully", bookCopies));
         } catch (Exception e) {
             log.error("Error getting available book copies for book {}: {}", bookId, e.getMessage());
@@ -152,7 +152,7 @@ public class BookCopyController {
         log.info("Getting book copies for library: {}", libraryId);
         
         try {
-            List<BookCopyResponse> bookCopies = bookCopyFacade.getBookCopiesByLibraryId(libraryId);
+            List<BookCopyResponse> bookCopies = bookCopyService.getBookCopiesByLibraryId(libraryId);
             return ResponseEntity.ok(StandardResponse.success("Book copies retrieved successfully", bookCopies));
         } catch (Exception e) {
             log.error("Error getting book copies for library {}: {}", libraryId, e.getMessage());
@@ -161,23 +161,7 @@ public class BookCopyController {
         }
     }
 
-    @GetMapping("/qr/{qrCode}")
-    @Operation(summary = "Get book copy by QR code", description = "Retrieve book copy information by QR code")
-    public ResponseEntity<StandardResponse<BookCopyResponse>> getBookCopyByQrCode(
-            @Parameter(description = "QR Code", required = true)
-            @PathVariable String qrCode) {
-        
-        log.info("Getting book copy by QR code: {}", qrCode);
-        
-        try {
-            BookCopyResponse bookCopy = bookCopyFacade.getBookCopyByQrCode(qrCode);
-            return ResponseEntity.ok(StandardResponse.success("Book copy retrieved successfully", bookCopy));
-        } catch (Exception e) {
-            log.error("Error getting book copy by QR code {}: {}", qrCode, e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(StandardResponse.error("Book copy not found"));
-        }
-    }
+
 
     // ==================== COMMAND ENDPOINTS ====================
 
@@ -187,10 +171,9 @@ public class BookCopyController {
             @Parameter(description = "Book copy creation data", required = true)
             @Valid @RequestBody CreateBookCopyCommand command) {
         
-        log.info("Creating new book copy with QR code: {}", command.getQrCode());
-        
+
         try {
-            BookCopyResponse createdBookCopy = bookCopyFacade.createBookCopy(command);
+            BookCopyResponse createdBookCopy = bookCopyService.createBookCopy(command);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(StandardResponse.success("Book copy created successfully", createdBookCopy));
         } catch (RuntimeException e) {
@@ -213,7 +196,7 @@ public class BookCopyController {
         log.info("Creating {} book copies for book: {}", command.getCopies().size(), command.getBookId());
         
         try {
-            bookCopyFacade.createBookCopiesFromBook(command);
+            bookCopyService.createBookCopiesFromBook(command);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(StandardResponse.success("Book copies created successfully", null));
         } catch (RuntimeException e) {
@@ -238,7 +221,7 @@ public class BookCopyController {
         log.info("Updating book copy: {}", bookCopyId);
         
         try {
-            BookCopyResponse updatedBookCopy = bookCopyFacade.updateBookCopy(bookCopyId, command);
+            BookCopyResponse updatedBookCopy = bookCopyService.updateBookCopy(bookCopyId, command);
             return ResponseEntity.ok(StandardResponse.success("Book copy updated successfully", updatedBookCopy));
         } catch (RuntimeException e) {
             log.error("Error updating book copy {}: {}", bookCopyId, e.getMessage());
@@ -262,7 +245,7 @@ public class BookCopyController {
         log.info("Changing book copy status: {} -> {}", bookCopyId, status);
         
         try {
-            BookCopyResponse updatedBookCopy = bookCopyFacade.changeBookCopyStatus(bookCopyId, status);
+            BookCopyResponse updatedBookCopy = bookCopyService.changeBookCopyStatus(bookCopyId, status);
             return ResponseEntity.ok(StandardResponse.success("Book copy status changed successfully", updatedBookCopy));
         } catch (RuntimeException e) {
             log.error("Error changing book copy status {}: {}", bookCopyId, e.getMessage());
@@ -284,7 +267,7 @@ public class BookCopyController {
         log.info("Deleting book copy: {}", bookCopyId);
         
         try {
-            bookCopyFacade.deleteBookCopy(bookCopyId);
+            bookCopyService.deleteBookCopy(bookCopyId);
             return ResponseEntity.ok(StandardResponse.success("Book copy deleted successfully", null));
         } catch (RuntimeException e) {
             log.error("Error deleting book copy {}: {}", bookCopyId, e.getMessage());

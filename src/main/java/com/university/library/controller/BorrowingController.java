@@ -1,12 +1,15 @@
 package com.university.library.controller;
 
-import com.university.library.dto.*;
 import com.university.library.base.StandardResponse;
+import com.university.library.dto.request.borrowing.ReportLostCommand;
+import com.university.library.dto.request.borrowing.ReturnBookCommand;
+import com.university.library.dto.request.borrowing.ScanAndBorrowCommand;
+import com.university.library.dto.response.borrowing.BorrowingResponse;
 import com.university.library.entity.User;
 import com.university.library.entity.Borrowing;
 import com.university.library.repository.BorrowingRepository;
-import com.university.library.service.command.BorrowingCommandService;
-import com.university.library.service.query.BorrowingQueryService;
+import com.university.library.service.BorrowingService;
+
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +27,7 @@ import java.util.UUID;
 @SecurityRequirement(name = "api")
 public class BorrowingController {
 
-    private final BorrowingCommandService borrowingCommandService;
-    private final BorrowingQueryService borrowingQueryService;
+    private final BorrowingService borrowingService;
     private final BorrowingRepository borrowingRepository;
 
     @GetMapping("/check-borrowed")
@@ -70,7 +72,7 @@ public class BorrowingController {
             // Lấy ID người dùng từ authentication
             UUID borrowerId = userPrincipal.getUserId();
 
-            BorrowingResponse borrowing = borrowingCommandService.Borrow(
+            BorrowingResponse borrowing = borrowingService.Borrow(
                     command.getQrCode(),
                     borrowerId
             );
@@ -94,7 +96,7 @@ public class BorrowingController {
         try {
             log.info("Returning book for QR code: {}", command.getQrCode());
 
-            BorrowingResponse borrowing = borrowingCommandService.returnBook(command.getQrCode());
+            BorrowingResponse borrowing = borrowingService.returnBook(command.getQrCode());
 
             String message;
             if (borrowing.getStatus() == Borrowing.BorrowingStatus.OVERDUE) {
@@ -123,7 +125,7 @@ public class BorrowingController {
         try {
             log.info("Reporting lost book for QR code: {}", command.getQrCode());
 
-            BorrowingResponse borrowing = borrowingCommandService.reportLost(command.getQrCode());
+            BorrowingResponse borrowing = borrowingService.reportLost(command.getQrCode());
 
             return ResponseEntity.ok(StandardResponse.success(
                     "Đã báo mất sách. Phí phạt: " + borrowing.getFineAmount() + " VND", borrowing));
@@ -146,7 +148,7 @@ public class BorrowingController {
         try {
             log.info("Getting borrowings - page: {}, size: {}, status: {}, query: {}", page, size, status, query);
             
-            var response = borrowingQueryService.getAllBorrowings(page, size, status, query);
+            var response = borrowingService.getAllBorrowings(page, size, status, query);
             
             log.info("Found {} borrowings (page {} of {})", 
                 response.getContent().size(), page + 1, response.getTotalPages());
@@ -170,7 +172,7 @@ public class BorrowingController {
         try {
             log.info("Getting borrowings for user: {} with pagination: page={}, size={}", userId, page, size);
             
-            var response = borrowingQueryService.getBorrowingsByUser(userId, page, size);
+            var response = borrowingService.getBorrowingsByUser(userId, page, size);
             
             return ResponseEntity.ok(StandardResponse.success("Lấy danh sách mượn sách của người dùng thành công", response.getContent()));
         } catch (Exception e) {
@@ -188,7 +190,7 @@ public class BorrowingController {
         try {
             log.info("Getting overdue borrowings");
             
-            List<BorrowingResponse> borrowings = borrowingQueryService.getOverdueBorrowings();
+            List<BorrowingResponse> borrowings = borrowingService.getOverdueBorrowings();
             
             return ResponseEntity.ok(StandardResponse.success("Lấy danh sách sách quá hạn thành công", borrowings));
         } catch (Exception e) {
@@ -206,7 +208,7 @@ public class BorrowingController {
         try {
             log.info("Getting borrowing by ID: {}", borrowingId);
             
-            BorrowingResponse borrowing = borrowingQueryService.getBorrowingById(borrowingId);
+            BorrowingResponse borrowing = borrowingService.getBorrowingById(borrowingId);
             
             return ResponseEntity.ok(StandardResponse.success("Lấy thông tin mượn sách thành công", borrowing));
         } catch (Exception e) {
