@@ -33,5 +33,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID>, JpaSp
      */
     @Query("SELECT COUNT(b) FROM Book b WHERE b.category.categoryId = :categoryId")
     Long countBooksByCategoryId(@Param("categoryId") UUID categoryId);
+
+
 } 
 

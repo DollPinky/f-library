@@ -16,10 +16,10 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Tham số tìm kiếm sách")
 public class BookSearchParams {
     
-    @Schema(description = "Từ khóa tìm kiếm (title, author, isbn, publisher)", example = "Novak and Sons")
+    @Schema(description = "Từ khóa tìm kiếm (title, author, publisher)", example = "AnhCuong")
     private String query;
     
-    @Schema(description = "ID danh mục (optional)", example = "2249b745-ebf4-400f-a63f-6a1752c15e39")
+    @Schema(description = "ID danh mục (optional), nếu không có sẽ search hết category", example = "2249b745-ebf4-400f-a63f-6a1752c15e39")
     private UUID categoryId;
     
     @Schema(description = "ID thư viện (optional - nếu không có sẽ search tất cả thư viện)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
@@ -40,9 +40,9 @@ public class BookSearchParams {
     @Builder.Default
     private Integer size = 10;
     
-    @Schema(description = "Sắp xếp theo trường", example = "title", defaultValue = "title", allowableValues = {"title", "author", "publisher", "year", "isbn", "createdAt", "updatedAt"})
+    @Schema(description = "Sắp xếp theo trường", example = "title", defaultValue = "title", allowableValues = {"title", "author", "publisher", "year",  "createdAt", "updatedAt"})
     @Pattern(regexp = "^(title|author|publisher|year|isbn|createdAt|updatedAt)?$", 
-             message = "SortBy phải là một trong các giá trị: title, author, publisher, year, isbn, createdAt, updatedAt")
+             message = "SortBy phải là một trong các giá trị: title, author, publisher, year,  createdAt, updatedAt")
     @Builder.Default
     private String sortBy = "title";
     

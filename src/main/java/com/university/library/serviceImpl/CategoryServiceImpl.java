@@ -8,8 +8,10 @@ import com.university.library.dto.response.category.CategoryResponse;
 import com.university.library.entity.Category;
 import com.university.library.repository.CategoryRepository;
 import com.university.library.service.CategoryService;
+import com.university.library.specification.CategorySpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,37 +50,37 @@ public class CategoryServiceImpl implements CategoryService {
     /**
      * Tìm kiếm danh mục
      */
+    // CategoryServiceImpl.java - update searchCategories method
     public PagedResponse<CategoryResponse> searchCategories(CategorySearchParams params) {
-        Specification<Category> spec = createSearchSpecification(params);
+        log.info("Searching categories with params: {}", params);
 
-        Pageable pageable = PageRequest.of(
-                params.getPage(),
-                params.getSize(),
-                Sort.by(
-                        Sort.Direction.fromString(params.getSortDirection()),
-                        params.getSortBy()
-                )
-        );
+        // Create specification from search params
+        Specification<Category> spec = CategorySpecification.withSearchParams(params);
 
-        Page<Category> categories = categoryRepository.findAll(spec, pageable);
+        // Create pageable with sorting
+        Sort.Direction direction = Sort.Direction.fromString(params.getSortDirection());
+        Sort sort = Sort.by(direction, params.getSortBy());
+        Pageable pageable = PageRequest.of(params.getPage(), params.getSize(), sort);
 
-        List<CategoryResponse> categoryResponses = categories.getContent().stream()
+        // Execute query
+        Page<Category> categoryPage = categoryRepository.findAll(spec, pageable);
+
+        // Convert to response
+        List<CategoryResponse> content = categoryPage.getContent().stream()
                 .map(category -> {
-                    CategoryResponse response = CategoryResponse.fromEntitySimple(category);
+                    CategoryResponse response = CategoryResponse.fromEntity(category);
                     Long bookCount = categoryRepository.countBooksByCategoryId(category.getCategoryId());
                     response.setBookCount(bookCount);
                     return response;
                 })
                 .collect(Collectors.toList());
 
-        PagedResponse<CategoryResponse> result = PagedResponse.of(
-                categoryResponses,
-                categories.getNumber(),
-                categories.getSize(),
-                categories.getTotalElements()
+        return PagedResponse.of(
+                content,
+                categoryPage.getNumber(),
+                categoryPage.getSize(),
+                categoryPage.getTotalElements()
         );
-
-        return result;
     }
 
     /**
@@ -123,36 +125,6 @@ public class CategoryServiceImpl implements CategoryService {
         return childrenResponses;
     }
 
-    /**
-     * Tạo specification cho tìm kiếm
-     */
-    private Specification<Category> createSearchSpecification(CategorySearchParams params) {
-        return (root, query, criteriaBuilder) -> {
-            var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
-
-            if (params.getQuery() != null && !params.getQuery().trim().isEmpty()) {
-                String searchTerm = "%" + params.getQuery().toLowerCase() + "%";
-                predicates.add(criteriaBuilder.or(
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), searchTerm),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchTerm)
-                ));
-            }
-
-            if (params.getParentCategoryId() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("parentCategory").get("categoryId"), params.getParentCategoryId()));
-            }
-
-            if (params.getRootOnly() != null && params.getRootOnly()) {
-                predicates.add(criteriaBuilder.isNull(root.get("parentCategory")));
-            }
-
-            if (params.getHasBooks() != null && params.getHasBooks()) {
-                predicates.add(criteriaBuilder.isNotEmpty(root.get("books")));
-            }
-
-            return criteriaBuilder.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
-        };
-    }
 
     /**
      * Category Command

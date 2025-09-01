@@ -62,7 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         // Check if employee code already exists
-        if (userRepository.existsByEmployeeCode(request.getCompanyAccount())) {
+        if (userRepository.existsByCompanyAccount(request.getCompanyAccount())) {
             throw new RuntimeException("Mã nhân viên đã tồn tại trong hệ thống");
         }
 

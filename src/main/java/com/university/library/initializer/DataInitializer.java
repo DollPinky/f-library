@@ -18,7 +18,6 @@ public class DataInitializer implements CommandLineRunner {
     private final CampusRepository campusRepository;
     private final CategoryRepository categoryRepository;
     private final BookRepository bookRepository;
-    private final BookCopyRepository bookCopyRepository;
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final PasswordEncoder passwordEncoder;
@@ -53,8 +52,6 @@ public class DataInitializer implements CommandLineRunner {
         // 7. Create Users
         createUsers();
 
-        // 8. Create Book Copies
-        createBookCopies();
     }
 
     private void createPermissions() {
@@ -400,53 +397,5 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private void createBookCopies() {
-        Instant now = Instant.now();
 
-        // Helper class to store book copy information
-        class BookCopyInfo {
-            String bookTitle;
-            String campus;
-            String shelfLocation;
-
-            BookCopyInfo(String bookTitle, String campus, String shelfLocation) {
-                this.bookTitle = bookTitle;
-                this.campus = campus;
-                this.shelfLocation = shelfLocation;
-            }
-        }
-
-        List<BookCopyInfo> bookCopyInfos = Arrays.asList(
-                // HN Library copies
-                new BookCopyInfo("Truyện Kiều", "HN_LIB_1" , "A1-R1-S1"),
-                new BookCopyInfo("Vũ trụ trong lòng bàn tay", "HN_LIB_1",  "A2-R1-S1"),
-                new BookCopyInfo("Clean Code", "HN_LIB_1",  "A3-R1-S1"),
-
-                // HCM Library copies
-                new BookCopyInfo("Truyện Kiều", "HCM_LIB_1",  "B1-R1-S1"),
-                new BookCopyInfo("Nghĩ giàu làm giàu", "HCM_LIB_1",  "B2-R1-S1"),
-                new BookCopyInfo("Lịch sử Việt Nam", "HCM_LIB_1",  "B3-R1-S1"),
-
-                // DN Library copies
-                new BookCopyInfo("Vũ trụ trong lòng bàn tay", "DN_LIB_1",  "C1-R1-S1"),
-                new BookCopyInfo("Clean Code", "DN_LIB_1",  "C2-R1-S1")
-        );
-
-        for (BookCopyInfo info : bookCopyInfos) {
-            Book book = bookMap.get(info.bookTitle);
-            Campus campus = campusMap.get(info.campus);
-
-            if (book != null && campus != null) {
-                BookCopy bookCopy = BookCopy.builder()
-                        .book(book)
-                        .campus(campus)
-                        .status(BookCopy.BookStatus.AVAILABLE)
-                        .shelfLocation(info.shelfLocation)
-                        .createdAt(now)
-                        .updatedAt(now)
-                        .build();
-                bookCopyRepository.save(bookCopy);
-            }
-        }
-    }
 }

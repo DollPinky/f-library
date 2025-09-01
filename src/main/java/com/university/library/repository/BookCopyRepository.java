@@ -27,16 +27,11 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, UUID>, JpaSp
 
 
 
-
-    BookCopy findByBookCopyId(UUID bookCopyId);
-
-
     /**
      * Lấy tất cả book copies với eager loading cho book entity
      */
     @EntityGraph(attributePaths = {"book"})
     @Query("SELECT bc FROM BookCopy bc")
     List<BookCopy> findAllBookCopiesWithBook();
-
 
 }

@@ -16,14 +16,14 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Tham số tìm kiếm bản sao sách")
 public class BookCopySearchParams {
     
-    @Schema(description = "Từ khóa tìm kiếm (QR code, shelf location, book title, library name)", example = "QR-123")
+    @Schema(description = "Từ khóa tìm kiếm  ( shelf location, book title, library name)", example = "QR-123")
     private String query;
     
-    @Schema(description = "ID sách (optional)", example = "2249b745-ebf4-400f-a63f-6a1752c15e39")
+    @Schema(description = "ID sách (optional), không có sẽ tìm tất cả các bookCopy có trong tất cả các Book", example = "2249b745-ebf4-400f-a63f-6a1752c15e39")
     private UUID bookId;
     
-    @Schema(description = "ID thư viện (optional)", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
-    private UUID libraryId;
+    @Schema(description = "ID thư viện (optional), không có thì sẽ tìm tất cả các bookCopy có trong tất cả các Campus", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+    private UUID campusId;
     
     @Schema(description = "Trạng thái bản sao sách (optional)", example = "AVAILABLE", allowableValues = {"AVAILABLE", "BORROWED", "RESERVED", "LOST", "DAMAGED"})
     @Pattern(regexp = "^(AVAILABLE|BORROWED|RESERVED|LOST|DAMAGED)?$", 
@@ -33,7 +33,7 @@ public class BookCopySearchParams {
     @Schema(description = "Chỉ lấy bản sao có thể mượn", example = "true")
     private Boolean availableOnly;
     
-    @Schema(description = "Chỉ lấy bản sao đã mượn", example = "true")
+    @Schema(description = "Chỉ lấy bản sao đã mượn", example = "false")
     private Boolean borrowedOnly;
     
     @Schema(description = "Số trang (bắt đầu từ 0)", example = "0", defaultValue = "0")

@@ -42,37 +42,7 @@ public class PagedResponse<T> implements Page<T> {
     
     private boolean hasContent;
     
-    public static <T> PagedResponse<T> fromPage(Page<T> page) {
-        return PagedResponse.<T>builder()
-                .content(page.getContent())
-                .number(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .hasNext(page.hasNext())
-                .hasPrevious(page.hasPrevious())
-                .isFirst(page.isFirst())
-                .isLast(page.isLast())
-                .sort(page.getSort())
-                .hasContent(page.hasContent())
-                .build();
-    }
-    
-    public static <T> PagedResponse<T> empty() {
-        return PagedResponse.<T>builder()
-                .content(List.of())
-                .number(0)
-                .size(0)
-                .totalElements(0)
-                .totalPages(0)
-                .hasNext(false)
-                .hasPrevious(false)
-                .isFirst(true)
-                .isLast(true)
-                .sort(Sort.unsorted())
-                .hasContent(false)
-                .build();
-    }
+
     
     public static <T> PagedResponse<T> of(List<T> content, int pageNumber, int pageSize, long totalElements) {
         int totalPages = (int) Math.ceil((double) totalElements / pageSize);
@@ -184,13 +154,6 @@ public class PagedResponse<T> implements Page<T> {
     public Iterator<T> iterator() {
         return content.iterator();
     }
-    
-    public int getPageNumber() {
-        return number;
-    }
-    
-    public int getPageSize() {
-        return size;
-    }
+
 } 
 

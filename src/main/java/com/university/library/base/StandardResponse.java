@@ -27,23 +27,7 @@ public class StandardResponse<T> {
     private Instant timestamp = Instant.now();
     
     private String errorCode;
-    
-    public static <T> StandardResponse<T> success(String đăngNhậpThànhCông) {
-        return StandardResponse.<T>builder()
-                .success(true)
-                .message("Thành công")
-                .timestamp(Instant.now())
-                .build();
-    }
-    
-    public static <T> StandardResponse<T> success(T data) {
-        return StandardResponse.<T>builder()
-                .success(true)
-                .message("Thành công")
-                .data(data)
-                .timestamp(Instant.now())
-                .build();
-    }
+
     
     public static <T> StandardResponse<T> success(String message, T data) {
         return StandardResponse.<T>builder()
