@@ -7,12 +7,10 @@ import com.university.library.dto.request.bookCopy.BookCopySearchParams;
 import com.university.library.dto.request.bookCopy.CreateBookCopyCommand;
 import com.university.library.dto.request.bookCopy.CreateBookCopyFromBookCommand;
 import com.university.library.service.BookCopyService;
-import com.university.library.serviceImpl.QRCodeServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +33,10 @@ public class BookCopyController {
 
     private final BookCopyService bookCopyService;
 
+    // ==================== QUERY ENDPOINTS ====================
+
+
+
     @GetMapping(value = "/generate-all-qr-codes", produces = MediaType.APPLICATION_PDF_VALUE)
     @Operation(summary = "Generate PDF with all QR codes", description = "Generate a PDF file containing all QR codes with book information")
     public ResponseEntity<byte[]> generateAllQRCodesPDF() {
@@ -54,7 +56,6 @@ public class BookCopyController {
         }
     }
 
-    // ==================== QUERY ENDPOINTS ====================
 
     @GetMapping(value = "/generate-qr/{bookCopyid}", produces = MediaType.IMAGE_PNG_VALUE)
     @Operation(summary = "Generate QR code image for booking")
@@ -90,7 +91,7 @@ public class BookCopyController {
 
 
 
-    @GetMapping
+    @GetMapping("/search")
     @Operation(summary = "Search book copies", description = "Search book copies with pagination and filters")
     public ResponseEntity<StandardResponse<PagedResponse<BookCopyResponse>>> searchBookCopies(
             @Parameter(description = "Search parameters")
@@ -140,7 +141,7 @@ public class BookCopyController {
         } catch (Exception e) {
             log.error("Error getting available book copies for book {}: {}", bookId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error("Failed to get available book copies"));
+                    .body(StandardResponse.error("Failed to get available book copies"));
         }
     }
 
@@ -149,29 +150,7 @@ public class BookCopyController {
 
     // ==================== COMMAND ENDPOINTS ====================
 
-    @PostMapping
-    @Operation(summary = "Create new book copy", description = "Create a new book copy in the library system")
-    public ResponseEntity<StandardResponse<BookCopyResponse>> createBookCopy(
-            @Parameter(description = "Book copy creation data", required = true)
-            @Valid @RequestBody CreateBookCopyCommand command) {
-
-
-        try {
-            BookCopyResponse createdBookCopy = bookCopyService.createBookCopy(command);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(StandardResponse.success("Book copy created successfully", createdBookCopy));
-        } catch (RuntimeException e) {
-            log.error("Error creating book copy: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(StandardResponse.error(e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error creating book copy: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StandardResponse.error("Failed to create book copy"));
-        }
-    }
-
-    @PostMapping("/from-book")
+    @PostMapping("/create")
     @Operation(summary = "Create book copies from book", description = "Create multiple book copies for an existing book")
     public ResponseEntity<StandardResponse<String>> createBookCopiesFromBook(
             @Parameter(description = "Book copy creation data", required = true)

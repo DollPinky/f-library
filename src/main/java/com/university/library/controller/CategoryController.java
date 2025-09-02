@@ -51,7 +51,7 @@ public class CategoryController {
         }
     }
 
-    @GetMapping
+    @GetMapping("/search")
     @Operation(summary = "Search categories", description = "Search categories with pagination and filters")
     public ResponseEntity<StandardResponse<PagedResponse<CategoryResponse>>> searchCategories(
             @Parameter(description = "Search parameters")
@@ -69,7 +69,7 @@ public class CategoryController {
         }
     }
 
-    @GetMapping("/hierarchy")
+    @GetMapping("/all")
     @Operation(summary = "Get category hierarchy", description = "Get the complete category hierarchy structure")
     public ResponseEntity<StandardResponse<List<CategoryResponse>>> getCategoryHierarchy() {
         
@@ -105,7 +105,7 @@ public class CategoryController {
 
     // ==================== COMMAND ENDPOINTS ====================
 
-    @PostMapping
+    @PostMapping("/create")
     @Operation(summary = "Create new category", description = "Create a new category in the library system")
     public ResponseEntity<StandardResponse<CategoryResponse>> createCategory(
             @Parameter(description = "Category creation data", required = true)

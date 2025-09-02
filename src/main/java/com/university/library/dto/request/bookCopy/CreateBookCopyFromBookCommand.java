@@ -35,10 +35,6 @@ public class CreateBookCopyFromBookCommand {
         @JsonDeserialize(using = UUIDDeserializer.class)
         private UUID campusId;
         
-        @NotNull(message = "Số lượng không được để trống")
-        @Positive(message = "Số lượng phải là số dương")
-        private Integer quantity;
-        
         private String location;
     }
 } 

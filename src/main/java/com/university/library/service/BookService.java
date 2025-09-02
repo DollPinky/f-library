@@ -5,8 +5,6 @@ import com.university.library.dto.request.book.BookSearchParams;
 import com.university.library.dto.request.book.CreateBookCommand;
 import com.university.library.dto.request.book.UpdateBookCommand;
 import com.university.library.dto.response.book.BookResponse;
-import com.university.library.entity.Book;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +15,7 @@ public interface BookService {
      */
     BookResponse getBookById(UUID bookId);
     PagedResponse<BookResponse> searchBooks(BookSearchParams params);
+    List<BookResponse> getAllBook();
     /**
      * BookCommand
      */

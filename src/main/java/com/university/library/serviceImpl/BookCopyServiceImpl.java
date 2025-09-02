@@ -334,8 +334,6 @@ public class BookCopyServiceImpl implements BookCopyService {
         for (CreateBookCopyFromBookCommand.BookCopyInfo copyInfo : command.getCopies()) {
             Campus library = campusRepository.findById(copyInfo.getCampusId())
                     .orElseThrow(() -> new RuntimeException("Library not found with ID: " + copyInfo.getCampusId()));
-
-            for (int i = 0; i < copyInfo.getQuantity(); i++) {
                 BookCopy bookCopy = BookCopy.builder()
                         .book(book)
                         .campus(library)
@@ -343,7 +341,7 @@ public class BookCopyServiceImpl implements BookCopyService {
                         .status(BookCopy.BookStatus.AVAILABLE)
                         .build();
                 bookCopies.add(bookCopy);
-            }
+
         }
 
         bookCopyRepository.saveAll(bookCopies);

@@ -6,7 +6,9 @@ import com.university.library.dto.request.book.BookSearchParams;
 import com.university.library.dto.request.book.CreateBookCommand;
 import com.university.library.dto.request.book.UpdateBookCommand;
 import com.university.library.dto.response.book.BookResponse;
+import com.university.library.dto.response.bookCopy.BookCopyResponse;
 import com.university.library.entity.Book;
+import com.university.library.entity.BookCopy;
 import com.university.library.entity.Category;
 import com.university.library.repository.BookRepository;
 import com.university.library.repository.CategoryRepository;
@@ -37,6 +39,14 @@ public class BookServiceImpl implements BookService {
     /**
      QueryBook
      */
+     public List<BookResponse> getAllBook(){
+        List<Book> book = bookRepository.findAll();
+        List<BookResponse> responses = book.stream()
+                .map(BookResponse::fromEntity)
+                .collect(Collectors.toList());
+
+        return responses;
+    }
     public BookResponse getBookById(UUID bookId) {
         log.info(BookConstants.LOG_GETTING_BOOK, bookId);
 

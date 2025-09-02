@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -53,7 +54,23 @@ public class BookController {
         }
     }
 
-    @GetMapping
+    @GetMapping("/all")
+    @Operation(summary = "Get book by ID", description = "Retrieve detailed information about a specific book")
+    public ResponseEntity<StandardResponse<List<BookResponse>>> getAllBook()
+    {
+
+        try {
+           List<BookResponse>  book = bookService.getAllBook();
+            return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOK_RETRIEVED, book));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(StandardResponse.error(BookConstants.ERROR_BOOK_NOT_FOUND));
+        }
+    }
+
+
+
+    @GetMapping("/search")
     @Operation(summary = "Search books", description = "Search books with pagination and filters")
     public ResponseEntity<StandardResponse<PagedResponse<BookResponse>>> searchBooks(
             @Parameter(description = "Search parameters")
@@ -73,7 +90,7 @@ public class BookController {
 
     // ==================== COMMAND ENDPOINTS ====================
 
-    @PostMapping
+    @PostMapping("/create")
     @Operation(summary = "Create new book", description = "Create a new book in the library system")
     public ResponseEntity<StandardResponse<BookResponse>> createBook(
             @Parameter(description = "Book creation data", required = true)
