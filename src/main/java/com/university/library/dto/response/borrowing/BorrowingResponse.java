@@ -29,8 +29,8 @@ public class BorrowingResponse {
     private boolean isOverdue;
     private long overdueDays;
     private double calculatedFine;
-    private Instant createdAt;
-    private Instant updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static BorrowingResponse fromEntity(Borrowing borrowing) {
         if (borrowing == null) {

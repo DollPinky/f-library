@@ -4,6 +4,7 @@ import com.university.library.entity.User;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -20,8 +21,8 @@ public class AccountResponse {
     private String companyAccount;
     private User.AccountRole role;
     private CampusResponse campus;
-    private Instant createdAt;
-    private Instant updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static AccountResponse fromEntity(User account) {
         if (account == null) {

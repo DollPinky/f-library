@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -34,6 +35,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID>, JpaSp
     @Query("SELECT COUNT(b) FROM Book b WHERE b.category.categoryId = :categoryId")
     Long countBooksByCategoryId(@Param("categoryId") UUID categoryId);
 
+    Optional<Category> findByName(String name);
 
 } 
 

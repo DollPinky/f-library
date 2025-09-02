@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Component
@@ -248,8 +249,8 @@ public class DataInitializer implements CommandLineRunner {
                         .isActive(true)
                         .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(adminRole))
-                        .createdAt(now)
-                        .updatedAt(now)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .build(),
 
                 // Librarian accounts
@@ -265,8 +266,8 @@ public class DataInitializer implements CommandLineRunner {
                         .isActive(true)
                         .campus(campusMap.get("HCM-F-Town-2"))
                         .roles(Set.of(librarianRole))
-                        .createdAt(now)
-                        .updatedAt(now)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .build(),
                 User.builder()
                         .fullName("Lê Văn Thủ thư HCM")
@@ -280,8 +281,8 @@ public class DataInitializer implements CommandLineRunner {
                         .isActive(true)
                         .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(librarianRole))
-                        .createdAt(now)
-                        .updatedAt(now)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .build(),
                 User.builder()
                         .fullName("Phạm Thị Thủ thư DN")
@@ -295,8 +296,8 @@ public class DataInitializer implements CommandLineRunner {
                         .isActive(true)
                         .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(librarianRole))
-                        .createdAt(now)
-                        .updatedAt(now)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .build(),
 
                 // Reader accounts (employees)
@@ -312,8 +313,8 @@ public class DataInitializer implements CommandLineRunner {
                         .isActive(true)
                         .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
-                        .createdAt(now)
-                        .updatedAt(now)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .build(),
                 User.builder()
                         .fullName("Vũ Thị Nhân viên HN")
@@ -327,8 +328,8 @@ public class DataInitializer implements CommandLineRunner {
                         .isActive(true)
                         .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
-                        .createdAt(now)
-                        .updatedAt(now)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .build(),
                 User.builder()
                         .fullName("Đỗ Văn Nhân viên HCM")
@@ -342,8 +343,8 @@ public class DataInitializer implements CommandLineRunner {
                         .isActive(true)
                         .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
-                        .createdAt(now)
-                        .updatedAt(now)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .build(),
                 User.builder()
                         .fullName("Ngô Thị Nhân viên HCM")
@@ -357,8 +358,8 @@ public class DataInitializer implements CommandLineRunner {
                         .isActive(true)
                         .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
-                        .createdAt(now)
-                        .updatedAt(now)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .build(),
                 User.builder()
                         .fullName("Bùi Văn Nhân viên DN")
@@ -372,8 +373,8 @@ public class DataInitializer implements CommandLineRunner {
                         .isActive(true)
                         .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
-                        .createdAt(now)
-                        .updatedAt(now)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .build(),
                 User.builder()
                         .fullName("Lê Văn Nhân viên DN")
@@ -387,8 +388,8 @@ public class DataInitializer implements CommandLineRunner {
                         .isActive(true)
                         .campus(campusMap.get("HCM-F-Town-1"))
                         .roles(Set.of(readerRole))
-                        .createdAt(now)
-                        .updatedAt(now)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .build()
         };
 
@@ -396,6 +397,5 @@ public class DataInitializer implements CommandLineRunner {
             userRepository.save(user);
         }
     }
-
 
 }

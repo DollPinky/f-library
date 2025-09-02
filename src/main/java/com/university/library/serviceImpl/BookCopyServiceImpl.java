@@ -178,7 +178,7 @@ public class BookCopyServiceImpl implements BookCopyService {
      BookCopyQuery
      */
 
-    public BookCopyResponse getBookCopyById(UUID bookCopyId) {
+    public BookCopyResponse getBookCopyById(String bookCopyId) {
 
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
                 .orElseThrow(() -> new RuntimeException("Book copy not found with ID: " + bookCopyId));
@@ -243,30 +243,16 @@ public class BookCopyServiceImpl implements BookCopyService {
      BookCopyCommand
      */
 
-    public byte[] generateQRCodeImage(UUID bookCopyID) throws Exception {
+    public byte[] generateQRCodeImage(String bookCopyID) throws Exception {
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyID)
                 .orElseThrow(() -> new RuntimeException("Book copy not found with ID: " + bookCopyID));
         String idBookCopy = corsAllowedOrigins + "/api/v1/bookDetail/" + bookCopy.getBookCopyId();
         return qrCodeService.generateQRCodeImage(idBookCopy, 250, 250);
     }
 
-    @Transactional
-    public BookCopyResponse createBookCopy(CreateBookCopyCommand command) {
-
-        BookCopy bookCopy = BookCopy.builder()
-                .shelfLocation(command.getShelfLocation())
-                .status(convertBookStatus(command.getStatus()))
-                .build();
-
-        BookCopy savedBookCopy = bookCopyRepository.save(bookCopy);
-        BookCopyResponse response = BookCopyResponse.fromEntity(savedBookCopy);
-
-        log.info(BookCopyConstants.LOG_BOOK_COPY_CREATED, savedBookCopy.getBookCopyId());
-        return response;
-    }
 
     @Transactional
-    public BookCopyResponse updateBookCopy(UUID bookCopyId, CreateBookCopyCommand command) {
+    public BookCopyResponse updateBookCopy(String bookCopyId, CreateBookCopyCommand command) {
         log.info("Updating book copy with ID: {}", bookCopyId);
 
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
@@ -285,7 +271,7 @@ public class BookCopyServiceImpl implements BookCopyService {
     }
 
     @Transactional
-    public void deleteBookCopy(UUID bookCopyId) {
+    public void deleteBookCopy(String bookCopyId) {
         log.info("Deleting book copy with ID: {}", bookCopyId);
 
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
@@ -302,7 +288,7 @@ public class BookCopyServiceImpl implements BookCopyService {
     }
 
     @Transactional
-    public BookCopyResponse changeBookCopyStatus(UUID bookCopyId, CreateBookCopyCommand.BookStatus newStatus) {
+    public BookCopyResponse changeBookCopyStatus(String bookCopyId, CreateBookCopyCommand.BookStatus newStatus) {
         log.info("Changing book copy status: {} -> {}", bookCopyId, newStatus);
 
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
@@ -336,6 +322,7 @@ public class BookCopyServiceImpl implements BookCopyService {
                     .orElseThrow(() -> new RuntimeException("Library not found with ID: " + copyInfo.getCampusId()));
                 BookCopy bookCopy = BookCopy.builder()
                         .book(book)
+                        .bookCopyId(copyInfo.getBookCopyId())
                         .campus(library)
                         .shelfLocation(copyInfo.getLocation())
                         .status(BookCopy.BookStatus.AVAILABLE)

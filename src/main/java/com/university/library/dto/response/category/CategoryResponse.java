@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -23,8 +24,8 @@ public class CategoryResponse {
     private CategoryResponse parentCategory;
     private List<CategoryResponse> subCategories;
     private Long bookCount;
-    private Instant createdAt;
-    private Instant updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
     public static CategoryResponse fromEntity(Category category) {
         if (category == null) {

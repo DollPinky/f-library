@@ -4,7 +4,9 @@ import com.university.library.base.PagedResponse;
 import com.university.library.dto.request.book.BookSearchParams;
 import com.university.library.dto.request.book.CreateBookCommand;
 import com.university.library.dto.request.book.UpdateBookCommand;
+import com.university.library.dto.response.book.BookImportResponse;
 import com.university.library.dto.response.book.BookResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,5 +24,6 @@ public interface BookService {
     BookResponse createBook(CreateBookCommand command);
     BookResponse updateBook(UUID bookId, UpdateBookCommand command);
     void deleteBook(UUID bookId);
+    BookImportResponse importBooksFromExcel(MultipartFile file);
 
 }

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -24,7 +25,7 @@ public class StandardResponse<T> {
     private T data;
 
     @Builder.Default
-    private Instant timestamp = Instant.now();
+    private LocalDateTime timestamp = LocalDateTime.now();
 
     private String errorCode;
 
@@ -32,7 +33,7 @@ public class StandardResponse<T> {
         return StandardResponse.<T>builder()
                 .success(true)
                 .message("Thành công")
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -41,7 +42,7 @@ public class StandardResponse<T> {
                 .success(true)
                 .message("Thành công")
                 .data(data)
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -50,7 +51,7 @@ public class StandardResponse<T> {
                 .success(true)
                 .message(message)
                 .data(data)
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -58,7 +59,7 @@ public class StandardResponse<T> {
         return StandardResponse.<T>builder()
                 .success(false)
                 .message(message)
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -67,7 +68,7 @@ public class StandardResponse<T> {
                 .success(false)
                 .message(message)
                 .errorCode(errorCode)
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -76,7 +77,7 @@ public class StandardResponse<T> {
                 .success(false)
                 .message(message)
                 .data(data)
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 }

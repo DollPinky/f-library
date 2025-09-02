@@ -19,8 +19,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.Instant;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
@@ -36,22 +35,22 @@ public abstract class BaseEntity {
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
-  private Instant createdAt;
+  private LocalDateTime createdAt;
 
   @LastModifiedDate
   @Column(name = "updated_at", nullable = false)
-  private Instant updatedAt;
+  private LocalDateTime updatedAt;
 
   @PrePersist
   protected void onCreate() {
-    Instant now = Instant.now();
+    LocalDateTime now = LocalDateTime.now();
     isDeleted = false;
     createdAt = now;
     updatedAt = now;
   }
   @PreUpdate
   protected void onUpdate() {
-    updatedAt = Instant.now();
+    updatedAt = LocalDateTime.now();
   }
 }
 

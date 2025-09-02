@@ -17,8 +17,8 @@ public interface BorrowingService {
     /**
      BorrowingCommand
      */
-    BorrowingResponse Borrow(UUID bookCopyId, UUID borrowerId);
-    BorrowingResponse returnBook(UUID bookCopyId);
-    BorrowingResponse reportLost(UUID bookCopyId);
+    BorrowingResponse Borrow(String bookCopyId, UUID borrowerId);
+    BorrowingResponse returnBook(String bookCopyId);
+    BorrowingResponse reportLost(String bookCopyId);
 
 }

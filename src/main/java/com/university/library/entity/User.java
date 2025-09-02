@@ -3,6 +3,7 @@ package com.university.library.entity;
 import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -63,10 +64,10 @@ public class User extends BaseEntity implements org.springframework.security.cor
     private Campus campus;
 
     @Column(name = "created_at")
-    private Instant createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
 
     public enum AccountRole {
         ADMIN,

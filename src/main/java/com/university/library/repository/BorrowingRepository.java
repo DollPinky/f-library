@@ -18,14 +18,6 @@ import java.util.UUID;
 @Repository
 public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, JpaSpecificationExecutor<Borrowing> {
 
-    @Query("SELECT b FROM Borrowing b WHERE b.bookCopy.campus.campusId = :campusId")
-    List<Borrowing> findByCampusId(@Param("campusId") UUID campusId);
-
-    /**
-     * Tìm borrowings theo trạng thái
-     */
-    List<Borrowing> findByStatus(Borrowing.BorrowingStatus status);
-    
     /**
      * Tìm borrowings theo trạng thái với pagination
      */
@@ -60,18 +52,6 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
     
 
     /**
-     * Kiểm tra xem book copy có đang được mượn không
-     */
-    @Query("SELECT COUNT(b) > 0 FROM Borrowing b WHERE b.bookCopy.bookCopyId = :bookCopyId AND b.status IN ('BORROWED', 'RESERVED')")
-    boolean isBookCopyCurrentlyBorrowed(@Param("bookCopyId") UUID bookCopyId);
-    
-    /**
-     * Tìm borrowings theo thời gian
-     */
-    @Query("SELECT b FROM Borrowing b WHERE b.borrowedDate BETWEEN :startDate AND :endDate")
-    List<Borrowing> findByBorrowedDateBetween(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
-    
-    /**
      * Đếm số sách đang mượn của một người dùng (bao gồm cả chờ xác nhận)
      */
     @Query("SELECT COUNT(b) FROM Borrowing b WHERE b.borrower.userId = :borrowerId AND b.status IN ('BORROWED', 'PENDING_LIBRARIAN')")
@@ -99,7 +79,7 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
 
     boolean existsByBorrowerUserIdAndBookCopyBookCopyIdAndStatus(
             UUID borrowerId,
-            UUID bookCopyId,
+            String bookCopyId,
             Borrowing.BorrowingStatus status
     );
 } 

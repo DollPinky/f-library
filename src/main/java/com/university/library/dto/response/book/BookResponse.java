@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,8 +25,8 @@ public class BookResponse {
     private String description;
     private CategoryResponse category;
     private List<BookCopyResponse> bookCopies;
-    private Instant createdAt;
-    private Instant updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static BookResponse fromEntity(Book book) {
         if (book == null) {
@@ -85,13 +85,13 @@ public class BookResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class BookCopyResponse {
-        private UUID bookCopyId;
+        private String bookCopyId;
         private UUID bookId;
         private UUID campusId;
         private String status;
         private String shelfLocation;
-        private Instant createdAt;
-        private Instant updatedAt;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
 
         public static BookCopyResponse fromEntity(BookCopy bookCopy) {
             if (bookCopy == null) {

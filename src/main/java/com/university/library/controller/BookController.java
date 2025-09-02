@@ -6,6 +6,7 @@ import com.university.library.constants.BookConstants;
 import com.university.library.dto.request.book.BookSearchParams;
 import com.university.library.dto.request.book.CreateBookCommand;
 import com.university.library.dto.request.book.UpdateBookCommand;
+import com.university.library.dto.response.book.BookImportResponse;
 import com.university.library.dto.response.book.BookResponse;
 import com.university.library.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,8 +17,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -156,6 +159,27 @@ public class BookController {
             log.error(BookConstants.ERROR_LOG_UNEXPECTED_DELETE, bookId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(StandardResponse.error(BookConstants.ERROR_DELETE_FAILED));
+        }
+    }
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Import books from Excel", description = "Import multiple books and book copies from Excel file")
+    public ResponseEntity<StandardResponse<BookImportResponse>> importBooks(
+            @Parameter(description = "Excel file containing book data", required = true)
+            @RequestParam("file") MultipartFile file) {
+
+        log.info("Importing books from Excel file: {}", file.getOriginalFilename());
+
+        try {
+            BookImportResponse result = bookService.importBooksFromExcel(file);
+            return ResponseEntity.ok(StandardResponse.success("Books imported successfully", result));
+        } catch (RuntimeException e) {
+            log.error("Error importing books: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(StandardResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error importing books: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(StandardResponse.error("Failed to import books"));
         }
     }
 

@@ -1,17 +1,14 @@
 package com.university.library.repository;
 
 import com.university.library.entity.BookCopy;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.*;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface BookCopyRepository extends JpaRepository<BookCopy, UUID>, JpaSpecificationExecutor<BookCopy> {
+public interface BookCopyRepository extends JpaRepository<BookCopy, String>, JpaSpecificationExecutor<BookCopy> {
 
     /**
      * Tìm bản sao sách theo sách
@@ -19,7 +16,7 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, UUID>, JpaSp
     List<BookCopy> findByBookBookId(UUID bookId);
 
 
-    BookCopy findByBookCopyId(UUID bookCopyId);
+    BookCopy findByBookCopyId(String bookCopyId);
     /**
      * Tìm bản sao sách có thể mượn theo sách
      */

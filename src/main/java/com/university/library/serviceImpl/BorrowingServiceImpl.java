@@ -144,7 +144,7 @@ public class BorrowingServiceImpl implements BorrowingService {
      * Tạo yêu cầu mượn sách hoặc đặt sách
      */
     @Transactional
-    public BorrowingResponse Borrow(UUID bookCopyId, UUID borrowerId) {
+    public BorrowingResponse Borrow(String bookCopyId, UUID borrowerId) {
 
         BookCopy bookCopy = bookCopyRepository.findByBookCopyId(bookCopyId);
         if (bookCopy == null) {
@@ -187,7 +187,7 @@ public class BorrowingServiceImpl implements BorrowingService {
      * Trả sách
      */
     @Transactional
-    public BorrowingResponse returnBook(UUID bookCopyId) {
+    public BorrowingResponse returnBook(String bookCopyId) {
 
         // Tìm bản sao sách bằng QR code
         BookCopy bookCopy = bookCopyRepository.findByBookCopyId(bookCopyId);
@@ -234,7 +234,7 @@ public class BorrowingServiceImpl implements BorrowingService {
      * Báo mất sách
      */
     @Transactional
-    public BorrowingResponse reportLost(UUID bookCopyId) {
+    public BorrowingResponse reportLost(String bookCopyId) {
 
         // Tìm bản sao sách bằng QR code
         BookCopy bookCopy = bookCopyRepository.findByBookCopyId(bookCopyId);
