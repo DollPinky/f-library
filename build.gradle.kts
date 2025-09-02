@@ -76,6 +76,8 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
+    implementation("org.apache.poi:poi:5.2.3")
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
 
 
 

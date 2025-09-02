@@ -8,6 +8,7 @@ import com.university.library.entity.Borrowing;
 import com.university.library.repository.BorrowingRepository;
 import com.university.library.service.BorrowingService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -186,6 +187,7 @@ public class BorrowingController {
      * Lấy borrowings quá hạn
      */
     @GetMapping("/overdue")
+    @Operation(summary = "Get borrowing quá hạn")
     public ResponseEntity<StandardResponse<List<BorrowingResponse>>> getOverdueBorrowings() {
         try {
             log.info("Getting overdue borrowings");
