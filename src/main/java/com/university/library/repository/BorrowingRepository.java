@@ -17,7 +17,9 @@ import java.util.UUID;
 
 @Repository
 public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, JpaSpecificationExecutor<Borrowing> {
-    
+
+    @Query("SELECT b FROM Borrowing b WHERE b.bookCopy.campus.campusId = :campusId")
+    List<Borrowing> findByCampusId(@Param("campusId") UUID campusId);
 
     /**
      * Tìm borrowings theo trạng thái

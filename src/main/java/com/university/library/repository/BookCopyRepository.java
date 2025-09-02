@@ -19,7 +19,7 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, UUID>, JpaSp
     List<BookCopy> findByBookBookId(UUID bookId);
 
 
-
+    BookCopy findByBookCopyId(UUID bookCopyId);
     /**
      * Tìm bản sao sách có thể mượn theo sách
      */

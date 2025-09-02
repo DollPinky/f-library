@@ -14,21 +14,37 @@ import java.time.Instant;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardResponse<T> {
-    
+
     @Builder.Default
     private boolean success = true;
-    
+
     @Builder.Default
     private String message = "Thành công";
-    
+
     private T data;
-    
+
     @Builder.Default
     private Instant timestamp = Instant.now();
-    
+
     private String errorCode;
 
-    
+    public static <T> StandardResponse<T> success(String đăngNhậpThànhCông) {
+        return StandardResponse.<T>builder()
+                .success(true)
+                .message("Thành công")
+                .timestamp(Instant.now())
+                .build();
+    }
+
+    public static <T> StandardResponse<T> success(T data) {
+        return StandardResponse.<T>builder()
+                .success(true)
+                .message("Thành công")
+                .data(data)
+                .timestamp(Instant.now())
+                .build();
+    }
+
     public static <T> StandardResponse<T> success(String message, T data) {
         return StandardResponse.<T>builder()
                 .success(true)
@@ -37,7 +53,7 @@ public class StandardResponse<T> {
                 .timestamp(Instant.now())
                 .build();
     }
-    
+
     public static <T> StandardResponse<T> error(String message) {
         return StandardResponse.<T>builder()
                 .success(false)
@@ -45,7 +61,7 @@ public class StandardResponse<T> {
                 .timestamp(Instant.now())
                 .build();
     }
-    
+
     public static <T> StandardResponse<T> error(String message, String errorCode) {
         return StandardResponse.<T>builder()
                 .success(false)
@@ -54,7 +70,7 @@ public class StandardResponse<T> {
                 .timestamp(Instant.now())
                 .build();
     }
-    
+
     public static <T> StandardResponse<T> error(String message, T data) {
         return StandardResponse.<T>builder()
                 .success(false)
@@ -63,5 +79,4 @@ public class StandardResponse<T> {
                 .timestamp(Instant.now())
                 .build();
     }
-} 
-
+}

@@ -5,6 +5,6 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class ScanAndBorrowCommand {
-    private UUID qrCode;
+public class BorrowRequest {
+    private UUID BookCopyId;
 }
