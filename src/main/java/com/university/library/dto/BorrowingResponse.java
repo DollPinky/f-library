@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -17,9 +18,9 @@ public class BorrowingResponse {
     private UUID borrowingId;
     private BookCopyResponse bookCopy;
     private AccountResponse borrower;
-    private Instant borrowedDate;
-    private Instant dueDate;
-    private Instant returnedDate;
+    private LocalDateTime borrowedDate;
+    private LocalDateTime dueDate;
+    private LocalDateTime returnedDate;
     private Borrowing.BorrowingStatus status;
     private Double fineAmount;
     private String notes;

@@ -1,5 +1,6 @@
 package com.university.library.repository;
 
+import com.university.library.entity.BookCopy;
 import com.university.library.entity.Borrowing;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -98,4 +100,18 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
      * Tìm tất cả borrowings với pagination
      */
     Page<Borrowing> findAll(Pageable pageable);
+
+    /**
+      Tìm Borrowing mới nhất dựa theo bookCopy và Status
+     */
+    Optional<Borrowing> findTopByBookCopyAndStatusOrderByCreatedAtDesc(
+            BookCopy bookCopy,
+            Borrowing.BorrowingStatus status
+    );
+
+    boolean existsByBorrowerAccountIdAndBookCopyBookCopyIdAndStatus(
+            UUID borrowerId,
+            UUID bookCopyId,
+            Borrowing.BorrowingStatus status
+    );
 } 
