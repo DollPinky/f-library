@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,8 @@ public class BookCopyQRPDFService {
 
     private final BookCopyRepository bookCopyRepository;
     private final QRCodeService qrCodeService;
+    @Value("${app.cors.allowed-origins:*}")
+    private String corsAllowedOrigins;
 
     public byte[] generateAllQRCodesPDF() throws Exception {
         // Use the new method name
@@ -43,7 +46,8 @@ public class BookCopyQRPDFService {
 
                 try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
                     // Generate QR code
-                    String qrContent = bookCopy.getQrCode();
+                    String qrContent = corsAllowedOrigins + "/api/v1/bookDetail/" + bookCopy.getQrCode();
+
                     byte[] qrImageBytes = qrCodeService.generateQRCodeImage(qrContent, 200, 200);
                     PDImageXObject qrImage = PDImageXObject.createFromByteArray(document, qrImageBytes, "QRCode");
 
