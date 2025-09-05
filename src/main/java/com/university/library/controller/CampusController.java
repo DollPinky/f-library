@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 @RequestMapping(CampusConstants.API_BASE_PATH)
 @RequiredArgsConstructor
 @Tag(name = "Campus Management", description = "APIs for managing campuses in the library system")
-@SecurityRequirement(name = "api")
 public class CampusController {
 
     private final CampusService campusService;

@@ -9,5 +9,5 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 public interface AuthenticationService extends UserDetailsService {
     AccountResponse register(RegisterRequest request);
-    UserResponse login(LoginRequest loginRequest);
+    AccountResponse login(LoginRequest loginRequest);
 }

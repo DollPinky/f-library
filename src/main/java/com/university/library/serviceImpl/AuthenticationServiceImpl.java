@@ -90,36 +90,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public UserResponse login(LoginRequest loginRequest) {
+    public AccountResponse login(LoginRequest request) {
         try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-
-
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            User account = (User) authentication.getPrincipal();
+            return AccountResponse.fromEntity(account);
         } catch (BadCredentialsException e) {
-            // Fixed: Preserve stack trace
-            throw new BadRequestException("Username/ password is invalid. Please try again!", e);
-        } catch (LockedException e) {
-            // Fixed: Preserve stack trace
-            throw new BadRequestException("Account has been locked!", e);
-        } catch (Exception e) {
-            // Fixed: Preserve stack trace
-            throw new BadRequestException("Login failed: " + e.getMessage(), e);
+            throw new BadCredentialsException("Email hoặc mật khẩu không đúng.");
         }
-
-        User user = userRepository
-                .findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("Account not found with username: " + loginRequest.getEmail()));
-
-        // Tạo authentication với authorities từ permissions
-        Authentication authentication =
-                new UsernamePasswordAuthenticationToken(user.getUsername(), null, user.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
-        String token = tokenService.generateToken(user);
-
-        return UserMapper.toResponse(user, token, refreshToken.getToken());
     }
 
     @Override

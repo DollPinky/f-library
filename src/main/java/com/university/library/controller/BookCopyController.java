@@ -28,7 +28,6 @@ import java.util.UUID;
 @RequestMapping("/api/v1/book-copies")
 @RequiredArgsConstructor
 @Tag(name = "Book Copy Management", description = "APIs for managing book copies in the library system")
-@SecurityRequirement(name = "api")
 public class BookCopyController {
 
     private final BookCopyService bookCopyService;

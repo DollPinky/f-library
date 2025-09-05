@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,7 +25,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/borrowings")
 @RequiredArgsConstructor
-@SecurityRequirement(name = "api")
 public class BorrowingController {
 
     private final BorrowingService borrowingService;
@@ -36,6 +36,7 @@ public class BorrowingController {
             @AuthenticationPrincipal User userPrincipal) {
         try {
             log.info("Checking if user has borrowed book copy: {}", bookCopyId);
+
 
             UUID userId = userPrincipal.getUserId();
 
@@ -67,7 +68,6 @@ public class BorrowingController {
             @AuthenticationPrincipal User userPrincipal) {
 
         try {
-            log.info("Scan and borrow for QR code: {}", borrowRequest.getBookCopyId());
 
             // Lấy ID người dùng từ authentication
             UUID borrowerId = userPrincipal.getUserId();
@@ -91,7 +91,6 @@ public class BorrowingController {
     /**
      * Trả sách
      */
-    @PreAuthorize("hasAnyAuthority('BORROW_MANAGE')")
     @PutMapping("/return")
     public ResponseEntity<StandardResponse<BorrowingResponse>> returnBook(
             @RequestBody BorrowRequest borrowRequest) {
@@ -120,7 +119,6 @@ public class BorrowingController {
     /**
      * Báo mất sách
      */
-    @PreAuthorize("hasAnyAuthority('BORROW_MANAGE')")
     @PutMapping("/lost")
     public ResponseEntity<StandardResponse<BorrowingResponse>> reportLost(
             @RequestBody BorrowRequest borrowRequest) {

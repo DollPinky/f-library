@@ -12,6 +12,8 @@ import com.university.library.service.AuthenticationService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,10 +49,12 @@ public class AccountController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<StandardResponse<UserResponse>> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<StandardResponse<AccountResponse>> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
-            UserResponse account = authenticationService.login(loginRequest);
+            AccountResponse account = authenticationService.login(request);
             // Ensure session is created and user is properly authenticated
+            HttpSession session = httpRequest.getSession(true);
+            session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
             return ResponseEntity.ok(StandardResponse.success("Đăng nhập thành công", account));
         } catch (Exception e) {
             log.error("Error logging in: ", e);
@@ -60,8 +64,8 @@ public class AccountController {
     }
 
 
+
     @PostMapping("/logout")
-    @SecurityRequirement(name = "api")
     @Transactional
     public ResponseEntity<StandardResponse<Void>> logout() {
         try {

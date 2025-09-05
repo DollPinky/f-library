@@ -26,7 +26,6 @@ import java.util.UUID;
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 @Tag(name = "Category Management", description = "APIs for managing categories in the library system")
-@SecurityRequirement(name = "api")
 public class CategoryController {
 
     private final CategoryService categoryService;
