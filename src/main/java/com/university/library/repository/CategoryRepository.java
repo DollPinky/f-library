@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -27,21 +28,14 @@ public interface CategoryRepository extends JpaRepository<Category, UUID>, JpaSp
      * Kiểm tra xem có danh mục nào có tên này không
      */
     boolean existsByName(String name);
-    
-    /**
-     * Tìm danh mục theo tên
-     */
-    List<Category> findByNameContainingIgnoreCase(String name);
-    
-    /**
-     * Tìm danh mục theo mô tả
-     */
-    List<Category> findByDescriptionContainingIgnoreCase(String description);
-    
+
     /**
      * Đếm số sách trong một danh mục
      */
     @Query("SELECT COUNT(b) FROM Book b WHERE b.category.categoryId = :categoryId")
     Long countBooksByCategoryId(@Param("categoryId") UUID categoryId);
+
+    Optional<Category> findByName(String name);
+
 } 
 

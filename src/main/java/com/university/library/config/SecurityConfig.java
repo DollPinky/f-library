@@ -1,6 +1,6 @@
 package com.university.library.config;
 
-import com.university.library.repository.AccountRepository;
+import com.university.library.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +27,7 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final AccountRepository accountRepository;
+    private final UserRepository accountRepository;
 
     @Value("${app.cors.allowed-origins:*}")
     private String corsAllowedOrigins;
@@ -39,17 +39,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v1/campuses/all",
                                 "/api/v1/accounts/register",
                                 "/api/v1/accounts/login",
-                                "/api/v1/categories",
-                                "/api/v1/categories/**",
-                                "/api/v1/books/*",
-                                "/api/v1/books/**",
-                                "/api/v1/libraries",
-                                "/api/v1/libraries/**",
-                                "/api/v1/borrowings",
-                                "/api/v1/borrowings/**",
+                                "/api/chat-with-guest",
+                                "/swagger-ui/**",
                                 "/api/v1/**",
                                 "/v3/api-docs",
                                 "/v3/api-docs/**",
@@ -57,8 +50,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/swagger-resources/**",
-                                "/webjars/**",
-                                "/error"
+                                "/webjars/**"
                         ).permitAll()
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "LIBRARIAN")
                         .anyRequest().authenticated()
@@ -68,18 +60,19 @@ public class SecurityConfig {
                         .invalidSessionUrl("/login?invalid=true")
                         .maximumSessions(1)
                         .maxSessionsPreventsLogin(false)
-                        .expiredUrl("/login?expired=true"))
+                        .expiredUrl("/login?expired=true")
+                        )
                 .logout(logout -> logout
                         .logoutUrl("/api/v1/accounts/logout")
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()))
                 .exceptionHandling()
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setContentType("application/json");
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}");
-                        });
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setContentType("application/json");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}");
+                });
 
         return http.build();
     }
@@ -130,4 +123,3 @@ public class SecurityConfig {
         return CookieSameSiteSupplier.ofLax();
     }
 }
-

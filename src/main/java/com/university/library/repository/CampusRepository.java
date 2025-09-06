@@ -13,5 +13,9 @@ import java.util.UUID;
 public interface CampusRepository extends JpaRepository<Campus, UUID> {
     @Query("SELECT c FROM Campus c WHERE c.campusId = :campusId")
     Optional<Campus> findByCampusId(@Param("campusId") UUID campusId);
+
+    Campus findByCode(String code);
+
+    boolean existsByCode(String code);
 }
 

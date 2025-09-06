@@ -20,20 +20,16 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class BookCopy extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "book_copy_id")
-    private UUID bookCopyId;
+    @Column(name = "book_copy_id", length = 20)
+    private String bookCopyId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "library_id", nullable = false)
-    private Library library;
-    
-    @Column(name = "qr_code", unique = true, length = 255)
-    private String qrCode;
+    @JoinColumn(name = "campus_id", nullable = false)
+    private Campus campus;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)

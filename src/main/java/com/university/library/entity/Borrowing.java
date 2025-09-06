@@ -2,7 +2,7 @@ package com.university.library.entity;
 
 import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
-import java.time.Instant;
+
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -29,7 +29,7 @@ public class Borrowing extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "borrower_id", nullable = false)
-    private Account borrower;
+    private User borrower;
 
     @Column(name = "borrowed_date", nullable = false)
     private LocalDateTime borrowedDate;

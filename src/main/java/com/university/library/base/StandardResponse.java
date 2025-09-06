@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -14,70 +15,69 @@ import java.time.Instant;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardResponse<T> {
-    
+
     @Builder.Default
     private boolean success = true;
-    
+
     @Builder.Default
     private String message = "Thành công";
-    
+
     private T data;
-    
+
     @Builder.Default
-    private Instant timestamp = Instant.now();
-    
+    private LocalDateTime timestamp = LocalDateTime.now();
+
     private String errorCode;
-    
+
     public static <T> StandardResponse<T> success(String đăngNhậpThànhCông) {
         return StandardResponse.<T>builder()
                 .success(true)
                 .message("Thành công")
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
-    
+
     public static <T> StandardResponse<T> success(T data) {
         return StandardResponse.<T>builder()
                 .success(true)
                 .message("Thành công")
                 .data(data)
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
-    
+
     public static <T> StandardResponse<T> success(String message, T data) {
         return StandardResponse.<T>builder()
                 .success(true)
                 .message(message)
                 .data(data)
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
-    
+
     public static <T> StandardResponse<T> error(String message) {
         return StandardResponse.<T>builder()
                 .success(false)
                 .message(message)
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
-    
+
     public static <T> StandardResponse<T> error(String message, String errorCode) {
         return StandardResponse.<T>builder()
                 .success(false)
                 .message(message)
                 .errorCode(errorCode)
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
-    
+
     public static <T> StandardResponse<T> error(String message, T data) {
         return StandardResponse.<T>builder()
                 .success(false)
                 .message(message)
                 .data(data)
-                .timestamp(Instant.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
-} 
-
+}

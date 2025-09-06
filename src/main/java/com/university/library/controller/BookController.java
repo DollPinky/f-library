@@ -3,12 +3,15 @@ package com.university.library.controller;
 import com.university.library.base.PagedResponse;
 import com.university.library.base.StandardResponse;
 import com.university.library.constants.BookConstants;
-import com.university.library.dto.*;
-import com.university.library.service.BookCopyFacade;
-import com.university.library.service.BookFacade;
-import com.university.library.service.query.BookCopyQueryService;
+import com.university.library.dto.request.book.BookSearchParams;
+import com.university.library.dto.request.book.CreateBookCommand;
+import com.university.library.dto.request.book.UpdateBookCommand;
+import com.university.library.dto.response.book.BookImportResponse;
+import com.university.library.dto.response.book.BookResponse;
+import com.university.library.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,7 +32,7 @@ import java.util.UUID;
 @Tag(name = "Book Management", description = "APIs for managing books in the library system")
 public class BookController {
 
-    private final BookFacade bookFacade;
+    private final BookService bookService;
 
     // ==================== QUERY ENDPOINTS ====================
 
@@ -39,11 +43,11 @@ public class BookController {
     public ResponseEntity<StandardResponse<BookResponse>> getBookById(
             @Parameter(description = "Book ID", required = true)
             @PathVariable UUID bookId) {
-        
+
         log.info(BookConstants.API_GET_BOOK, bookId);
-        
+
         try {
-            BookResponse book = bookFacade.getBookById(bookId);
+            BookResponse book = bookService.getBookById(bookId);
             return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOK_RETRIEVED, book));
         } catch (Exception e) {
             log.error("Error getting book by ID: {} - {}", bookId, e.getMessage());
@@ -52,16 +56,32 @@ public class BookController {
         }
     }
 
-    @GetMapping
+    @GetMapping("/all")
+    @Operation(summary = "Get book by ID", description = "Retrieve detailed information about a specific book")
+    public ResponseEntity<StandardResponse<List<BookResponse>>> getAllBook()
+    {
+
+        try {
+           List<BookResponse>  book = bookService.getAllBook();
+            return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOK_RETRIEVED, book));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(StandardResponse.error(BookConstants.ERROR_BOOK_NOT_FOUND));
+        }
+    }
+
+
+
+    @GetMapping("/search")
     @Operation(summary = "Search books", description = "Search books with pagination and filters")
     public ResponseEntity<StandardResponse<PagedResponse<BookResponse>>> searchBooks(
             @Parameter(description = "Search parameters")
             @ModelAttribute BookSearchParams params) {
-        
+
         log.info(BookConstants.API_SEARCH_BOOKS, params);
-        
+
         try {
-            PagedResponse<BookResponse> result = bookFacade.searchBooks(params);
+            PagedResponse<BookResponse> result = bookService.searchBooks(params);
             return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOKS_RETRIEVED, result));
         } catch (Exception e) {
             log.error("Error searching books: {}", e.getMessage());
@@ -72,16 +92,16 @@ public class BookController {
 
     // ==================== COMMAND ENDPOINTS ====================
 
-    @PostMapping
+    @PostMapping("/create")
     @Operation(summary = "Create new book", description = "Create a new book in the library system")
     public ResponseEntity<StandardResponse<BookResponse>> createBook(
             @Parameter(description = "Book creation data", required = true)
             @Valid @RequestBody CreateBookCommand command) {
-        
+
         log.info(BookConstants.API_CREATE_BOOK, command.getTitle());
-        
+
         try {
-            BookResponse createdBook = bookFacade.createBook(command);
+            BookResponse createdBook = bookService.createBook(command);
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(StandardResponse.success(BookConstants.SUCCESS_BOOK_CREATED, createdBook));
         } catch (RuntimeException e) {
@@ -102,11 +122,11 @@ public class BookController {
             @PathVariable UUID bookId,
             @Parameter(description = "Updated book data", required = true)
             @Valid @RequestBody UpdateBookCommand command) {
-        
+
         log.info(BookConstants.API_UPDATE_BOOK, bookId);
-        
+
         try {
-            BookResponse updatedBook = bookFacade.updateBook(bookId, command);
+            BookResponse updatedBook = bookService.updateBook(bookId, command);
             return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOK_UPDATED, updatedBook));
         } catch (RuntimeException e) {
             log.error("Error updating book: {} - {}", bookId, e.getMessage());
@@ -124,11 +144,11 @@ public class BookController {
     public ResponseEntity<StandardResponse<String>> deleteBook(
             @Parameter(description = "Book ID", required = true)
             @PathVariable UUID bookId) {
-        
+
         log.info(BookConstants.API_DELETE_BOOK, bookId);
-        
+
         try {
-            bookFacade.deleteBook(bookId);
+            bookService.deleteBook(bookId);
             return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOK_DELETED, null));
         } catch (RuntimeException e) {
             log.error(BookConstants.ERROR_LOG_DELETE_BOOK, bookId, e.getMessage());
@@ -140,5 +160,32 @@ public class BookController {
                 .body(StandardResponse.error(BookConstants.ERROR_DELETE_FAILED));
         }
     }
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Import books from Excel", description = "Import multiple books and book copies from Excel file")
+    public ResponseEntity<StandardResponse<BookImportResponse>> importBooks(
+            @Parameter(description = "Excel file containing book data", required = true)
+            @RequestParam("file") MultipartFile file) {
+
+        log.info("Importing books from Excel file: {}", file.getOriginalFilename());
+
+        try {
+            BookImportResponse result = bookService.importBooksFromExcel(file);
+            return ResponseEntity.ok(StandardResponse.success("Books imported successfully", result));
+        } catch (RuntimeException e) {
+            log.error("Error importing books: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(StandardResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error importing books: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(StandardResponse.error("Failed to import books"));
+        }
+    }
+
+    /**
+     * thêm api tìm book dựa theo category
+     */
+
+
 }
 

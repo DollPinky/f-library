@@ -52,8 +52,7 @@ public class SwaggerConfig {
                         - Apache Kafka
                         - Docker + Docker Compose
                         
-                        ## Authentication:
-                        Hiện tại chưa có authentication. Sẽ được thêm trong phiên bản tiếp theo.
+                    
                         """)
                 .contact(contact)
                 .license(license);

@@ -39,6 +39,9 @@ tasks.jacocoTestCoverageVerification {
 group = "com.university"
 version = "0.0.1-SNAPSHOT"
 
+val jjwtVersion = "0.12.5"
+
+
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
@@ -69,8 +72,12 @@ dependencies {
     implementation ("com.google.zxing:core:3.5.3")
     implementation ("com.google.zxing:javase:3.5.3")
     implementation("org.apache.pdfbox:pdfbox:2.0.27")
-    // Add a font that supports Vietnamese
     implementation("io.github.cdimascio:java-dotenv:5.2.2")
+    implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
+    implementation("org.apache.poi:poi:5.2.3")
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
 
 
 
