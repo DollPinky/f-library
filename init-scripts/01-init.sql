@@ -90,13 +90,14 @@ CREATE TABLE book_copies (
 
 -- Accounts table (for authentication and user management)
 CREATE TABLE accounts (
-    account_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     phone VARCHAR(20) NOT NULL,
     department VARCHAR(255),
     position VARCHAR(255),
-    employee_code VARCHAR(50) NOT NULL UNIQUE,
+    company_account VARCHAR(50) NOT NULL UNIQUE,
+    token_version INT,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL, -- ADMIN, LIBRARIAN, READER
     campus_id UUID NOT NULL REFERENCES campuses(campus_id) ON DELETE CASCADE,
@@ -108,7 +109,7 @@ CREATE TABLE accounts (
 CREATE TABLE staff (
     staff_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     library_id UUID NOT NULL REFERENCES libraries(library_id) ON DELETE CASCADE,
-    account_id UUID NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES accounts(user_id) ON DELETE CASCADE,
     hire_date DATE NOT NULL,
     salary DECIMAL(10,2),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -119,7 +120,7 @@ CREATE TABLE staff (
 CREATE TABLE borrowings (
     borrowing_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_copy_id UUID NOT NULL REFERENCES book_copies(book_copy_id) ON DELETE CASCADE,
-    borrower_id UUID NOT NULL REFERENCES accounts(account_id) ON DELETE CASCADE,
+    borrower_id UUID NOT NULL REFERENCES accounts(user_id) ON DELETE CASCADE,
     borrowed_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     due_date TIMESTAMP WITH TIME ZONE NOT NULL,
     returned_date TIMESTAMP WITH TIME ZONE,
@@ -160,13 +161,13 @@ CREATE INDEX idx_book_copies_status ON book_copies(status);
 
 -- Account indexes
 CREATE INDEX idx_accounts_email ON accounts(email);
-CREATE INDEX idx_accounts_employee_code ON accounts(employee_code);
+CREATE INDEX idx_accounts_company_account ON accounts(company_account);
 CREATE INDEX idx_accounts_campus_id ON accounts(campus_id);
 CREATE INDEX idx_accounts_role ON accounts(role);
 
 -- Staff indexes
 CREATE INDEX idx_staff_library_id ON staff(library_id);
-CREATE INDEX idx_staff_account_id ON staff(account_id);
+CREATE INDEX idx_staff_user_id ON staff(user_id);
 
 -- Borrowing indexes
 CREATE INDEX idx_borrowings_book_copy_id ON borrowings(book_copy_id);
@@ -201,24 +202,24 @@ INSERT INTO categories (category_id, name, description, color) VALUES
 ('770e8400-e29b-41d4-a716-446655440005', 'Lịch sử', 'Sách lịch sử Việt Nam và thế giới', '#e3e7e3');
 
 -- Insert sample accounts with hashed passwords (password: 12345678)
-INSERT INTO accounts (account_id, full_name, email, phone, department, position, employee_code, password_hash, role, campus_id) VALUES
+INSERT INTO accounts (user_id, full_name, email, phone, department, position, company_account, token_version, password_hash, role, campus_id) VALUES
 -- Admin accounts
-('880e8400-e29b-41d4-a716-446655440001', 'Nguyễn Văn Admin', 'admin@company.com', '0123456789', 'IT', 'System Administrator', 'EMP001', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'ADMIN', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440001', 'Nguyễn Văn Admin', 'admin@company.com', '0123456789', 'IT', 'System Administrator', 'EMP001', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'ADMIN', '550e8400-e29b-41d4-a716-446655440001'),
 -- Librarian accounts
-('880e8400-e29b-41d4-a716-446655440002', 'Trần Thị Thủ thư HN', 'librarian.hn@company.com', '0123456790', 'Thư viện', 'Thủ thư', 'EMP002', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440001'),
-('880e8400-e29b-41d4-a716-446655440003', 'Lê Văn Thủ thư HCM', 'librarian.hcm@company.com', '0123456791', 'Thư viện', 'Thủ thư', 'EMP003', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440002'),
-('880e8400-e29b-41d4-a716-446655440004', 'Phạm Thị Thủ thư DN', 'librarian.dn@company.com', '0123456792', 'Thư viện', 'Thủ thư', 'EMP004', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440003'),
+('880e8400-e29b-41d4-a716-446655440002', 'Trần Thị Thủ thư HN', 'librarian.hn@company.com', '0123456790', 'Thư viện', 'Thủ thư', 'EMP002', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440003', 'Lê Văn Thủ thư HCM', 'librarian.hcm@company.com', '0123456791', 'Thư viện', 'Thủ thư', 'EMP003', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440002'),
+('880e8400-e29b-41d4-a716-446655440004', 'Phạm Thị Thủ thư DN', 'librarian.dn@company.com', '0123456792', 'Thư viện', 'Thủ thư', 'EMP004', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440003'),
 
 -- Reader accounts (employees)
-('880e8400-e29b-41d4-a716-446655440005', 'Hoàng Văn Nhân viên HN', 'employee.hn1@company.com', '0123456793', 'Marketing', 'Nhân viên Marketing', 'EMP005', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
-('880e8400-e29b-41d4-a716-446655440006', 'Vũ Thị Nhân viên HN', 'employee.hn2@company.com', '0123456794', 'Sales', 'Nhân viên Sales', 'EMP006', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
-('880e8400-e29b-41d4-a716-446655440007', 'Đỗ Văn Nhân viên HCM', 'employee.hcm1@company.com', '0123456795', 'IT', 'Lập trình viên', 'EMP007', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
-('880e8400-e29b-41d4-a716-446655440008', 'Ngô Thị Nhân viên HCM', 'employee.hcm2@company.com', '0123456796', 'HR', 'Nhân viên HR', 'EMP008', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
-('880e8400-e29b-41d4-a716-446655440009', 'Bùi Văn Nhân viên DN', 'employee.dn1@company.com', '0123456797', 'Finance', 'Kế toán', 'EMP009', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440003'),
-('880e8400-e29b-41d4-a716-446655440010', 'Lê Văn Nhân viên DN', 'employee.dn2@company.com', '0123456798', 'Finance', 'Kế toán', 'EMP010', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440003');
+('880e8400-e29b-41d4-a716-446655440005', 'Hoàng Văn Nhân viên HN', 'employee.hn1@company.com', '0123456793', 'Marketing', 'Nhân viên Marketing', 'EMP005', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440006', 'Vũ Thị Nhân viên HN', 'employee.hn2@company.com', '0123456794', 'Sales', 'Nhân viên Sales', 'EMP006', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440007', 'Đỗ Văn Nhân viên HCM', 'employee.hcm1@company.com', '0123456795', 'IT', 'Lập trình viên', 'EMP007', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
+('880e8400-e29b-41d4-a716-446655440008', 'Ngô Thị Nhân viên HCM', 'employee.hcm2@company.com', '0123456796', 'HR', 'Nhân viên HR', 'EMP008', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
+('880e8400-e29b-41d4-a716-446655440009', 'Bùi Văn Nhân viên DN', 'employee.dn1@company.com', '0123456797', 'Finance', 'Kế toán', 'EMP009', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440003'),
+('880e8400-e29b-41d4-a716-446655440010', 'Lê Văn Nhân viên DN', 'employee.dn2@company.com', '0123456798', 'Finance', 'Kế toán', 'EMP010', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440003');
 
 -- Insert staff records (linking accounts to libraries)
-INSERT INTO staff (staff_id, library_id, account_id, hire_date, salary) VALUES
+INSERT INTO staff (staff_id, library_id, user_id, hire_date, salary) VALUES
 ('990e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', '880e8400-e29b-41d4-a716-446655440002', '2023-01-15', 15000000),
 ('990e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440003', '880e8400-e29b-41d4-a716-446655440003', '2023-02-20', 15000000),
 ('990e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440005', '880e8400-e29b-41d4-a716-446655440004', '2023-03-10', 15000000);
@@ -231,14 +232,14 @@ INSERT INTO books (book_id, category_id, title, author, publisher, year, isbn, d
 ('aa0e8400-e29b-41d4-a716-446655440004', '770e8400-e29b-41d4-a716-446655440004', 'Nghĩ giàu làm giàu', 'Napoleon Hill', 'NXB Tổng hợp', 1937, '978-604-0-00004-4', 'Sách về tư duy làm giàu'),
 ('aa0e8400-e29b-41d4-a716-446655440005', '770e8400-e29b-41d4-a716-446655440005', 'Lịch sử Việt Nam', 'Trần Trọng Kim', 'NXB Văn hóa', 1920, '978-604-0-00005-5', 'Lịch sử Việt Nam từ thời cổ đại');
 -- --- Sample Accounts (Staff)
--- INSERT INTO accounts (account_id, username, email, password_hash, full_name, phone, user_type, status, campus_id, library_id, is_deleted, created_at, updated_at) VALUES
+-- INSERT INTO accounts (user_id, username, email, password_hash, full_name, phone, user_type, status, campus_id, library_id, is_deleted, created_at, updated_at) VALUES
 -- (gen_random_uuid(), 'admin1', 'admin1@library.edu.vn', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'Admin User 1', '0123456789', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HN'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 -- (gen_random_uuid(), 'librarian1', 'librarian1@library.edu.vn', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'Librarian User 1', '0123456790', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HCM'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 --
 -- --- Sample Staff
--- INSERT INTO staffs (staff_id, account_id, library_id, employee_id, staff_role, department, position, is_active, can_manage_books, can_manage_users, can_manage_staff, can_view_reports, can_process_borrowings, is_deleted, created_at, updated_at) VALUES
--- (gen_random_uuid(), (SELECT account_id FROM accounts WHERE username = 'admin1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'EMP001', 'ADMIN', 'IT Department', 'System Administrator', TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
--- (gen_random_uuid(), (SELECT account_id FROM accounts WHERE username = 'librarian1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'EMP002', 'LIBRARIAN', 'Library Department', 'Senior Librarian', TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- INSERT INTO staffs (staff_id, user_id, library_id, employee_id, staff_role, department, position, is_active, can_manage_books, can_manage_users, can_manage_staff, can_view_reports, can_process_borrowings, is_deleted, created_at, updated_at) VALUES
+-- (gen_random_uuid(), (SELECT user_id FROM accounts WHERE username = 'admin1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'EMP001', 'ADMIN', 'IT Department', 'System Administrator', TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- (gen_random_uuid(), (SELECT user_id FROM accounts WHERE username = 'librarian1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'EMP002', 'LIBRARIAN', 'Library Department', 'Senior Librarian', TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert book copies with new QR code format: BK_ISBN_LIBRARYCODE_COPYNUMBER
 INSERT INTO book_copies (book_copy_id, book_id, library_id, qr_code, status, shelf_location) VALUES
