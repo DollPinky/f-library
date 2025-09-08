@@ -39,11 +39,12 @@ jobs:
     #     sudo apt-get update
     #     sudo apt-get install -y docker compose
 
+    # docker compose up -d postgres redis kafka zookeeper
     - name: Start project infrastructure with Docker Compose
       run: |
         echo "Starting project infrastructure..."
         docker compose down -v
-        docker compose up -d postgres redis kafka zookeeper
+        docker compose up -d --build
 
         echo "Waiting for PostgreSQL to be ready..."
         timeout 120s bash -c 'until docker exec library-postgres pg_isready -U postgres; do sleep 2; done' || echo "PostgreSQL health check timeout"
@@ -110,17 +111,17 @@ jobs:
         docker exec library-postgres psql -U postgres -d library -c "SELECT COUNT(*) FROM books;" || echo "Database check failed"
         docker exec library-postgres psql -U postgres -d library -c "SELECT COUNT(*) FROM readers;" || echo "Database check failed"
 
-    - name: Cleanup project infrastructure
-      if: always()
-      run: |
-        echo "Stopping project infrastructure..."
-        docker compose down -v
+    # - name: Cleanup project infrastructure
+    #   if: always()
+    #   run: |
+    #     echo "Stopping project infrastructure..."
+    #     docker compose down -v
 
-    - name: Deploy project to server
-      if: always()
-      run: |
-        echo "Deploy project to server"
-        docker compose up -d
+    # - name: Deploy project to server
+    #   if: always()
+    #   run: |
+    #     echo "Deploy project to server"
+    #     docker compose up -d
 
     - name: Build status
       run: |
