@@ -110,17 +110,17 @@ jobs:
         docker exec library-postgres psql -U postgres -d library -c "SELECT COUNT(*) FROM books;" || echo "Database check failed"
         docker exec library-postgres psql -U postgres -d library -c "SELECT COUNT(*) FROM readers;" || echo "Database check failed"
 
-    - name: Cleanup project infrastructure
-      if: always()
-      run: |
-        echo "Stopping project infrastructure..."
-        docker compose down -v
+#    - name: Cleanup project infrastructure
+#      if: always()
+#      run: |
+#        echo "Stopping project infrastructure..."
+#        docker compose down -v
 
     - name: Deploy project to server
       if: always()
       run: |
         echo "Deploy project to server"
-        docker compose up -d
+        docker compose up -d --build library-app frontend
 
     - name: Build status
       run: |
