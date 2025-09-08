@@ -38,7 +38,7 @@ const LibrarianTab = () => {
       id: 2,
       fullName: 'Nguyễn Thị E',
       email: 'nguyenthe@library.university.edu.vn',
-      phone: '0987654331',
+      phone: '0987654321',
       employeeCode: 'TV002',
       department: 'Thư viện Khoa học',
       position: 'Thủ thư',
