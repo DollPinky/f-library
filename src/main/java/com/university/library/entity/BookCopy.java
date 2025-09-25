@@ -37,6 +37,9 @@ public class BookCopy extends BaseEntity {
     
     @Column(name = "shelf_location", length = 100)
     private String shelfLocation;
+
+//    @Column(name = "qr_code_data", length = 100)
+//    private String qrCodeData;
     
     @OneToMany(mappedBy = "bookCopy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Borrowing> borrowings = new ArrayList<>();

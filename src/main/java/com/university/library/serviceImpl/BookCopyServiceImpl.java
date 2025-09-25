@@ -74,7 +74,8 @@ public class BookCopyServiceImpl implements BookCopyService {
 
                 try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
                     // Generate QR code
-                    String qrContent = String.valueOf(bookCopy.getBookCopyId());
+                    String qrContent = "https://app/v1/bookcopy" + String.valueOf(bookCopy.getBookCopyId());
+//                    String qrContent = String.valueOf(bookCopy.getBookCopyId());
                     byte[] qrImageBytes = qrCodeService.generateQRCodeImage(qrContent, 200, 200);
                     PDImageXObject qrImage = PDImageXObject.createFromByteArray(document, qrImageBytes, "QRCode");
                     // Add QR code to PDF
@@ -246,7 +247,7 @@ public class BookCopyServiceImpl implements BookCopyService {
     public byte[] generateQRCodeImage(String bookCopyID) throws Exception {
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyID)
                 .orElseThrow(() -> new RuntimeException("Book copy not found with ID: " + bookCopyID));
-        String idBookCopy = corsAllowedOrigins + "/api/v1/bookDetail/" + bookCopy.getBookCopyId();
+        String idBookCopy = corsAllowedOrigins + "/api/v1/bookcopy/" + bookCopy.getBookCopyId();
         return qrCodeService.generateQRCodeImage(idBookCopy, 250, 250);
     }
 
