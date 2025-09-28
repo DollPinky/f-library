@@ -1,144 +1,69 @@
-# Library Management Frontend
+# React + TypeScript + Vite
 
-## BookController API Integration
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-This frontend application is fully integrated with the BookController API from the Spring Boot backend. The integration provides a complete book management interface with real-time search, filtering, sorting, and cache management capabilities.
+Currently, two official plugins are available:
 
-### API Endpoints Used
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-The frontend integrates with the following BookController endpoints:
+## Expanding the ESLint configuration
 
-#### Query Endpoints
-- `GET /api/v1/books/{bookId}` - Get book by ID
-- `GET /api/v1/books` - Search books with pagination and filters
-- `GET /api/v1/books/health` - Health check
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-#### Cache Management Endpoints
-- `DELETE /api/v1/books/{bookId}/cache` - Clear book cache
-- `DELETE /api/v1/books/cache/search` - Clear search cache
-- `DELETE /api/v1/books/cache` - Clear all cache
-- `POST /api/v1/books/cache/bulk-clear` - Clear multiple books cache
-- `GET /api/v1/books/{bookId}/cache/status` - Get book cache status
-- `GET /api/v1/books/cache/statistics` - Get cache statistics
+```js
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-### Features Implemented
+      // Remove tseslint.configs.recommended and replace with this
+      ...tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      ...tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      ...tseslint.configs.stylisticTypeChecked,
 
-#### 1. Book Listing and Search
-- Real-time search with dropdown suggestions
-- Advanced filtering by status, category, and library
-- Sorting by title, author, publisher, year, ISBN, and creation date
-- Pagination support
-- URL state management for filters and search
-
-#### 2. Book Details
-- Detailed book information display
-- Book copy status tracking
-- Available/borrowed copy counts
-- Book metadata (ISBN, publisher, year, etc.)
-
-#### 3. System Monitoring
-- Service health status indicator
-- Cache performance statistics
-- Cache hit rate display
-- Manual cache clearing functionality
-
-#### 4. User Actions
-- Book borrowing (placeholder for future implementation)
-- Book detail viewing
-- Admin book management links
-
-### Data Structure
-
-The frontend expects the following data structure from the BookController API:
-
-```typescript
-interface BookResponse {
-  bookId: UUID;
-  title: string;
-  author: string;
-  publisher: string;
-  year: number;
-  isbn: string;
-  category: {
-    categoryId: UUID;
-    name: string;
-    description: string;
-  };
-  bookCopies: Array<{
-    bookCopyId: UUID;
-    bookId: UUID;
-    libraryId: UUID;
-    qrCode: string;
-    status: 'AVAILABLE' | 'BORROWED' | 'RESERVED' | 'LOST' | 'DAMAGED';
-    shelfLocation: string;
-    createdAt: string;
-    updatedAt: string;
-  }>;
-  createdAt: string;
-  updatedAt: string;
-}
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-### Search Parameters
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-The frontend supports all search parameters defined in `BookSearchParams`:
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-- `query` - Search term for title, author, ISBN, publisher
-- `categoryId` - Filter by category
-- `libraryId` - Filter by library
-- `status` - Filter by book copy status
-- `page` - Page number (0-based)
-- `size` - Page size
-- `sortBy` - Sort field
-- `sortDirection` - Sort direction (ASC/DESC)
-
-### Environment Configuration
-
-Set the following environment variables:
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-
-### Usage
-
-1. Start the backend Spring Boot application
-2. Start the frontend development server:
-   ```bash
-   npm run dev
-   ```
-3. Navigate to `http://localhost:3000/books`
-
-### Key Components
-
-- `useBooksApi.js` - API integration hook
-- `useBooks.js` - Books state management hook
-- `BooksPage.jsx` - Main books listing page
-- `RealTimeSearch.jsx` - Search component with suggestions
-- `TableView.jsx` - Data table with sorting and pagination
-- `DetailDrawer.jsx` - Book detail modal
-
-### Error Handling
-
-The application includes comprehensive error handling:
-- API error responses
-- Network connectivity issues
-- Invalid data formats
-- User-friendly error messages
-
-### Performance Features
-
-- Client-side caching through React hooks
-- Server-side cache management
-- Optimistic UI updates
-- Lazy loading of book details
-- Efficient pagination
-
-### Future Enhancements
-
-- Book borrowing functionality
-- User authentication integration
-- Advanced analytics dashboard
-- Export functionality
-- Bulk operations
-- Real-time notifications 
