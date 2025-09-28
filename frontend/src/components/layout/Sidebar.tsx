@@ -4,6 +4,7 @@ import { BookOpen } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import { Separator } from "@radix-ui/react-dropdown-menu";
+import { Link } from "react-router-dom";
 
 interface SidebarProps {
   activateItemId?: string;
@@ -13,12 +14,6 @@ interface SidebarProps {
 function Sidebar(props: SidebarProps) {
   return (
     <div className="flex h-full max-h-screen flex-col border-r bg-white min-w-[240px]">
-      {/* Logo */}
-      <div className="flex items-center gap-2 p-4">
-        <BookOpen className="h-6 w-6 text-primary-pink" />
-        <h1 className="text-xl font-bold text-gray-800">Book Library</h1>
-      </div>
-
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
         <div className="grid gap-2">
@@ -27,7 +22,7 @@ function Sidebar(props: SidebarProps) {
               key={item.id}
               variant="ghost"
               className={cn(
-                "w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal",
+                "w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal cursor-pointer",
                 item.id === props.activateItemId
                   ? "bg-primary/10 text-primary-pink hover:bg-primary/20"
                   : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"

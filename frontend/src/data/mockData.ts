@@ -12,7 +12,7 @@ export const navItems: NavItem[] = [
     id: "dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    href: "#",
+    href: "/",
     current: true,
   },
   {
@@ -46,42 +46,48 @@ export const books: Book[] = [
     title: "The old you",
     author: "Luise Voss",
     price: 20,
-    coverUrl: "",
+    coverUrl:
+      "https://m.media-amazon.com/images/I/7131kTsiapL._UF1000,1000_QL80_.jpg",
   },
   {
     id: "book2",
     title: "City on the edge",
     author: "Mark Goldman",
     price: 20,
-    coverUrl: "",
+    coverUrl:
+      "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1388684409i/75355.jpg",
   },
   {
     id: "book3",
     title: "Be a kind mosquito",
     author: "Sofia Pavon",
     price: 20,
-    coverUrl: "",
+    coverUrl:
+      "https://m.media-amazon.com/images/I/61FlLZnUPaL._UF1000,1000_QL80_.jpg",
   },
   {
     id: "book4",
     title: "The formation of ...",
     author: "Charles Darwin",
     price: 20,
-    coverUrl: "",
+    coverUrl:
+      "https://m.media-amazon.com/images/I/41LF3LCYqqL._UF1000,1000_QL80_.jpg",
   },
   {
     id: "book5",
     title: "The martian",
     author: "Andy Weir",
     price: 20,
-    coverUrl: "",
+    coverUrl:
+      "https://img1.od-cdn.com/ImageType-400/0111-1/82E/F8E/C3/%7B82EF8EC3-386B-4561-8F65-2D59433B9358%7DImg400.jpg",
   },
   {
     id: "book6",
     title: "The design hustle",
     author: "Jaqueline Sing",
     price: 20,
-    coverUrl: "",
+    coverUrl:
+      "https://m.media-amazon.com/images/I/71WyOmr92pL._UF1000,1000_QL80_.jpg",
   },
 ];
 
