@@ -19,17 +19,17 @@ export const navItems: NavItem[] = [
     id: "reader-management",
     label: "Reader Management",
     icon: User,
-    href: "#",
+    href: "/",
     current: true,
   },
   {
     id: "book-management",
     label: "Book Management",
     icon: BookIcon,
-    href: "#",
+    href: "/book_management",
     current: true,
   },
-  { id: "reports", label: "Reports", icon: BarChart, href: "#", current: true },
+  { id: "reports", label: "Reports", icon: BarChart, href: "/", current: true },
 ];
 
 export const settingsNavItem: NavItem = {
@@ -93,7 +93,7 @@ export const books: Book[] = [
 
 export const records: RecordEntry[] = [
   {
-    bookId: "122132",
+    bookId: "122131",
     readerName: "Grayson Prince",
     readerId: "#B-12312",
     bookName: "Green thumb poppy",
@@ -102,6 +102,8 @@ export const records: RecordEntry[] = [
     status: "Subscribed",
     fee: 400,
     readerAvatarUrl: "",
+    bookImg:
+      "https://cdn.storymirror.com/cover/original/f146a2af99026c00463922133f1c9afa7fca11d3.png",
   },
   {
     bookId: "122132",
@@ -113,6 +115,8 @@ export const records: RecordEntry[] = [
     status: "Unsubscribed",
     fee: 500,
     readerAvatarUrl: "",
+    bookImg:
+      "https://cdn.storymirror.com/cover/original/f146a2af99026c00463922133f1c9afa7fca11d3.png",
   },
 ];
 

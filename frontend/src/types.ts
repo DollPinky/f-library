@@ -18,6 +18,7 @@ export type RecordStatus = "Subscribed" | "Unsubscribed";
 
 export interface RecordEntry {
   bookId: string;
+  bookImg: string;
   readerName: string;
   readerId: string;
   bookName: string;
