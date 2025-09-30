@@ -1,13 +1,17 @@
 package com.university.library.serviceImpl;
 
 
+import com.university.library.dto.request.refreshToken.RefreshTokenRequest;
+import com.university.library.dto.response.refreshToken.RefreshTokenResponse;
 import com.university.library.entity.RefreshToken;
 import com.university.library.entity.User;
+import com.university.library.exception.exceptions.NotFoundException;
 import com.university.library.exception.exceptions.TokenRefreshException;
 import com.university.library.repository.RefreshTokenRepository;
 import com.university.library.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.token.TokenService;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -21,6 +25,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private Long refreshTokenDurationMs;
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenServiceImpl tokenService;
 
 
     public Optional<RefreshToken> findByToken(String token) {
@@ -39,6 +44,21 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
         refreshToken = refreshTokenRepository.save(refreshToken);
         return refreshToken;
+    }
+
+    @Override
+    public RefreshTokenResponse refreshAccessToken(RefreshTokenRequest request) {
+        RefreshToken rf = refreshTokenRepository.findByToken(request.getRefreshToken()).orElseGet(()->{
+            throw  new TokenRefreshException(request.getRefreshToken()," not found");
+        });
+
+        verifyExpiration(rf);
+        User user = rf.getUser();
+        if(user == null) {
+            throw  new NotFoundException("User not found");
+        }
+
+        return RefreshTokenResponse.builder().accessToken(tokenService.generateToken(user)).build();
     }
 
 

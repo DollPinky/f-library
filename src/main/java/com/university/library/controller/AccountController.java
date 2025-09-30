@@ -3,14 +3,15 @@ package com.university.library.controller;
 import com.university.library.base.StandardResponse;
 import com.university.library.dto.request.account.LoginRequest;
 import com.university.library.dto.request.account.RegisterRequest;
+import com.university.library.dto.request.refreshToken.RefreshTokenRequest;
 import com.university.library.dto.response.account.AccountResponse;
-import com.university.library.dto.response.user.UserResponse;
+import com.university.library.dto.response.refreshToken.RefreshTokenResponse;
 import com.university.library.entity.User;
 import com.university.library.repository.RefreshTokenRepository;
 import com.university.library.repository.UserRepository;
 import com.university.library.service.AuthenticationService;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import com.university.library.service.RefreshTokenService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -22,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -35,6 +37,7 @@ public class AccountController {
     private final AuthenticationService authenticationService;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/register")
     public ResponseEntity<StandardResponse<AccountResponse>> register(@Valid @RequestBody RegisterRequest request) {
@@ -54,7 +57,7 @@ public class AccountController {
             AccountResponse account = authenticationService.login(request);
             // Ensure session is created and user is properly authenticated
             HttpSession session = httpRequest.getSession(true);
-            session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
             return ResponseEntity.ok(StandardResponse.success("Đăng nhập thành công", account));
         } catch (Exception e) {
             log.error("Error logging in: ", e);
@@ -63,26 +66,29 @@ public class AccountController {
         }
     }
 
-
-
     @PostMapping("/logout")
     @Transactional
-    public ResponseEntity<StandardResponse<Void>> logout() {
+    public ResponseEntity<StandardResponse<Void>> logout(HttpServletRequest request) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             User user = (User) authentication.getPrincipal();
-
             user.incrementTokenVersion();
             userRepository.save(user);
 
             refreshTokenRepository.deleteByUser(user);
 
+            request.getSession().invalidate();
+            SecurityContextHolder.clearContext();
             return ResponseEntity.ok(StandardResponse.success("Đăng xuất thành công", null));
         } catch (Exception e) {
             log.error("Error logging out: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(StandardResponse.error("Không thể đăng xuất: " + e.getMessage()));
         }
+    }
+    @PostMapping("/refresh-token")
+    public ResponseEntity<StandardResponse<RefreshTokenResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+     return ResponseEntity.ok(StandardResponse.success(refreshTokenService.refreshAccessToken(request)));
     }
 
 }
