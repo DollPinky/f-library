@@ -1,15 +1,15 @@
 import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
-import Dashboard from "./pages/admin/DashBoard";
 import BookManagement from "./pages/admin/BookManagement/BookManagement";
+import Dashboard from "./pages/admin/Dashboard";
 const router = createBrowserRouter([
   {
     path: "/",
     element: <MainLayout />,
     children: [
       { index: true, element: <Dashboard /> },
-      { path: "/book_management", element: <BookManagement /> },
+      { path: "/book-management", element: <BookManagement /> },
     ],
   },
 ]);

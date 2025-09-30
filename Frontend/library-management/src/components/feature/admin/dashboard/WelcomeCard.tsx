@@ -1,11 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Book, BookOpen } from "lucide-react";
-import React from "react";
 
 export default function WelcomeCard() {
-  const isMobile = useIsMobile();
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -22,36 +19,20 @@ export default function WelcomeCard() {
               Library Dashboard
             </p>
           </div>
-          <h2 className={isMobile ? "text-xl font-bold" : "text-3xl font-bold"}>
+          <h2 className="text-3xl font-bold">
             {getGreeting()}, <span className="text-amber-200">Anthony</span>
           </h2>
-          <p
-            className={
-              isMobile
-                ? "text-xs opacity-90 leading-relaxed"
-                : "max-w-xs text-sm opacity-90 leading-relaxed"
-            }
-          >
+          <p className="max-w-xs text-sm opacity-90 leading-relaxed">
             Welcome to your library management dashboard. You can add new books,
             manage borrowers, and track all library activities from here.
           </p>
           <div className="flex gap-3 pt-2">
-            <Button
-              className={
-                isMobile
-                  ? "text-xs py-1 px-2 w-fit bg-white text-primary hover:bg-gray-100 shadow-md"
-                  : "w-fit bg-white text-primary hover:bg-gray-100 shadow-md"
-              }
-            >
+            <Button className="w-fit bg-white text-primary hover:bg-gray-100 shadow-md">
               Add New Book
             </Button>
             <Button
               variant="outline"
-              className={
-                isMobile
-                  ? "text-xs py-1 px-2 w-fit bg-transparent border-white text-white hover:bg-white/20"
-                  : "w-fit bg-transparent border-white text-white hover:bg-white/20"
-              }
+              className="w-fit bg-transparent border-white text-white hover:bg-white/20"
             >
               View Statistics
             </Button>
@@ -59,7 +40,7 @@ export default function WelcomeCard() {
         </div>
 
         <div className="absolute right-0 bottom-0 opacity-20 md:opacity-50 pointer-events-none">
-          <Book size={isMobile ? 140 : 180} />
+          <Book size={180} />
         </div>
 
         <div className="absolute top-0 right-0 -mt-4 -mr-8 h-24 w-24 rotate-12 rounded-full bg-white/20 blur-2xl filter"></div>

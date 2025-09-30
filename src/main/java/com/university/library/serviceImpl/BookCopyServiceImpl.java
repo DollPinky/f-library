@@ -250,6 +250,24 @@ public class BookCopyServiceImpl implements BookCopyService {
         return qrCodeService.generateQRCodeImage(idBookCopy, 250, 250);
     }
 
+    @Override
+    public List<BookCopyResponse> findByCategory(UUID category) {
+        List<BookCopy> bookCopies = bookCopyRepository.findByBook_Category_CategoryId(category);
+
+        return bookCopies.stream()
+                .map(BookCopyResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<BookCopyResponse> findByCategoryAndStatus(UUID category, BookCopy.BookStatus status) {
+        List<BookCopy> bookCopies = bookCopyRepository.findByBook_Category_CategoryIdAndStatus(category, status);
+
+        return bookCopies.stream()
+                .map(BookCopyResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
 
     @Transactional
     public BookCopyResponse updateBookCopy(String bookCopyId, CreateBookCopyCommand command) {

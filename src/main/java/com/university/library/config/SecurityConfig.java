@@ -1,10 +1,12 @@
 package com.university.library.config;
 
 import com.university.library.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -52,7 +54,62 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
-                        .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "LIBRARIAN")
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/book-copies/{bookCopyId}",
+                                "/api/v1/book-copies/search",
+                                "/api/v1/book-copies/generate-qr/{bookCopyId}",
+                                "/api/v1/book-copies/generate-all-qr-codes",
+                                "/api/v1/book-copies/book/{bookId}",
+                                "/api/v1/book-copies/book/{bookId}/available"
+                        ).permitAll()
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/books/{bookId}",
+                                "/api/v1/books/all",
+                                "/api/v1/books/search"
+                        ).permitAll()
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/categories/{categoryId}",
+                                "/api/v1/categories/{categoryId}/children",
+                                "/api/v1/categories/all",
+                                "/api/v1/categories/search"
+                        ).permitAll()
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/campuses/{campusId}",
+                                "/api/v1/campuses/all"
+                        ).permitAll()
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/borrowings",
+                                "/api/v1/borrowings/{borrowingId}",
+                                "/api/v1/borrowings/user/{userId}",
+                                "/api/v1/borrowings/overdue",
+                                "/api/v1/borrowings/check-borrowed"
+                        ).permitAll()
+
+                        //admin
+                        .requestMatchers(HttpMethod.POST, "/api/v1/book-copies/create").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/book-copies/{bookCopyId}/status").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/book-copies/{bookCopyId}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/book-copies/{bookCopyId}").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/books/create").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/books/import").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/books/{bookId}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/books/{bookId}").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/categories/create").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/categories/{categoryId}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/{categoryId}").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/borrowings/borrow").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/return").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/lost").hasRole("ADMIN")
+
+                        .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -61,7 +118,7 @@ public class SecurityConfig {
                         .maximumSessions(1)
                         .maxSessionsPreventsLogin(false)
                         .expiredUrl("/login?expired=true")
-                        )
+                )
                 .logout(logout -> logout
                         .logoutUrl("/api/v1/accounts/logout")
                         .invalidateHttpSession(true)

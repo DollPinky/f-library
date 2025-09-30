@@ -21,7 +21,9 @@ public class DataInitializer implements CommandLineRunner {
     private final BookRepository bookRepository;
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+    private final BookCopyRepository bookCopyRepository;
     private final PasswordEncoder passwordEncoder;
+    private final BookCopyRepository bookCopyRepository;
 
     // Maps to store references to entities by their natural keys
     private Map<String, Campus> campusMap = new HashMap<>();
@@ -53,6 +55,39 @@ public class DataInitializer implements CommandLineRunner {
         // 7. Create Users
         createUsers();
 
+        //Create BookCopy
+        createBookCopy();
+
+    }
+
+    private void createBookCopy() {
+        if (bookCopyRepository.count() == 0) {
+            Book book = bookRepository.findAll().stream().findFirst()
+                    .orElseThrow(() -> new RuntimeException("Chưa có Book trong DB"));
+            Campus campus = campusRepository.findAll().stream().findFirst()
+                    .orElseThrow(() -> new RuntimeException("Chưa có Campus trong DB"));
+
+            // Tạo BookCopy 1
+            BookCopy[] bookCopy = {
+                    BookCopy.builder()
+                            .bookCopyId("BC001")
+                            .book(book)
+                            .campus(campus)
+                            .status(BookCopy.BookStatus.AVAILABLE)
+                            .shelfLocation("Shelf A1")
+                            .build(),
+                    BookCopy.builder()
+                            .bookCopyId("BC002")
+                            .book(book)
+                            .campus(campus)
+                            .status(BookCopy.BookStatus.AVAILABLE)
+                            .shelfLocation("Shelf A2")
+                            .build()
+            };
+
+            // Lưu vào DB
+            bookCopyRepository.saveAll(Arrays.asList(bookCopy));
+        }
     }
 
     private void createPermissions() {
@@ -82,22 +117,6 @@ public class DataInitializer implements CommandLineRunner {
                     .permissions(Set.copyOf(permissionRepository.findAll()))
                     .build();
             roleRepository.save(adminRole);
-        }
-
-        // LIBRARIAN Role
-        if (!roleRepository.existsById("LIBRARIAN")) {
-            Role librarianRole = Role.builder()
-                    .name("LIBRARIAN")
-                    .description("Thủ thư")
-                    .permissions(Set.of(
-                            permissionRepository.findByCode("BOOK_MANAGE"),
-                            permissionRepository.findByCode("BOOK_VIEW"),
-                            permissionRepository.findByCode("BORROW_MANAGE"),
-                            permissionRepository.findByCode("USER_VIEW"),
-                            permissionRepository.findByCode("REPORT_VIEW")
-                    ))
-                    .build();
-            roleRepository.save(librarianRole);
         }
 
         // READER Role
@@ -232,7 +251,6 @@ public class DataInitializer implements CommandLineRunner {
     private void createUsers() {
         Instant now = Instant.now();
         Role adminRole = roleRepository.findById("ADMIN").orElseThrow();
-        Role librarianRole = roleRepository.findById("LIBRARIAN").orElseThrow();
         Role readerRole = roleRepository.findById("READER").orElseThrow();
 
         User[] users = {
@@ -252,54 +270,6 @@ public class DataInitializer implements CommandLineRunner {
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
                         .build(),
-
-                // Librarian accounts
-                User.builder()
-                        .fullName("Trần Thị Thủ thư HN")
-                        .email("librarian.hn@company.com")
-                        .passwordHash(passwordEncoder.encode("librarian123"))
-                        .phone("0123456790")
-                        .role(User.AccountRole.LIBRARIAN)
-                        .department("Thư viện")
-                        .position("Thủ thư")
-                        .companyAccount("EMP002")
-                        .isActive(true)
-                        .campus(campusMap.get("HCM-F-Town-2"))
-                        .roles(Set.of(librarianRole))
-                        .createdAt(LocalDateTime.now())
-                        .updatedAt(LocalDateTime.now())
-                        .build(),
-                User.builder()
-                        .fullName("Lê Văn Thủ thư HCM")
-                        .email("librarian.hcm@company.com")
-                        .passwordHash(passwordEncoder.encode("librarian123"))
-                        .phone("0123456791")
-                        .role(User.AccountRole.LIBRARIAN)
-                        .department("Thư viện")
-                        .position("Thủ thư")
-                        .companyAccount("EMP003")
-                        .isActive(true)
-                        .campus(campusMap.get("HCM-F-Town-1"))
-                        .roles(Set.of(librarianRole))
-                        .createdAt(LocalDateTime.now())
-                        .updatedAt(LocalDateTime.now())
-                        .build(),
-                User.builder()
-                        .fullName("Phạm Thị Thủ thư DN")
-                        .email("librarian.dn@company.com")
-                        .passwordHash(passwordEncoder.encode("librarian123"))
-                        .phone("0123456792")
-                        .role(User.AccountRole.LIBRARIAN)
-                        .department("Thư viện")
-                        .position("Thủ thư")
-                        .companyAccount("EMP004")
-                        .isActive(true)
-                        .campus(campusMap.get("HCM-F-Town-1"))
-                        .roles(Set.of(librarianRole))
-                        .createdAt(LocalDateTime.now())
-                        .updatedAt(LocalDateTime.now())
-                        .build(),
-
                 // Reader accounts (employees)
                 User.builder()
                         .fullName("Hoàng Văn Nhân viên HN")

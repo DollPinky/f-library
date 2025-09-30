@@ -26,7 +26,7 @@ export const navItems: NavItem[] = [
     id: "book-management",
     label: "Book Management",
     icon: BookIcon,
-    href: "/book_management",
+    href: "/book-management",
     current: true,
   },
   { id: "reports", label: "Reports", icon: BarChart, href: "/", current: true },

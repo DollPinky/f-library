@@ -44,7 +44,7 @@ function Header({ activateItemId, onNavigate }: SidebarMobileProps) {
           )}
 
           <div className="flex items-center space-x-4">
-            <BookOpenIcon color="red" />
+            <img src="./src/assets/logo.png" className="w-14 h-14" />
             <h2 className="text-2xl font-bold tracking-tight">Book Library</h2>
           </div>
           <div className="ml-auto flex items-center space-x-2 md:space-x-4">
@@ -81,7 +81,10 @@ function Header({ activateItemId, onNavigate }: SidebarMobileProps) {
                   className="relative h-8 w-8 rounded-full cursor-pointer"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/avatars/01.png" alt="@user" />
+                    <AvatarImage
+                      src="https://github.com/shadcn.png"
+                      alt="@user"
+                    />
                     <AvatarFallback aria-setsize={15}>A</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -90,7 +93,7 @@ function Header({ activateItemId, onNavigate }: SidebarMobileProps) {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      Anthony Nguyen
+                      Anthony Le
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
                       Admin
