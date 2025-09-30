@@ -25,5 +25,5 @@ public interface BookService {
     BookResponse updateBook(UUID bookId, UpdateBookCommand command);
     void deleteBook(UUID bookId);
     BookImportResponse importBooksFromExcel(MultipartFile file);
-
+    BookResponse updateBookCoverUrl(UUID bookId,String file);
 }

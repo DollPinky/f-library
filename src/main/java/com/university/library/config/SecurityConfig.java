@@ -100,6 +100,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/books/import").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/books/{bookId}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/books/{bookId}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/books/book-cover-link/{bookId}").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/categories/create").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/categories/{categoryId}").hasRole("ADMIN")

@@ -31,5 +31,7 @@ public class UpdateBookCommand {
     private UUID categoryId;
     
     private String description;
+
+    private String bookCover;
 } 
 

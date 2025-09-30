@@ -23,7 +23,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final BookCopyRepository bookCopyRepository;
     private final PasswordEncoder passwordEncoder;
-    private final BookCopyRepository bookCopyRepository;
+
 
     // Maps to store references to entities by their natural keys
     private Map<String, Campus> campusMap = new HashMap<>();
