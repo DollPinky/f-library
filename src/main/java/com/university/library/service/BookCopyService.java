@@ -23,6 +23,9 @@ public interface BookCopyService {
      byte[] generateAllQRCodesPDF() throws Exception;
      byte[] generateQRCodeImage(String bookCopyID) throws Exception;
 
+    List<BookCopyResponse> findByCategory(UUID category);
+    List<BookCopyResponse> findByCategoryAndStatus(UUID category, BookCopy.BookStatus status);
+
  /**
   * Command
   */

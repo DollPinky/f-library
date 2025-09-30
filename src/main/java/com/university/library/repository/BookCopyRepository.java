@@ -1,5 +1,6 @@
 package com.university.library.repository;
 
+import com.university.library.entity.Book;
 import com.university.library.entity.BookCopy;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
@@ -31,4 +32,9 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, String>, Jpa
     @Query("SELECT bc FROM BookCopy bc")
     List<BookCopy> findAllBookCopiesWithBook();
 
+    List<BookCopy> findByBook_Category_CategoryId(UUID bookCategoryCategoryId);
+
+    List<BookCopy> findByBook_(Book book);
+
+    List<BookCopy> findByBook_Category_CategoryIdAndStatus(UUID bookCategoryCategoryId, BookCopy.BookStatus status);
 }
