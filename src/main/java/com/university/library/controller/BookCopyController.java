@@ -6,6 +6,7 @@ import com.university.library.dto.response.bookCopy.BookCopyResponse;
 import com.university.library.dto.request.bookCopy.BookCopySearchParams;
 import com.university.library.dto.request.bookCopy.CreateBookCopyCommand;
 import com.university.library.dto.request.bookCopy.CreateBookCopyFromBookCommand;
+import com.university.library.entity.BookCopy;
 import com.university.library.service.BookCopyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -240,6 +241,20 @@ public class BookCopyController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(StandardResponse.error("Failed to delete book copy"));
         }
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<StandardResponse<List<BookCopyResponse>>> getByCategory(@PathVariable UUID categoryId) {
+        List<BookCopyResponse> copies = bookCopyService.findByCategory(categoryId);
+        return ResponseEntity.ok(StandardResponse.success(copies));
+    }
+
+    @GetMapping("/category/{categoryId}/status/{status}")
+    public ResponseEntity<StandardResponse<List<BookCopyResponse>>> getByCategoryAndStatus(
+            @PathVariable UUID categoryId,
+            @PathVariable BookCopy.BookStatus status) {
+        List<BookCopyResponse> copies = bookCopyService.findByCategoryAndStatus(categoryId, status);
+        return ResponseEntity.ok(StandardResponse.success(copies));
     }
 }
 

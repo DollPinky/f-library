@@ -71,7 +71,6 @@ public class User extends BaseEntity implements org.springframework.security.cor
 
     public enum AccountRole {
         ADMIN,
-        LIBRARIAN,
         READER
     }
 

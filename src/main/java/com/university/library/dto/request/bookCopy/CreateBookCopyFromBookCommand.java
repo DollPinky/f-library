@@ -37,9 +37,6 @@ public class CreateBookCopyFromBookCommand {
         @NotNull(message = "Thư viện không được để trống")
         @JsonDeserialize(using = UUIDDeserializer.class)
         private UUID campusId;
-
-
-        
         private String location;
     }
 } 
