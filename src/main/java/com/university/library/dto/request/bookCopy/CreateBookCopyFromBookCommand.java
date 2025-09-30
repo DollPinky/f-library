@@ -32,7 +32,7 @@ public class CreateBookCopyFromBookCommand {
     @AllArgsConstructor
     public static class BookCopyInfo {
 
-        private String BookCopyId;
+        private UUID BookCopyId;
 
         @NotNull(message = "Thư viện không được để trống")
         @JsonDeserialize(using = UUIDDeserializer.class)

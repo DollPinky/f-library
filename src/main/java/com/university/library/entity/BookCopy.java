@@ -20,8 +20,9 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class BookCopy extends BaseEntity {
     @Id
-    @Column(name = "book_copy_id", length = 20)
-    private String bookCopyId;
+    @Column(name = "book_copy_id")
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID bookCopyId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
