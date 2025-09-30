@@ -109,7 +109,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/return").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/lost").hasRole("ADMIN")
 
-                        .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "LIBRARIAN")
+                        .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

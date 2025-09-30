@@ -54,7 +54,7 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
     /**
      * Đếm số sách đang mượn của một người dùng (bao gồm cả chờ xác nhận)
      */
-    @Query("SELECT COUNT(b) FROM Borrowing b WHERE b.borrower.userId = :borrowerId AND b.status IN ('BORROWED', 'PENDING_LIBRARIAN')")
+    @Query("SELECT COUNT(b) FROM Borrowing b WHERE b.borrower.userId = :borrowerId AND b.status IN ('BORROWED')")
     long countActiveBorrowingsByBorrower(@Param("borrowerId") UUID borrowerId);
     
     /**
