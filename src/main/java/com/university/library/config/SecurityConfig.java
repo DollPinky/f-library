@@ -52,7 +52,7 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
-                        .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "LIBRARIAN")
+                        .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

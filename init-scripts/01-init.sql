@@ -99,7 +99,7 @@ CREATE TABLE accounts (
     company_account VARCHAR(50) NOT NULL UNIQUE,
     token_version INT,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL, -- ADMIN, LIBRARIAN, READER
+    role VARCHAR(20) NOT NULL, -- ADMIN, READER
     campus_id UUID NOT NULL REFERENCES campuses(campus_id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -206,9 +206,9 @@ INSERT INTO accounts (user_id, full_name, email, phone, department, position, co
 -- Admin accounts
 ('880e8400-e29b-41d4-a716-446655440001', 'Nguyễn Văn Admin', 'admin@company.com', '0123456789', 'IT', 'System Administrator', 'EMP001', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'ADMIN', '550e8400-e29b-41d4-a716-446655440001'),
 -- Librarian accounts
-('880e8400-e29b-41d4-a716-446655440002', 'Trần Thị Thủ thư HN', 'librarian.hn@company.com', '0123456790', 'Thư viện', 'Thủ thư', 'EMP002', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440001'),
-('880e8400-e29b-41d4-a716-446655440003', 'Lê Văn Thủ thư HCM', 'librarian.hcm@company.com', '0123456791', 'Thư viện', 'Thủ thư', 'EMP003', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440002'),
-('880e8400-e29b-41d4-a716-446655440004', 'Phạm Thị Thủ thư DN', 'librarian.dn@company.com', '0123456792', 'Thư viện', 'Thủ thư', 'EMP004', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440003'),
+-- ('880e8400-e29b-41d4-a716-446655440002', 'Trần Thị Thủ thư HN', 'librarian.hn@company.com', '0123456790', 'Thư viện', 'Thủ thư', 'EMP002', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440001'),
+-- ('880e8400-e29b-41d4-a716-446655440003', 'Lê Văn Thủ thư HCM', 'librarian.hcm@company.com', '0123456791', 'Thư viện', 'Thủ thư', 'EMP003', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440002'),
+-- ('880e8400-e29b-41d4-a716-446655440004', 'Phạm Thị Thủ thư DN', 'librarian.dn@company.com', '0123456792', 'Thư viện', 'Thủ thư', 'EMP004', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440003'),
 
 -- Reader accounts (employees)
 ('880e8400-e29b-41d4-a716-446655440005', 'Hoàng Văn Nhân viên HN', 'employee.hn1@company.com', '0123456793', 'Marketing', 'Nhân viên Marketing', 'EMP005', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
@@ -219,10 +219,10 @@ INSERT INTO accounts (user_id, full_name, email, phone, department, position, co
 ('880e8400-e29b-41d4-a716-446655440010', 'Lê Văn Nhân viên DN', 'employee.dn2@company.com', '0123456798', 'Finance', 'Kế toán', 'EMP010', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440003');
 
 -- Insert staff records (linking accounts to libraries)
-INSERT INTO staff (staff_id, library_id, user_id, hire_date, salary) VALUES
-('990e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', '880e8400-e29b-41d4-a716-446655440002', '2023-01-15', 15000000),
-('990e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440003', '880e8400-e29b-41d4-a716-446655440003', '2023-02-20', 15000000),
-('990e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440005', '880e8400-e29b-41d4-a716-446655440004', '2023-03-10', 15000000);
+-- INSERT INTO staff (staff_id, library_id, user_id, hire_date, salary) VALUES
+-- ('990e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', '880e8400-e29b-41d4-a716-446655440002', '2023-01-15', 15000000),
+-- ('990e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440003', '880e8400-e29b-41d4-a716-446655440003', '2023-02-20', 15000000),
+-- ('990e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440005', '880e8400-e29b-41d4-a716-446655440004', '2023-03-10', 15000000);
 
 -- Insert sample books
 INSERT INTO books (book_id, category_id, title, author, publisher, year, isbn, description) VALUES
