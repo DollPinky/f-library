@@ -6,25 +6,29 @@ export interface NavItem {
   current: boolean;
 }
 
+export type RecordStatus = "Subscribed" | "Unsubscribed";
+
+// export interface RecordEntry {
+//   bookId: string;
+//   bookImg: string;
+//   readerName: string;
+//   readerId: string;
+//   bookName: string;
+//   author: string;
+//   duration: string;
+//   status: RecordStatus;
+//   fee: number;
+//   readerAvatarUrl: string;
+// }
 export interface Book {
   id: string;
   title: string;
   author: string;
   price: number;
   coverUrl: string;
-}
-
-export type RecordStatus = "Subscribed" | "Unsubscribed";
-
-export interface RecordEntry {
-  bookId: string;
-  bookImg: string;
-  readerName: string;
-  readerId: string;
-  bookName: string;
-  author: string;
-  duration: string;
   status: RecordStatus;
-  fee: number;
-  readerAvatarUrl: string;
+  readerName?: string;
+  readerId?: string;
+  duration?: string;
+  fee?: number;
 }

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { User } from "lucide-react";
 
-import { records } from "../../../../data/mockData";
+import { books } from "../../../../data/mockData";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -36,9 +36,9 @@ export default function BookTable({ isMobile }: BookTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {records.map((record) => (
-                <TableRow key={record.bookId}>
-                  <TableCell className="font-medium">{record.bookId}</TableCell>
+              {books.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell className="font-medium">{record.id}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
@@ -50,7 +50,7 @@ export default function BookTable({ isMobile }: BookTableProps) {
                   </TableCell>
                   <TableCell>{record.readerId}</TableCell>
                   <TableCell className="max-w-[200px] truncate">
-                    {record.bookName}
+                    {record.title}
                   </TableCell>
                   <TableCell>{record.author}</TableCell>
                   <TableCell>{record.duration}</TableCell>
@@ -78,9 +78,9 @@ export default function BookTable({ isMobile }: BookTableProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {records.map((record) => (
+          {books.map((record) => (
             <Card
-              key={record.bookId}
+              key={record.id}
               className="overflow-hidden border-l-4 hover:shadow-md transition-all"
               style={{
                 borderLeftColor:
@@ -123,7 +123,7 @@ export default function BookTable({ isMobile }: BookTableProps) {
 
                   <div className="mb-3">
                     <h3 className="font-semibold text-base mb-1 line-clamp-1">
-                      {record.bookName}
+                      {record.title}
                     </h3>
                     <p className="text-sm text-muted-foreground line-clamp-1">
                       {record.author}
@@ -135,7 +135,7 @@ export default function BookTable({ isMobile }: BookTableProps) {
                       <p className="text-xs font-medium text-slate-500">
                         BOOK ID
                       </p>
-                      <p className="font-medium">{record.bookId}</p>
+                      <p className="font-medium">{record.id}</p>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-slate-500">

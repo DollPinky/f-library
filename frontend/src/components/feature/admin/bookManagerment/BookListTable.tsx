@@ -9,25 +9,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { RecordEntry } from "@/types";
+import type { Book } from "@/types";
 import { Avatar } from "@radix-ui/react-avatar";
 import { FileText, Pencil, Trash2 } from "lucide-react";
 
 interface BookListProps {
   isMobile?: boolean;
-  records: RecordEntry[];
+  books: Book[];
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onView: (id: string) => void;
+  isEdit?: boolean;
 }
 
 export default function BookListTable({
   isMobile,
-  records,
+  books,
   onEdit,
   onDelete,
   onView,
-}: BookListProps) {
+}: // isEdit,
+BookListProps) {
   return (
     <>
       {!isMobile ? (
@@ -45,24 +47,22 @@ export default function BookListTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {records.map((book) => (
+              {books.map((book) => (
                 <TableRow
-                  key={book.bookId}
+                  key={book.id}
                   className="border-b hover:bg-gray-50/50 transition-colors"
                 >
-                  <TableCell className="font-medium py-4">
-                    {book.bookId}
-                  </TableCell>
+                  <TableCell className="font-medium py-4">{book.id}</TableCell>
                   <TableCell className="py-4">
                     <Avatar className="h-12 w-9 rounded">
                       <img
-                        src={book.bookImg}
-                        alt={book.bookName}
+                        src={book.coverUrl}
+                        alt={book.title}
                         className="object-cover aspect-[2/3]"
                       />
                     </Avatar>
                   </TableCell>
-                  <TableCell className="py-4">{book.bookName}</TableCell>
+                  <TableCell className="py-4">{book.title}</TableCell>
                   <TableCell className="py-4">{book.author}</TableCell>
                   <TableCell className="py-4">
                     {book.readerName || "-"}
@@ -87,7 +87,7 @@ export default function BookListTable({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 cursor-pointer"
-                        onClick={() => onEdit(book.bookId)}
+                        onClick={() => onEdit(book.id)}
                       >
                         <Pencil size={16} />
                       </Button>
@@ -95,7 +95,7 @@ export default function BookListTable({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
-                        onClick={() => onDelete(book.bookId)}
+                        onClick={() => onDelete(book.id)}
                       >
                         <Trash2 size={16} />
                       </Button>
@@ -103,7 +103,7 @@ export default function BookListTable({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 cursor-pointer"
-                        onClick={() => onView(book.bookId)}
+                        onClick={() => onView(book.id)}
                       >
                         <FileText size={16} />
                       </Button>
@@ -116,9 +116,9 @@ export default function BookListTable({
         </div>
       ) : (
         <div className="space-y-4">
-          {records.map((book) => (
+          {books.map((book) => (
             <Card
-              key={book.bookId}
+              key={book.id}
               className="overflow-hidden border-l-4 hover:shadow-md transition-all"
               style={{
                 borderLeftColor:
@@ -130,8 +130,8 @@ export default function BookListTable({
                   <div className="flex-shrink-0">
                     <div className="h-20 w-14 rounded overflow-hidden shadow-sm border">
                       <img
-                        src={book.bookImg}
-                        alt={book.bookName}
+                        src={book.coverUrl}
+                        alt={book.title}
                         className="h-full w-full object-cover"
                       />
                     </div>
@@ -140,7 +140,7 @@ export default function BookListTable({
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center justify-between">
                       <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium">
-                        ID: {book.bookId}
+                        ID: {book.id}
                       </span>
                       <Badge
                         variant={
@@ -156,7 +156,7 @@ export default function BookListTable({
                       </Badge>
                     </div>
 
-                    <h3 className="font-semibold text-base">{book.bookName}</h3>
+                    <h3 className="font-semibold text-base">{book.title}</h3>
 
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
@@ -177,7 +177,7 @@ export default function BookListTable({
                       variant="outline"
                       size="sm"
                       className="h-8 text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                      onClick={() => onView(book.bookId)}
+                      onClick={() => onView(book.id)}
                     >
                       <FileText size={14} className="mr-1" />
                       View
@@ -186,7 +186,7 @@ export default function BookListTable({
                       variant="outline"
                       size="sm"
                       className="h-8 text-gray-600 border-gray-200 hover:bg-gray-50"
-                      onClick={() => onEdit(book.bookId)}
+                      onClick={() => onEdit(book.id)}
                     >
                       <Pencil size={14} className="mr-1" />
                       Edit
@@ -195,7 +195,7 @@ export default function BookListTable({
                       variant="outline"
                       size="sm"
                       className="h-8 text-red-600 border-red-200 hover:bg-red-50"
-                      onClick={() => onDelete(book.bookId)}
+                      onClick={() => onDelete(book.id)}
                     >
                       <Trash2 size={14} className="mr-1" />
                       Delete
