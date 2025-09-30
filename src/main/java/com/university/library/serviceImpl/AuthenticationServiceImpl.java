@@ -28,6 +28,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -81,6 +83,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(User.AccountRole.READER) // Default role for new registrations
                 .campus(campus)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         User savedAccount = userRepository.save(user);
