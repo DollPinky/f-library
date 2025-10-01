@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface BookCopyRepository extends JpaRepository<BookCopy, String>, JpaSpecificationExecutor<BookCopy> {
+public interface BookCopyRepository extends JpaRepository<BookCopy, UUID>, JpaSpecificationExecutor<BookCopy> {
 
     /**
      * Tìm bản sao sách theo sách
@@ -17,7 +17,7 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, String>, Jpa
     List<BookCopy> findByBookBookId(UUID bookId);
 
 
-    BookCopy findByBookCopyId(String bookCopyId);
+    BookCopy findByBookCopyId(UUID bookCopyId);
     /**
      * Tìm bản sao sách có thể mượn theo sách
      */

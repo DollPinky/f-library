@@ -16,12 +16,12 @@ public interface BookCopyService {
     /**
      * Query
      */
-     BookCopyResponse getBookCopyById(String bookCopyId) ;
+     BookCopyResponse getBookCopyById(UUID bookCopyId) ;
      PagedResponse<BookCopyResponse> searchBookCopies(BookCopySearchParams params);
      List<BookCopyResponse> getBookCopiesByBookId(UUID bookId);
      List<BookCopyResponse> getAvailableBookCopiesByBookId(UUID bookId);
      byte[] generateAllQRCodesPDF() throws Exception;
-     byte[] generateQRCodeImage(String bookCopyID) throws Exception;
+     byte[] generateQRCodeImage(UUID bookCopyID) throws Exception;
 
     List<BookCopyResponse> findByCategory(UUID category);
     List<BookCopyResponse> findByCategoryAndStatus(UUID category, BookCopy.BookStatus status);
@@ -29,8 +29,8 @@ public interface BookCopyService {
  /**
   * Command
   */
-   BookCopyResponse updateBookCopy(String bookCopyId, CreateBookCopyCommand command);
-   void deleteBookCopy(String bookCopyId);
-   BookCopyResponse changeBookCopyStatus(String bookCopyId, CreateBookCopyCommand.BookStatus newStatus);
+   BookCopyResponse updateBookCopy(UUID bookCopyId, CreateBookCopyCommand command);
+   void deleteBookCopy(UUID bookCopyId);
+   BookCopyResponse changeBookCopyStatus(UUID bookCopyId, CreateBookCopyCommand.BookStatus newStatus);
   void createBookCopiesFromBook(CreateBookCopyFromBookCommand command);
 }

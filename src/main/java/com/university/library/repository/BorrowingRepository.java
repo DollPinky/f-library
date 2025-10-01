@@ -79,7 +79,7 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
 
     boolean existsByBorrowerUserIdAndBookCopyBookCopyIdAndStatus(
             UUID borrowerId,
-            String bookCopyId,
+            UUID bookCopyId,
             Borrowing.BorrowingStatus status
     );
 } 
