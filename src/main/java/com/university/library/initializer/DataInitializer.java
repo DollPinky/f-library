@@ -23,7 +23,6 @@ public class DataInitializer implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final BookCopyRepository bookCopyRepository;
     private final PasswordEncoder passwordEncoder;
-    private final BookCopyRepository bookCopyRepository;
 
     // Maps to store references to entities by their natural keys
     private Map<String, Campus> campusMap = new HashMap<>();
@@ -56,39 +55,39 @@ public class DataInitializer implements CommandLineRunner {
         createUsers();
 
         //Create BookCopy
-        createBookCopy();
+//        createBookCopy();
 
     }
-
-    private void createBookCopy() {
-        if (bookCopyRepository.count() == 0) {
-            Book book = bookRepository.findAll().stream().findFirst()
-                    .orElseThrow(() -> new RuntimeException("Chưa có Book trong DB"));
-            Campus campus = campusRepository.findAll().stream().findFirst()
-                    .orElseThrow(() -> new RuntimeException("Chưa có Campus trong DB"));
-
-            // Tạo BookCopy 1
-            BookCopy[] bookCopy = {
-                    BookCopy.builder()
-                            .bookCopyId("BC001")
-                            .book(book)
-                            .campus(campus)
-                            .status(BookCopy.BookStatus.AVAILABLE)
-                            .shelfLocation("Shelf A1")
-                            .build(),
-                    BookCopy.builder()
-                            .bookCopyId("BC002")
-                            .book(book)
-                            .campus(campus)
-                            .status(BookCopy.BookStatus.AVAILABLE)
-                            .shelfLocation("Shelf A2")
-                            .build()
-            };
-
-            // Lưu vào DB
-            bookCopyRepository.saveAll(Arrays.asList(bookCopy));
-        }
-    }
+//Comment for delpoy by Docker, cant converse bookCopyId from String to UUID
+//    private void createBookCopy() {
+//        if (bookCopyRepository.count() == 0) {
+//            Book book = bookRepository.findAll().stream().findFirst()
+//                    .orElseThrow(() -> new RuntimeException("Chưa có Book trong DB"));
+//            Campus campus = campusRepository.findAll().stream().findFirst()
+//                    .orElseThrow(() -> new RuntimeException("Chưa có Campus trong DB"));
+//
+//            // Tạo BookCopy 1
+//            BookCopy[] bookCopy = {
+//                    BookCopy.builder()
+//                            .bookCopyId("BC001")
+//                            .book(book)
+//                            .campus(campus)
+//                            .status(BookCopy.BookStatus.AVAILABLE)
+//                            .shelfLocation("Shelf A1")
+//                            .build(),
+//                    BookCopy.builder()
+//                            .bookCopyId("BC002")
+//                            .book(book)
+//                            .campus(campus)
+//                            .status(BookCopy.BookStatus.AVAILABLE)
+//                            .shelfLocation("Shelf A2")
+//                            .build()
+//            };
+//
+//            // Lưu vào DB
+//            bookCopyRepository.saveAll(Arrays.asList(bookCopy));
+//        }
+//    }
 
     private void createPermissions() {
         Permission[] permissions = {
