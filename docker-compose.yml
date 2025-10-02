@@ -115,8 +115,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
+      context: ./frontend/library-management
+      dockerfile: Dockerfile
     container_name: library-frontend
     depends_on:
       - library-app
