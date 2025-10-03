@@ -17,7 +17,7 @@ export default function BookList({ isMobile }: BookListProps) {
   return (
     <div className="w-full">
       <Carousel className="w-full">
-        <CarouselContent className="-ml-2 md:-ml-4">
+        <CarouselContent className="-ml-2 md:-ml-4 text-center">
           {books.map((book) => (
             <CarouselItem
               key={book.id}
