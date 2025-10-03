@@ -32,7 +32,7 @@ public class BorrowingController {
 
     @GetMapping("/check-borrowed")
     public ResponseEntity<StandardResponse<Boolean>> checkIfUserBorrowedBookCopy(
-            @RequestParam String bookCopyId,
+            @RequestParam UUID bookCopyId,
             @AuthenticationPrincipal User userPrincipal) {
         try {
             log.info("Checking if user has borrowed book copy: {}", bookCopyId);
