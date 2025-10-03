@@ -59,7 +59,7 @@ public class BookCopyController {
 
     @GetMapping(value = "/generate-qr/{bookCopyid}", produces = MediaType.IMAGE_PNG_VALUE)
     @Operation(summary = "Generate QR code image for booking")
-    public ResponseEntity<byte[]> generateQRCode(@PathVariable String bookCopyid) {
+    public ResponseEntity<byte[]> generateQRCode(@PathVariable UUID bookCopyid) {
         try {
             byte[] qrImage = bookCopyService.generateQRCodeImage(bookCopyid);
             return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(qrImage);
@@ -74,7 +74,7 @@ public class BookCopyController {
     @Operation(summary = "Get book copy by ID", description = "Retrieve detailed information about a specific book copy")
     public ResponseEntity<StandardResponse<BookCopyResponse>> getBookCopyById(
             @Parameter(description = "Book Copy ID", required = true)
-            @PathVariable String bookCopyId) {
+            @PathVariable UUID bookCopyId) {
 
         log.info("Getting book copy by ID: {}", bookCopyId);
 
@@ -177,7 +177,7 @@ public class BookCopyController {
     @Operation(summary = "Update book copy", description = "Update an existing book copy's information")
     public ResponseEntity<StandardResponse<BookCopyResponse>> updateBookCopy(
             @Parameter(description = "Book Copy ID", required = true)
-            @PathVariable String bookCopyId,
+            @PathVariable UUID bookCopyId,
             @Parameter(description = "Updated book copy data", required = true)
             @Valid @RequestBody CreateBookCopyCommand command) {
 
@@ -201,7 +201,7 @@ public class BookCopyController {
     @Operation(summary = "Change book copy status", description = "Change the status of a book copy")
     public ResponseEntity<StandardResponse<BookCopyResponse>> changeBookCopyStatus(
             @Parameter(description = "Book Copy ID", required = true)
-            @PathVariable String bookCopyId,
+            @PathVariable UUID bookCopyId,
             @Parameter(description = "New status", required = true)
             @RequestParam CreateBookCopyCommand.BookStatus status) {
 
@@ -225,7 +225,7 @@ public class BookCopyController {
     @Operation(summary = "Delete book copy", description = "Delete a book copy from the library system")
     public ResponseEntity<StandardResponse<String>> deleteBookCopy(
             @Parameter(description = "Book Copy ID", required = true)
-            @PathVariable String bookCopyId) {
+            @PathVariable UUID bookCopyId) {
 
         log.info("Deleting book copy: {}", bookCopyId);
 

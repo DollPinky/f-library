@@ -359,7 +359,7 @@ public class BookServiceImpl implements BookService {
         String shelfLocation = getCellValueAsString(row.getCell(9));
 
         // Kiểm tra nếu book copy đã tồn tại theo ISBN
-        if (bookCopyRepository.existsById(isbn)) {
+        if (bookCopyRepository.existsById(UUID.fromString(isbn))) {
             throw new RuntimeException("Book copy with ISBN " + isbn + " already exists");
         }
 
@@ -395,7 +395,7 @@ public class BookServiceImpl implements BookService {
 
         // Tạo book copy với ISBN làm ID
         BookCopy bookCopy = BookCopy.builder()
-                .bookCopyId(isbn)
+                .bookCopyId(UUID.nameUUIDFromBytes(isbn.getBytes()))
                 .book(book)
                 .campus(campus)
                 .shelfLocation(shelfLocation)

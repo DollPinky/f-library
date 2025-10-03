@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookCopyResponse {
-    private String bookCopyId;
+    private UUID bookCopyId;
     private BookResponse book;
     private CampusResponse campus;
     private BookStatus status;
