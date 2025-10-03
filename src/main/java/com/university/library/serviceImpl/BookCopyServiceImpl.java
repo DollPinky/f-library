@@ -74,7 +74,8 @@ public class BookCopyServiceImpl implements BookCopyService {
 
                 try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
                     // Generate QR code
-                    String qrContent = String.valueOf(bookCopy.getBookCopyId());
+                    String qrContent = corsAllowedOrigins + "/app/v1/book-copies/" + String.valueOf(bookCopy.getBookCopyId());
+//                    String qrContent = String.valueOf(bookCopy.getBookCopyId());
                     byte[] qrImageBytes = qrCodeService.generateQRCodeImage(qrContent, 200, 200);
                     PDImageXObject qrImage = PDImageXObject.createFromByteArray(document, qrImageBytes, "QRCode");
                     // Add QR code to PDF
@@ -178,7 +179,7 @@ public class BookCopyServiceImpl implements BookCopyService {
      BookCopyQuery
      */
 
-    public BookCopyResponse getBookCopyById(String bookCopyId) {
+    public BookCopyResponse getBookCopyById(UUID bookCopyId) {
 
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
                 .orElseThrow(() -> new RuntimeException("Book copy not found with ID: " + bookCopyId));
@@ -243,10 +244,10 @@ public class BookCopyServiceImpl implements BookCopyService {
      BookCopyCommand
      */
 
-    public byte[] generateQRCodeImage(String bookCopyID) throws Exception {
+    public byte[] generateQRCodeImage(UUID bookCopyID) throws Exception {
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyID)
                 .orElseThrow(() -> new RuntimeException("Book copy not found with ID: " + bookCopyID));
-        String idBookCopy = corsAllowedOrigins + "/api/v1/bookDetail/" + bookCopy.getBookCopyId();
+        String idBookCopy = corsAllowedOrigins + "/api/v1/book-copies/" + bookCopy.getBookCopyId();
         return qrCodeService.generateQRCodeImage(idBookCopy, 250, 250);
     }
 
@@ -270,7 +271,7 @@ public class BookCopyServiceImpl implements BookCopyService {
 
 
     @Transactional
-    public BookCopyResponse updateBookCopy(String bookCopyId, CreateBookCopyCommand command) {
+    public BookCopyResponse updateBookCopy(UUID bookCopyId, CreateBookCopyCommand command) {
         log.info("Updating book copy with ID: {}", bookCopyId);
 
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
@@ -289,7 +290,7 @@ public class BookCopyServiceImpl implements BookCopyService {
     }
 
     @Transactional
-    public void deleteBookCopy(String bookCopyId) {
+    public void deleteBookCopy(UUID bookCopyId) {
         log.info("Deleting book copy with ID: {}", bookCopyId);
 
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
@@ -306,7 +307,7 @@ public class BookCopyServiceImpl implements BookCopyService {
     }
 
     @Transactional
-    public BookCopyResponse changeBookCopyStatus(String bookCopyId, CreateBookCopyCommand.BookStatus newStatus) {
+    public BookCopyResponse changeBookCopyStatus(UUID bookCopyId, CreateBookCopyCommand.BookStatus newStatus) {
         log.info("Changing book copy status: {} -> {}", bookCopyId, newStatus);
 
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)

@@ -85,7 +85,7 @@ public class BookResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class BookCopyResponse {
-        private String bookCopyId;
+        private UUID bookCopyId;
         private UUID bookId;
         private UUID campusId;
         private String status;
