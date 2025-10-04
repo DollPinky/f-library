@@ -7,5 +7,5 @@ import java.util.UUID;
 
 @Data
 public class BorrowRequest {
-    private String bookCopyId;
+    private UUID bookCopyId;
 }
