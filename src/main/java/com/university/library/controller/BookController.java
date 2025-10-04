@@ -11,7 +11,6 @@ import com.university.library.dto.response.book.BookResponse;
 import com.university.library.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -185,6 +184,15 @@ public class BookController {
     /**
      * thêm api tìm book dựa theo category
      */
+    @PutMapping("/book-cover-link/{bookId}")
+    @Operation(summary = "Update book cover link", description = "Update link of book cover image")
+     public  ResponseEntity<StandardResponse<BookResponse>> updateBookLink(@PathVariable UUID bookId,
+                                                                           @RequestParam String imageLink){
+
+       BookResponse bookCoverResponse = bookService.updateBookCoverUrl(bookId,imageLink);
+
+         return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOK_UPDATED, bookCoverResponse));
+     }
 
 
 }

@@ -128,6 +128,7 @@ public class BookServiceImpl implements BookService {
                 .year(command.getPublishYear())
                 .description(command.getDescription())
                 .category(category)
+                .bookCover(command.getBookCover())
                 .build();
 
         Book savedBook = bookRepository.save(book);
@@ -163,6 +164,7 @@ public class BookServiceImpl implements BookService {
         existingBook.setYear(command.getPublishYear());
         existingBook.setDescription(command.getDescription());
         existingBook.setCategory(category);
+        existingBook.setBookCover(command.getBookCover());
 
         Book updatedBook = bookRepository.save(existingBook);
 
@@ -246,6 +248,25 @@ public class BookServiceImpl implements BookService {
         }
 
         return response;
+    }
+
+    @Override
+    public BookResponse updateBookCoverUrl(UUID bookId, String bookCoverUrl){
+
+        log.info(BookConstants.LOG_UPDATING_BOOK, bookId);
+
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_BOOK_NOT_FOUND + bookId));
+
+        book.setBookCover(bookCoverUrl);
+
+        Book updateBook = bookRepository.save(book);
+
+        BookResponse bookResponse = BookResponse.fromEntity(updateBook);
+
+        log.info(BookConstants.LOG_BOOK_UPDATED, bookId);
+
+        return bookResponse;
     }
 
     private boolean isRowEmpty(Row row) {

@@ -39,7 +39,7 @@ public class CreateBookCommand {
     
     private String description;
 
-
+    private  String bookCover;
 
 } 
 

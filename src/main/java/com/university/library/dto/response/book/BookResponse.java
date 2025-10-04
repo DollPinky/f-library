@@ -27,7 +27,7 @@ public class BookResponse {
     private List<BookCopyResponse> bookCopies;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
+    private String bookCoverUrl;
     public static BookResponse fromEntity(Book book) {
         if (book == null) {
             return null;
@@ -55,6 +55,7 @@ public class BookResponse {
                     .collect(Collectors.toList()) : null)
             .createdAt(book.getCreatedAt())
             .updatedAt(book.getUpdatedAt())
+            .bookCoverUrl(book.getBookCover())
             .build();
     }
 
