@@ -2,6 +2,7 @@ package com.university.library.repository;
 
 import com.university.library.entity.User;
 import com.university.library.entity.RefreshToken;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,6 +17,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
     Optional<RefreshToken> findByUser(User user);
     @Modifying
+    @Transactional
     @Query("DELETE FROM RefreshToken rt WHERE rt.user = :user")
     void deleteByUser(@Param("user") User user);
 }

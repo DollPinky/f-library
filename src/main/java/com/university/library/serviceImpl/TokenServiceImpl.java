@@ -77,7 +77,7 @@ public class TokenServiceImpl {
 
         // Kiểm tra token version
         int tokenVersion = (int) claims.get("tokenVersion");
-        if (tokenVersion != user.getTokenVersion()) {
+        if (tokenVersion != user.getTokenVersion() || claims.getExpiration().before(new Date())) {
             throw new ExpiredJwtException(null, claims, "Token has been invalidated");
         }
 

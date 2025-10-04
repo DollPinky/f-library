@@ -24,7 +24,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class User extends BaseEntity implements org.springframework.security.core.userdetails.UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

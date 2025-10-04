@@ -104,7 +104,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
             User account = (User) authentication.getPrincipal();
-            return AccountResponse.fromEntity(account);
+            AccountResponse accountResponse = AccountResponse.fromEntity(account);
+            if(account.getRole().equals( User.AccountRole.READER)) {
+                return accountResponse;
+            }
+            else {
+                accountResponse.setAccessToken(tokenService.generateToken(account));
+                accountResponse.setRefreshToken(refreshTokenService.createRefreshToken(account).getToken());
+                return accountResponse;
+            }
+
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("Email hoặc mật khẩu không đúng.");
         }
