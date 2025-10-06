@@ -37,6 +37,7 @@ export default function AddNewBook({
     price: 0,
     coverUrl: "",
     status: "Unsubscribed",
+    history: [],
   });
   const isMobile = useIsMobile();
 
@@ -51,6 +52,7 @@ export default function AddNewBook({
         price: 0,
         coverUrl: "",
         status: "Unsubscribed",
+        history: [],
       });
     }
   }, [isEdit, editData, open]);

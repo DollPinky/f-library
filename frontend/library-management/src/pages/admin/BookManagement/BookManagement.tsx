@@ -5,11 +5,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { PlusCircle, Search } from "lucide-react";
 import BookListTable from "@/components/feature/admin/bookManagerment/BookListTable";
 import { books } from "@/data/mockData";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AddNewBook from "@/components/feature/admin/bookManagerment/AddNewBook";
 import type { Book } from "@/types";
 import { toast } from "sonner";
 import DialogRemoveBook from "@/components/feature/admin/bookManagerment/DialogRemoveBook";
+import DialogViewDetail from "@/components/feature/admin/bookManagerment/DialogViewDetail";
+import useDebounce from "@/hooks/useDebounce";
 
 export default function BookManagement() {
   const isMobile = useIsMobile();
@@ -20,6 +22,25 @@ export default function BookManagement() {
 
   const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const [openView, setOpenView] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+
+  // search
+  const [searchValue, setSearchValue] = useState("");
+  const debounceSearch = useDebounce(searchValue, 300);
+
+  const filteredBooks = useMemo(() => {
+    if (!debounceSearch) return books;
+
+    return books.filter(
+      (book) =>
+        book.title
+          .toLowerCase()
+          .includes(debounceSearch.trim().toLowerCase()) ||
+        book.title.toUpperCase().includes(debounceSearch.trim().toUpperCase())
+    );
+  }, [debounceSearch]);
 
   // xoa
   const handleDelete = (id: string) => {
@@ -39,7 +60,13 @@ export default function BookManagement() {
       setBookToDelete(null);
     }
   };
-
+  const handleOpenChange = (open: boolean) => {
+    setOpen(open);
+    if (!open) {
+      setIsEdit(false);
+      setCurrBook(null);
+    }
+  };
   // sua
   const handleEdit = (id: string) => {
     const updateBook = books.find((book) => book.id === id);
@@ -55,6 +82,11 @@ export default function BookManagement() {
   // view
   const handleView = (id: string) => {
     console.log("Đã xem chi tiết thành công", id);
+    const book = books.find((book) => book.id === id);
+    if (book) {
+      setSelectedBook(book);
+      setOpenView(true);
+    }
   };
 
   // Add va sua
@@ -85,9 +117,11 @@ export default function BookManagement() {
           </Button>
           <div className="relative">
             <Input
+              value={searchValue}
               type="search"
-              placeholder={isMobile ? "Search..." : "Search by ID or name..."}
+              placeholder={isMobile ? "Search..." : "Search name book..."}
               className="pl-10 pr-4 py-2 w-full sm:w-[250px]"
+              onChange={(e) => setSearchValue(e.target.value)}
             />
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
               <Search size={16} />
@@ -96,18 +130,28 @@ export default function BookManagement() {
         </div>
       </div>
       {/* table */}
-      <BookListTable
-        isMobile={isMobile}
-        books={books}
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-        onView={handleView}
-      />
+      {filteredBooks.length === 0 && (
+        <div className="text-center py-12 border rounded-md bg-white">
+          <p className="text-gray-500">
+            No books found matching "{searchValue}"
+          </p>
+        </div>
+      )}
+
+      {filteredBooks.length > 0 && (
+        <BookListTable
+          isMobile={isMobile}
+          books={filteredBooks}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          onView={handleView}
+        />
+      )}
 
       <AddNewBook
         isEdit={isEdit}
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={handleOpenChange}
         onSubmit={handleSubmit}
         editData={currBook}
       />
@@ -117,6 +161,11 @@ export default function BookManagement() {
         onOpenChange={setDeleteOpen}
         onConfirm={confirmDelete}
         bookTitle={bookToDelete?.title}
+      />
+      <DialogViewDetail
+        openView={openView}
+        openViewChange={setOpenView}
+        book={selectedBook}
       />
     </div>
   );

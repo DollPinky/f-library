@@ -20,6 +20,13 @@ export type RecordStatus = "Subscribed" | "Unsubscribed";
 //   fee: number;
 //   readerAvatarUrl: string;
 // }
+
+export type BrorrowHistory = {
+  id: string;
+  borrower: string;
+  borrowDate: string;
+  returnDate?: string;
+};
 export interface Book {
   id: string;
   title: string;
@@ -31,4 +38,5 @@ export interface Book {
   readerId?: string;
   duration?: string;
   fee?: number;
+  history: BrorrowHistory[];
 }

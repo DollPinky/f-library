@@ -81,8 +81,11 @@ export default function Dashboard() {
       </Card>
 
       <Card className="md:m-0 m-3 mt-7">
-        <CardHeader>
-          <CardTitle>Recent Records</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Book Records</CardTitle>
+          <Button variant="link" className={isMobile ? "text-xs" : "text-sm"}>
+            View All
+          </Button>
         </CardHeader>
         <CardContent>
           <BookTable isMobile={isMobile} />

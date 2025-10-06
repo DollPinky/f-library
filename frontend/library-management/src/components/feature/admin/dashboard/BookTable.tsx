@@ -25,20 +25,18 @@ export default function BookTable({ isMobile }: BookTableProps) {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
-                <TableHead className="w-[100px] text-center">Book ID</TableHead>
-                <TableHead className="text-center">Reader Name</TableHead>
-                <TableHead className="text-center">Reader ID</TableHead>
-                <TableHead className="text-center">Book Name</TableHead>
-                <TableHead className="text-center">Author</TableHead>
-                <TableHead className="text-center">Duration</TableHead>
-                <TableHead className="text-center">Status</TableHead>
+                <TableHead>Reader Name</TableHead>
+                <TableHead>Reader ID</TableHead>
+                <TableHead>Book Name</TableHead>
+                <TableHead>Author</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Fee</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {books.map((record) => (
+              {books.slice(0, 5).map((record) => (
                 <TableRow key={record.id}>
-                  <TableCell className="font-medium">{record.id}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
@@ -78,7 +76,7 @@ export default function BookTable({ isMobile }: BookTableProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {books.map((record) => (
+          {books.slice(0, 5).map((record) => (
             <Card
               key={record.id}
               className="overflow-hidden border-l-4 hover:shadow-md transition-all"
@@ -131,12 +129,6 @@ export default function BookTable({ isMobile }: BookTableProps) {
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm bg-slate-50 p-3 rounded-md">
-                    <div>
-                      <p className="text-xs font-medium text-slate-500">
-                        BOOK ID
-                      </p>
-                      <p className="font-medium">{record.id}</p>
-                    </div>
                     <div>
                       <p className="text-xs font-medium text-slate-500">
                         DURATION
