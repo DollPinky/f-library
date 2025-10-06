@@ -9,6 +9,7 @@ import { bookCategories, mockBooks } from "@/data/mockData";
 import type { Book } from "@/types";
 import { Plus } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export function BookManagement() {
@@ -20,7 +21,7 @@ export function BookManagement() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [bookToDelete, setBookToDelete] = useState<Book | undefined>();
-
+  const navigate = useNavigate();
   const itemsPerPage = 10;
 
   const filteredBooks = useMemo(() => {
@@ -54,6 +55,7 @@ export function BookManagement() {
 
   const handleViewBook = (book: Book) => {
     // In a real app, this would navigate to a detailed view
+    navigate(`book/${book.id}`);
     toast.info(`Viewing details for "${book.name}"`);
   };
 

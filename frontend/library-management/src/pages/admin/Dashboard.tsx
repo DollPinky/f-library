@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-export default function Dashboard() {
+export default function AdminDashboard() {
   const isMobile = useIsMobile();
   return (
     <div className="flex flex-col space-y-6 md:p-8">
