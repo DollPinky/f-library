@@ -1,63 +1,65 @@
-import "./App.css";
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate,
-} from "react-router-dom";
-import MainLayout from "./components/layout/MainLayout";
+import './App.css'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 
-// Admin Components
-import AdminDashboard from "./pages/admin/Dashboard";
+// Layout
+import MainLayout from './components/layout/MainLayout'
 
-// User Components
-import UserDashboard from "./pages/user/Dashboard";
-import BorrowBookManagement from "./pages/user/BorrowBookManagement/BorrowBookManagement";
-import ReturnBookManagement from "./pages/user/ReturnBookManagement/ReturnBookManagement";
-import { BookManagement } from "./pages/admin/BookManagement/BookManagement";
+// Auth
+import Auth from './pages/auth/Auth'
+
+// Admin
+import AdminDashboard from './pages/admin/Dashboard'
+import { BookManagement } from './pages/admin/BookManagement/BookManagement'
+
+// User
+import UserDashboard from './pages/user/Dashboard'
+import BorrowBookManagement from './pages/user/BorrowBookManagement/BorrowBookManagement'
+import ReturnBookManagement from './pages/user/ReturnBookManagement/ReturnBookManagement'
 
 const router = createBrowserRouter([
+  // Auth (no layout)
+  { path: '/login', element: <Auth /> },
+
   {
-    path: "/",
+    path: '/',
     element: <MainLayout />,
     children: [
-      // Default redirect to admin dashboard
       { index: true, element: <Navigate to="/admin" replace /> },
 
       // Admin routes
       {
-        path: "/admin",
+        path: '/admin',
         children: [
-          { index: true, element: <AdminDashboard /> }, // /admin -> AdminDashboard
-          { path: "dashboard", element: <AdminDashboard /> }, // /admin/dashboard -> AdminDashboard
-          { path: "book-management", element: <BookManagement /> },
+          { index: true, element: <AdminDashboard /> },
+          { path: 'dashboard', element: <AdminDashboard /> },
+          { path: 'book-management', element: <BookManagement /> },
           {
-            path: "user-management",
-            element: <div>User Management (Coming Soon)</div>,
+            path: 'user-management',
+            element: <div>User Management (Coming Soon)</div>
           },
-          { path: "reports", element: <div>Reports (Coming Soon)</div> },
-        ],
+          { path: 'reports', element: <div>Reports (Coming Soon)</div> }
+        ]
       },
 
       // User routes
       {
-        path: "/user",
+        path: '/user',
         children: [
-          { index: true, element: <UserDashboard /> }, // /user -> UserDashboard
-          { path: "dashboard", element: <UserDashboard /> }, // /user/dashboard -> UserDashboard
-          { path: "borrow-books", element: <BorrowBookManagement /> },
-          { path: "return-books", element: <ReturnBookManagement /> },
-          { path: "profile", element: <div>Profile (Coming Soon)</div> },
-        ],
+          { index: true, element: <UserDashboard /> },
+          { path: 'dashboard', element: <UserDashboard /> },
+          { path: 'borrow-books', element: <BorrowBookManagement /> },
+          { path: 'return-books', element: <ReturnBookManagement /> }
+        ]
       },
 
-      // Legacy routes (for backward compatibility)
-      { path: "/book-management", element: <BookManagement /> },
-    ],
-  },
-]);
+      // Legacy (compatibility)
+      { path: '/book-management', element: <BookManagement /> }
+    ]
+  }
+])
 
 function App() {
-  return <RouterProvider router={router} />;
+  return <RouterProvider router={router} />
 }
 
-export default App;
+export default App
