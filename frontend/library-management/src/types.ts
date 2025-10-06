@@ -8,19 +8,6 @@ export interface NavItem {
 
 export type RecordStatus = "Subscribed" | "Unsubscribed";
 
-// export interface RecordEntry {
-//   bookId: string;
-//   bookImg: string;
-//   readerName: string;
-//   readerId: string;
-//   bookName: string;
-//   author: string;
-//   duration: string;
-//   status: RecordStatus;
-//   fee: number;
-//   readerAvatarUrl: string;
-// }
-
 export type BrorrowHistory = {
   id: string;
   borrower: string;
@@ -29,14 +16,21 @@ export type BrorrowHistory = {
 };
 export interface Book {
   id: string;
-  title: string;
+  name: string;
   author: string;
-  price: number;
-  coverUrl: string;
-  status: RecordStatus;
+  category: string;
+  isbn: string;
+  status: "Available" | "Borrowed" | "Maintenance" | "Reserved";
+  totalCopies: number;
+  availableCopies: number;
+  publishedDate: string;
+  description: string;
+  coverImage?: string;
   readerName?: string;
   readerId?: string;
   duration?: string;
   fee?: number;
-  history: BrorrowHistory[];
+  // history: BrorrowHistory[];
 }
+
+export type BookStatus = "Available" | "Borrowed" | "Maintenance" | "Reserved";
