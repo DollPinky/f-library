@@ -115,9 +115,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/categories/{categoryId}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/{categoryId}").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/borrowings/borrow").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/borrowings/borrow").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/return").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/lost").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()
 
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
                         .anyRequest().authenticated()
