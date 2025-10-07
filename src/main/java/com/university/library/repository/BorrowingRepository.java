@@ -1,5 +1,6 @@
 package com.university.library.repository;
 
+import com.university.library.dto.response.borrowing.BorrowingStateResponse;
 import com.university.library.entity.BookCopy;
 import com.university.library.entity.Borrowing;
 import org.springframework.data.domain.Page;
@@ -82,4 +83,19 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
             UUID bookCopyId,
             Borrowing.BorrowingStatus status
     );
+// lay danh sach cac book duoc muon nhieu nhat
+    @Query("""
+                SELECT new com.university.library.dto.response.borrowing.BorrowingStateResponse(
+                    b.bookId, b.author, b.description, b.title, b.language, b.publisher, b.year, COUNT(br.bookCopy.bookCopyId)
+                )
+                FROM Book b
+                JOIN b.bookCopies bc
+                JOIN bc.borrowings br
+                GROUP BY b.bookId, b.author, b.description, b.title, b.language, b.publisher, b.year
+                ORDER BY COUNT(br.bookCopy.bookCopyId) DESC
+            """)
+    List<BorrowingStateResponse> findMostBorrowedBooks(Pageable pageable);
+
+    //lay lich su ai da muon sach
+    List<Borrowing> findBorrowingByBookCopy_BookCopyId(UUID bookCopyId);
 } 

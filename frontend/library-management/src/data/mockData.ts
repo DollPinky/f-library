@@ -1,293 +1,291 @@
-import type { Book, NavItem } from '@/types'
+import type { Book, NavItem } from "@/types";
 import {
   BarChart,
   BookIcon,
   LayoutDashboard,
   Settings,
-  User
-} from 'lucide-react'
+  User,
+} from "lucide-react";
 
 // Admin navigation items
 export const adminNavItems: NavItem[] = [
   {
-    id: 'admin-dashboard',
-    label: 'Dashboard',
+    id: "admin-dashboard",
+    label: "Dashboard",
     icon: LayoutDashboard,
-    href: '/admin',
-    current: true
+    href: "/admin",
+    current: true,
   },
   {
-    id: 'book-management',
-    label: 'Book Management',
+    id: "book-management",
+    label: "Book Management",
     icon: BookIcon,
-    href: '/admin/book-management',
-    current: true
+    href: "/admin/book-management",
+    current: true,
   },
   {
-    id: 'reader-management',
-    label: 'Reader Management',
+    id: "user-management",
+    label: "User Management",
     icon: User,
-    href: '/admin/reader-management',
-    current: true
+    href: "/admin/user-management",
+    current: true,
   },
   {
-    id: 'reports',
-    label: 'Reports',
+    id: "reports",
+    label: "Reports",
     icon: BarChart,
-    href: '/admin/reports',
-    current: true
-  }
-]
+    href: "/admin/reports",
+    current: true,
+  },
+];
 
 // User navigation items
 export const userNavItems: NavItem[] = [
   {
-    id: 'user-dashboard',
-    label: 'Dashboard',
+    id: "user-dashboard",
+    label: "Dashboard",
     icon: LayoutDashboard,
-    href: '/user',
-    current: true
+    href: "/user",
+    current: true,
   },
   {
-    id: 'borrow-books',
-    label: 'Borrow Books',
+    id: "borrow-books",
+    label: "Borrow Books",
     icon: BookIcon,
-    href: '/user/borrow-books',
-    current: true
+    href: "/user/borrow-books",
+    current: true,
   },
   {
-    id: 'return-books',
-    label: 'Return Books',
+    id: "return-books",
+    label: "Return Books",
     icon: BarChart,
-    href: '/user/return-books',
-    current: true
+    href: "/user/return-books",
+    current: true,
   },
   {
-    id: 'my-profile',
-    label: 'My Profile',
+    id: "my-profile",
+    label: "My Profile",
     icon: User,
-    href: '/user/profile',
-    current: true
-  }
-]
+    href: "/user/profile",
+    current: true,
+  },
+];
 
 export const navItems: NavItem[] = [
   {
-    id: 'dashboard',
-    label: 'Dashboard',
+    id: "dashboard",
+    label: "Dashboard",
     icon: LayoutDashboard,
-    href: '/',
-    current: true
+    href: "/",
+    current: true,
   },
   {
-    id: 'reader-management',
-    label: 'Reader Management',
+    id: "user-management",
+    label: "User Management",
     icon: User,
-    href: '/',
-    current: true
+    href: "/",
+    current: true,
   },
   {
-    id: 'book-management',
-    label: 'Book Management',
+    id: "book-management",
+    label: "Book Management",
     icon: BookIcon,
-    href: '/book-management',
-    current: true
+    href: "/book-management",
+    current: true,
   },
-  { id: 'reports', label: 'Reports', icon: BarChart, href: '/', current: true }
-]
+  { id: "reports", label: "Reports", icon: BarChart, href: "/", current: true },
+];
 
 export const settingsNavItem: NavItem = {
-  id: 'settings',
-  label: 'Settings',
+  id: "settings",
+  label: "Settings",
   icon: Settings,
-  href: '#',
-  current: false
-}
+  href: "#",
+  current: false,
+};
 
-export const books: Book[] = [
+export const mockBooks: Book[] = [
   {
-    id: 'book1',
-    title: 'Into the Horizon',
-    author: 'Elena Carter',
-    price: 18,
-    coverUrl:
-      'https://m.media-amazon.com/images/I/610ZsxXdcHL._UF1000,1000_QL80_.jpg',
-    readerName: 'Liam Anderson',
-    readerId: '#R-10001',
-    status: 'Subscribed',
-    duration: '2 Weeks',
-    fee: 200
+    id: "1",
+    name: "The Great Gatsby",
+    author: "F. Scott Fitzgerald",
+    category: "Classic Literature",
+    isbn: "978-0-7432-7356-5",
+    status: "Available",
+    totalCopies: 5,
+    availableCopies: 3,
+    publishedDate: "1925-04-10",
+    description: "A classic American novel set in the Jazz Age.",
+    coverImage:
+      "https://images.unsplash.com/photo-1615416300468-51050fcb7a3d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmVhdCUyMGdhdHNieSUyMGJvb2slMjBjb3ZlcnxlbnwxfHx8fDE3NTk0NzY4MzZ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   },
   {
-    id: 'book2',
-    title: 'Shadows of Time',
-    author: 'Daniel Reed',
-    price: 22,
-    coverUrl:
-      'https://m.media-amazon.com/images/I/71POn+3oLNL._UF1000,1000_QL80_.jpg',
-    readerName: 'Olivia Bennett',
-    readerId: '#R-10002',
-    status: 'Unsubscribed',
-    duration: '1 Month',
-    fee: 300
+    id: "2",
+    name: "To Kill a Mockingbird",
+    author: "Harper Lee",
+    category: "Classic Literature",
+    isbn: "978-0-06-112008-4",
+    status: "Borrowed",
+    totalCopies: 4,
+    availableCopies: 0,
+    publishedDate: "1960-07-11",
+    description: "A gripping tale of racial injustice and childhood innocence.",
+    coverImage:
+      "https://images.unsplash.com/photo-1579965342575-16428a7c8881?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2NraW5nYmlyZCUyMGJvb2slMjBjb3ZlcnxlbnwxfHx8fDE3NTk0NzY4Mzd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   },
   {
-    id: 'book3',
-    title: 'Whispers in the Forest',
-    author: 'Sofia Martinez',
-    price: 19,
-    coverUrl:
-      'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1636584566i/59588594.jpg',
-    readerName: 'Noah Walker',
-    readerId: '#R-10003',
-    status: 'Subscribed',
-    duration: '3 Weeks',
-    fee: 250
+    id: "3",
+    name: "1984",
+    author: "George Orwell",
+    category: "Science Fiction",
+    isbn: "978-0-452-28423-4",
+    status: "Available",
+    totalCopies: 6,
+    availableCopies: 4,
+    publishedDate: "1949-06-08",
+    description: "A dystopian social science fiction novel.",
+    coverImage:
+      "https://images.unsplash.com/photo-1752848725112-dd887873700c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHwxOTg0JTIwb3J3ZWxsJTIwYm9va3xlbnwxfHx8fDE3NTk0NzY4Mzd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   },
   {
-    id: 'book4',
-    title: 'The Infinite Mind',
-    author: 'Charles Donovan',
-    price: 25,
-    coverUrl:
-      'https://m.media-amazon.com/images/I/61IRfSrYfdL._UF1000,1000_QL80_.jpg',
-    readerName: 'Sophia Turner',
-    readerId: '#R-10004',
-    status: 'Subscribed',
-    duration: '1 Month',
-    fee: 400
+    id: "4",
+    name: "Pride and Prejudice",
+    author: "Jane Austen",
+    category: "Romance",
+    isbn: "978-0-14-143951-8",
+    status: "Maintenance",
+    totalCopies: 3,
+    availableCopies: 0,
+    publishedDate: "1813-01-28",
+    description: "A romantic novel of manners.",
+    coverImage:
+      "https://images.unsplash.com/photo-1603162610423-af7febeca563?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcmlkZSUyMHByZWp1ZGljZSUyMGJvb2t8ZW58MXx8fHwxNzU5NDc2ODM4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   },
   {
-    id: 'book5',
-    title: 'Beyond the Stars',
-    author: 'Andy Weir',
-    price: 24,
-    coverUrl:
-      'https://m.media-amazon.com/images/I/81APzigRxwL._UF1000,1000_QL80_.jpg',
-    readerName: 'Ethan Johnson',
-    readerId: '#R-10005',
-    status: 'Unsubscribed',
-    duration: '2 Weeks',
-    fee: 180
+    id: "5",
+    name: "The Catcher in the Rye",
+    author: "J.D. Salinger",
+    category: "Classic Literature",
+    isbn: "978-0-316-76948-0",
+    status: "Available",
+    totalCopies: 4,
+    availableCopies: 2,
+    publishedDate: "1951-07-16",
+    description: "A story about teenage rebellion and angst.",
+    coverImage:
+      "https://images.unsplash.com/photo-1565951556573-1beb896beb26?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXRjaGVyJTIwcnllJTIwYm9va3xlbnwxfHx8fDE3NTk0NzY4Mzh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   },
   {
-    id: 'book6',
-    title: 'Designing Tomorrow',
-    author: 'Jacqueline Singh',
-    price: 21,
-    coverUrl:
-      'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1693800347i/198498380.jpg',
-    readerName: 'Mia Clark',
-    readerId: '#R-10006',
-    status: 'Subscribed',
-    duration: '1 Month',
-    fee: 350
+    id: "6",
+    name: "The Design Hustle",
+    author: "Jaqueline Sing",
+    category: "Business",
+    isbn: "978-0-123-45678-9",
+    status: "Available",
+    totalCopies: 8,
+    availableCopies: 6,
+    publishedDate: "2023-03-15",
+    description: "A comprehensive guide to modern design entrepreneurship.",
+    coverImage:
+      "https://images.unsplash.com/photo-1711185892188-13f35959d3ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYW50YXN5JTIwYm9vayUyMGNvdmVyfGVufDF8fHx8MTc1OTM4NTI4M3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   },
   {
-    id: 'book7',
-    title: 'The Silent Voyage',
-    author: 'Marcus Hale',
-    price: 20,
-    coverUrl:
-      'https://m.media-amazon.com/images/I/51K4xeDTJaL._UF1000,1000_QL80_.jpg',
-    readerName: 'Charlotte Green',
-    readerId: '#R-10007',
-    status: 'Subscribed',
-    duration: '2 Weeks',
-    fee: 220
+    id: "7",
+    name: "The Martian",
+    author: "Andy Weir",
+    category: "Science Fiction",
+    isbn: "978-0-345-50877-3",
+    status: "Available",
+    totalCopies: 7,
+    availableCopies: 5,
+    publishedDate: "2014-02-11",
+    description: "A gripping tale of survival on Mars.",
+    coverImage:
+      "https://images.unsplash.com/photo-1604435062356-a880b007922c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxteXN0ZXJ5JTIwYm9vayUyMGNvdmVyfGVufDF8fHx8MTc1OTQxMzA2N3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   },
   {
-    id: 'book8',
-    title: 'Echoes of the Past',
-    author: 'Linda Hayes',
-    price: 23,
-    coverUrl:
-      'https://m.media-amazon.com/images/I/71NpF8Vw7tL._UF1000,1000_QL80_.jpg',
-    readerName: 'James Scott',
-    readerId: '#R-10008',
-    status: 'Unsubscribed',
-    duration: '1 Month',
-    fee: 300
+    id: "8",
+    name: "Be a Kind Mosquito",
+    author: "Sofia Pavon",
+    category: "Children",
+    isbn: "978-0-987-65432-1",
+    status: "Available",
+    totalCopies: 5,
+    availableCopies: 4,
+    publishedDate: "2022-09-20",
+    description: "A charming children's story about kindness and friendship.",
+    coverImage:
+      "https://images.unsplash.com/photo-1610882648335-ced8fc8fa6b6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiaW9ncmFwaHklMjBib29rJTIwY292ZXJ8ZW58MXx8fHwxNzU5NDc3NTI2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   },
   {
-    id: 'book9',
-    title: 'Winds of Freedom',
-    author: 'Harper Collins',
-    price: 26,
-    coverUrl:
-      'https://m.media-amazon.com/images/I/51HH6DAGYNL._UF1000,1000_QL80_.jpg',
-    readerName: 'Amelia Brooks',
-    readerId: '#R-10009',
-    status: 'Subscribed',
-    duration: '3 Weeks',
-    fee: 270
+    id: "9",
+    name: "City on the Edge",
+    author: "Mark Goldman",
+    category: "Thriller",
+    isbn: "978-0-456-78901-2",
+    status: "Available",
+    totalCopies: 6,
+    availableCopies: 3,
+    publishedDate: "2023-01-10",
+    description: "A thrilling urban adventure set in a dystopian future.",
+    coverImage:
+      "https://images.unsplash.com/photo-1615416300468-51050fcb7a3d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmVhdCUyMGdhdHNieSUyMGJvb2slMjBjb3ZlcnxlbnwxfHx8fDE3NTk0NzY4MzZ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   },
   {
-    id: 'book10',
-    title: 'Rise of the Dawn',
-    author: 'Victor Kane',
-    price: 28,
-    coverUrl:
-      'https://m.media-amazon.com/images/I/81s9LSFZ8uL._UF1000,1000_QL80_.jpg',
-    readerName: 'Henry Adams',
-    readerId: '#R-10010',
-    status: 'Unsubscribed',
-    duration: '1 Month',
-    fee: 320
-  }
-]
-// export const records: RecordEntry[] = [
-//   {
-//     bookId: "122131",
-//     readerName: "Grayson Prince",
-//     readerId: "#B-12312",
-//     bookName: "Green thumb poppy",
-//     author: "Etelle Darcy",
-//     duration: "1 Month",
-//     status: "Subscribed",
-//     fee: 400,
-//     readerAvatarUrl: "",
-//     bookImg:
-//       "https://cdn.storymirror.com/cover/original/f146a2af99026c00463922133f1c9afa7fca11d3.png",
-//   },
-//   {
-//     bookId: "122132",
-//     readerName: "Jada White",
-//     readerId: "#B-12312",
-//     bookName: "Green thumb poppy",
-//     author: "Etelle Darcy",
-//     duration: "1 Month",
-//     status: "Unsubscribed",
-//     fee: 500,
-//     readerAvatarUrl: "",
-//     bookImg:
-//       "https://cdn.storymirror.com/cover/original/f146a2af99026c00463922133f1c9afa7fca11d3.png",
-//   },
-// ];
+    id: "10",
+    name: "The Formation of Everything",
+    author: "Charles Darwin",
+    category: "Science",
+    isbn: "978-0-789-01234-5",
+    status: "Available",
+    totalCopies: 4,
+    availableCopies: 2,
+    publishedDate: "2020-06-05",
+    description: "An exploration of the natural world and evolution.",
+    coverImage:
+      "https://images.unsplash.com/photo-1565951556573-1beb896beb26?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXRjaGVyJTIwcnllJTIwYm9va3xlbnwxfHx8fDE3NTk0NzY4Mzh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+  },
+];
 
 export const visitChartLabels = [
-  'MON',
-  'TUE',
-  'WED',
-  'THU',
-  'FRI',
-  'SAT',
-  'SUN'
-]
+  "MON",
+  "TUE",
+  "WED",
+  "THU",
+  "FRI",
+  "SAT",
+  "SUN",
+];
 export const visitChartData = {
   labels: visitChartLabels,
   datasets: [
     {
-      label: 'Visit',
+      label: "Visit",
       data: [65, 59, 80, 81, 56, 55, 40],
-      borderColor: 'rgb(255, 99, 132)',
-      backgroundColor: 'rgba(255, 99, 132, 0.5)'
+      borderColor: "rgb(255, 99, 132)",
+      backgroundColor: "rgba(255, 99, 132, 0.5)",
     },
     {
-      label: 'Read',
+      label: "Read",
       data: [28, 48, 40, 19, 86, 27, 90],
-      borderColor: 'rgb(53, 162, 235)',
-      backgroundColor: 'rgba(53, 162, 235, 0.5)'
-    }
-  ]
-}
+      borderColor: "rgb(53, 162, 235)",
+      backgroundColor: "rgba(53, 162, 235, 0.5)",
+    },
+  ],
+};
+
+export const bookCategories = [
+  "All Categories",
+  "Classic Literature",
+  "Science Fiction",
+  "Romance",
+  "Mystery",
+  "Biography",
+  "History",
+  "Technology",
+  "Business",
+  "Health",
+  "Children",
+  "Thriller",
+  "Science",
+];

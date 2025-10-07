@@ -1,34 +1,34 @@
-import { Bell, Menu, Search, X } from 'lucide-react'
-import { Input } from '../ui/input'
-import { Button } from '../ui/button'
+import { Bell, Menu, Search, X } from "lucide-react";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
-  DropdownMenuTrigger
-} from '@radix-ui/react-dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator
-} from '../ui/dropdown-menu'
-import { useIsMobile } from '@/hooks/use-mobile'
-import { useState } from 'react'
-import { settingsNavItem } from '@/data/mockData'
-import type { NavItem } from '@/types'
-import { cn } from '@/lib/utils'
-import logoImage from '@/assets/logo.png'
+  DropdownMenuSeparator,
+} from "../ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
+import { settingsNavItem } from "@/data/mockData";
+import type { NavItem } from "@/types";
+import { cn } from "@/lib/utils";
+import logoImage from "@/assets/logo.png";
 
 interface HeaderProps {
-  activateItemId?: string
-  onNavigate?: (id: string, href: string) => void
-  navItems: NavItem[]
+  activateItemId?: string;
+  onNavigate?: (id: string, href: string) => void;
+  navItems: NavItem[];
 }
 
 function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
-  const isMobile = useIsMobile()
-  const [isSearchVisible, setIsSearchVisible] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const isMobile = useIsMobile();
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
     <>
       <div className="border-b">
@@ -36,8 +36,8 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
           {/* Mobile menu */}
           {isMobile && (
             <Button
-              variant={'ghost'}
-              size={'icon'}
+              variant={"ghost"}
+              size={"icon"}
               className="mr-2"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
@@ -51,7 +51,9 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
               alt="Book Library Logo"
               className="w-14 h-14"
             />
-            <h2 className="text-2xl font-bold tracking-tight">Book Library</h2>
+            <h2 className="lg:text-2xl font-bold tracking-tight sm:text-lg">
+              Book Library
+            </h2>
           </div>
           <div className="ml-auto flex items-center space-x-2 md:space-x-4">
             {!isMobile && (
@@ -140,7 +142,7 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
                 <h2 className="font-bold text-xl">Menu</h2>
                 <Button
                   variant="ghost"
-                  size={'icon'}
+                  size={"icon"}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <X className="h-5 w-5" />
@@ -153,18 +155,18 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
                   {navItems.map((item) => (
                     <Button
                       key={item.id}
-                      variant={'ghost'}
+                      variant={"ghost"}
                       className={cn(
-                        'w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal cursor-pointer',
+                        "w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal cursor-pointer",
                         item.id === activateItemId
-                          ? 'bg-primary/10 text-primary-pink hover:bg-primary/20'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                          ? "bg-primary/10 text-primary-pink hover:bg-primary/20"
+                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                       )}
                       onClick={() => {
                         if (onNavigate) {
-                          onNavigate(item.id, item.href)
+                          onNavigate(item.id, item.href);
                         }
-                        setIsMobileMenuOpen(false)
+                        setIsMobileMenuOpen(false);
                       }}
                     >
                       <item.icon className="h-5 w-5" />
@@ -176,7 +178,7 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
                 <div className="h-px bg-gray-200 my-4"></div>
 
                 <Button
-                  variant={'ghost'}
+                  variant={"ghost"}
                   className="w-full justify-start gap-3 px-3 py-2 text-base font-normal"
                 >
                   <settingsNavItem.icon className="h-5 w-5" />
@@ -188,7 +190,7 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
         </div>
       )}
     </>
-  )
+  );
 }
 
-export default Header
+export default Header;

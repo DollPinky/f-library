@@ -1,17 +1,17 @@
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useIsMobile } from '@/hooks/use-mobile'
-import { Book, BookOpen, Calendar, Clock, Star, User } from 'lucide-react'
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Book, BookOpen, Calendar, Clock, Star, User } from "lucide-react";
 
-export default function Dashboard() {
-  const isMobile = useIsMobile()
+export default function UserDashboard() {
+  const isMobile = useIsMobile();
 
   const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) return 'Good Morning'
-    if (hour < 18) return 'Good Afternoon'
-    return 'Good Evening'
-  }
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
 
   return (
     <div className="flex flex-col space-y-6 md:p-8">
@@ -26,15 +26,15 @@ export default function Dashboard() {
               </p>
             </div>
             <h2
-              className={isMobile ? 'text-xl font-bold' : 'text-3xl font-bold'}
+              className={isMobile ? "text-xl font-bold" : "text-3xl font-bold"}
             >
               {getGreeting()}, <span className="text-amber-200">Reader</span>
             </h2>
             <p
               className={
                 isMobile
-                  ? 'text-xs opacity-90 leading-relaxed'
-                  : 'max-w-xs text-sm opacity-90 leading-relaxed'
+                  ? "text-xs opacity-90 leading-relaxed"
+                  : "max-w-xs text-sm opacity-90 leading-relaxed"
               }
             >
               Welcome to your personal library dashboard. Discover new books,
@@ -44,8 +44,8 @@ export default function Dashboard() {
               <Button
                 className={
                   isMobile
-                    ? 'text-xs py-1 px-2 w-fit bg-white text-blue-600 hover:bg-gray-100 shadow-md'
-                    : 'w-fit bg-white text-blue-600 hover:bg-gray-100 shadow-md'
+                    ? "text-xs py-1 px-2 w-fit bg-white text-blue-600 hover:bg-gray-100 shadow-md"
+                    : "w-fit bg-white text-blue-600 hover:bg-gray-100 shadow-md"
                 }
               >
                 Browse Books
@@ -54,8 +54,8 @@ export default function Dashboard() {
                 variant="outline"
                 className={
                   isMobile
-                    ? 'text-xs py-1 px-2 w-fit bg-transparent border-white text-white hover:bg-white/20'
-                    : 'w-fit bg-transparent border-white text-white hover:bg-white/20'
+                    ? "text-xs py-1 px-2 w-fit bg-transparent border-white text-white hover:bg-white/20"
+                    : "w-fit bg-transparent border-white text-white hover:bg-white/20"
                 }
               >
                 My Library
@@ -73,26 +73,26 @@ export default function Dashboard() {
       </Card>
 
       {/* Stats Cards */}
-      <div className={isMobile ? 'space-y-4' : 'grid gap-6 grid-cols-4'}>
+      <div className={isMobile ? "space-y-4" : "grid gap-6 grid-cols-4"}>
         <Card>
           <CardHeader className="py-3">
-            <CardTitle className={isMobile ? 'text-sm' : 'text-base'}>
+            <CardTitle className={isMobile ? "text-sm" : "text-base"}>
               Books Borrowed
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={isMobile ? 'text-xl' : 'text-2xl font-bold'}>5</div>
+            <div className={isMobile ? "text-xl" : "text-2xl font-bold"}>5</div>
             <p className="text-xs text-muted-foreground">Currently reading</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="py-3">
-            <CardTitle className={isMobile ? 'text-sm' : 'text-base'}>
+            <CardTitle className={isMobile ? "text-sm" : "text-base"}>
               Books Completed
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={isMobile ? 'text-xl' : 'text-2xl font-bold'}>
+            <div className={isMobile ? "text-xl" : "text-2xl font-bold"}>
               23
             </div>
             <p className="text-xs text-muted-foreground">This year</p>
@@ -100,14 +100,14 @@ export default function Dashboard() {
         </Card>
         <Card>
           <CardHeader className="py-3">
-            <CardTitle className={isMobile ? 'text-sm' : 'text-base'}>
+            <CardTitle className={isMobile ? "text-sm" : "text-base"}>
               Due Soon
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div
               className={
-                isMobile ? 'text-xl' : 'text-2xl font-bold text-orange-500'
+                isMobile ? "text-xl" : "text-2xl font-bold text-orange-500"
               }
             >
               2
@@ -117,14 +117,14 @@ export default function Dashboard() {
         </Card>
         <Card>
           <CardHeader className="py-3">
-            <CardTitle className={isMobile ? 'text-sm' : 'text-base'}>
+            <CardTitle className={isMobile ? "text-sm" : "text-base"}>
               Reading Score
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div
               className={
-                isMobile ? 'text-xl' : 'text-2xl font-bold text-green-500'
+                isMobile ? "text-xl" : "text-2xl font-bold text-green-500"
               }
             >
               4.8
@@ -138,14 +138,14 @@ export default function Dashboard() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Currently Reading</CardTitle>
-          <Button variant="link" className={isMobile ? 'text-xs' : 'text-sm'}>
+          <Button variant="link" className={isMobile ? "text-xs" : "text-sm"}>
             View All
           </Button>
         </CardHeader>
         <CardContent>
           <div
             className={
-              isMobile ? 'space-y-4' : 'grid gap-4 grid-cols-2 lg:grid-cols-3'
+              isMobile ? "space-y-4" : "grid gap-4 grid-cols-2 lg:grid-cols-3"
             }
           >
             {[1, 2, 3].map((book) => (
@@ -206,7 +206,7 @@ export default function Dashboard() {
       </Card>
 
       {/* Quick Actions */}
-      <div className={isMobile ? 'space-y-4' : 'grid gap-6 grid-cols-2'}>
+      <div className={isMobile ? "space-y-4" : "grid gap-6 grid-cols-2"}>
         <Card className="cursor-pointer hover:shadow-md transition-shadow">
           <CardContent className="p-6 text-center">
             <div className="flex flex-col items-center space-y-4">
@@ -240,5 +240,5 @@ export default function Dashboard() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

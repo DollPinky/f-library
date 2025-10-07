@@ -1,45 +1,47 @@
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { useIsMobile } from '@/hooks/use-mobile'
-import { Search, Filter, Book, Calendar, User } from 'lucide-react'
-import { books } from '@/data/mockData'
-import { useState } from 'react'
-import type { Book as BookType } from '@/types'
-import { toast } from 'sonner'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Search, Filter, Book, Calendar, User } from "lucide-react";
+import { mockBooks } from "@/data/mockData";
+import { useState } from "react";
+import type { Book as BookType } from "@/types";
+import { toast } from "sonner";
 
 export default function BorrowBookManagement() {
-  const isMobile = useIsMobile()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('All')
+  const isMobile = useIsMobile();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   // Filter books that are available (not subscribed)
-  const availableBooks = books.filter((book) => book.status === 'Unsubscribed')
+  const availableBooks = mockBooks.filter(
+    (book) => book.status === "Available"
+  );
 
   const filteredBooks = availableBooks.filter(
     (book) =>
-      book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      book.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       book.author.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  );
 
   const categories = [
-    'All',
-    'Fiction',
-    'Science',
-    'History',
-    'Technology',
-    'Literature'
-  ]
+    "All",
+    "Fiction",
+    "Science",
+    "History",
+    "Technology",
+    "Literature",
+  ];
 
   const handleBorrowBook = (book: BookType) => {
-    toast.success(`Successfully borrowed "${book.title}"`)
-    console.log('Borrowing book:', book)
-  }
+    toast.success(`Successfully borrowed "${book.name}"`);
+    console.log("Borrowing book:", book);
+  };
 
   const handleViewDetails = (book: BookType) => {
-    console.log('Viewing book details:', book)
-  }
+    console.log("Viewing book details:", book);
+  };
 
   return (
     <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
@@ -57,7 +59,7 @@ export default function BorrowBookManagement() {
             <Input
               type="search"
               placeholder={
-                isMobile ? 'Search...' : 'Search books or authors...'
+                isMobile ? "Search..." : "Search books or authors..."
               }
               className="pl-10 pr-4 py-2 w-full sm:w-[300px]"
               value={searchTerm}
@@ -79,7 +81,7 @@ export default function BorrowBookManagement() {
         {categories.map((category) => (
           <Button
             key={category}
-            variant={selectedCategory === category ? 'default' : 'outline'}
+            variant={selectedCategory === category ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedCategory(category)}
             className="text-xs"
@@ -90,7 +92,7 @@ export default function BorrowBookManagement() {
       </div>
 
       {/* Stats */}
-      <div className={isMobile ? 'space-y-4' : 'grid gap-4 grid-cols-3'}>
+      <div className={isMobile ? "space-y-4" : "grid gap-4 grid-cols-3"}>
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -148,8 +150,8 @@ export default function BorrowBookManagement() {
           <div
             className={
               isMobile
-                ? 'space-y-4'
-                : 'grid gap-6 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                ? "space-y-4"
+                : "grid gap-6 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             }
           >
             {filteredBooks.map((book) => (
@@ -159,10 +161,10 @@ export default function BorrowBookManagement() {
               >
                 {/* Cover */}
                 <div className="relative h-72 bg-gradient-to-b from-blue-400 to-blue-600">
-                  {book.coverUrl ? (
+                  {book.coverImage ? (
                     <img
-                      src={book.coverUrl}
-                      alt={book.title}
+                      src={book.coverImage}
+                      alt={book.name}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -172,12 +174,12 @@ export default function BorrowBookManagement() {
                   )}
                   <Badge
                     className={`absolute top-2 right-2 ${
-                      book.status === 'Unsubscribed'
-                        ? 'bg-green-500'
-                        : 'bg-red-500'
+                      book.status === "Available"
+                        ? "bg-green-500"
+                        : "bg-red-500"
                     }`}
                   >
-                    {book.status === 'Unsubscribed' ? 'Available' : 'Borrowed'}
+                    {book.status === "Available" ? "Available" : "Borrowed"}
                   </Badge>
                 </div>
 
@@ -186,7 +188,7 @@ export default function BorrowBookManagement() {
                   {/* Thông tin sách */}
                   <div className="flex-1 text-center space-y-1">
                     <h3 className="font-semibold text-sm line-clamp-2">
-                      {book.title}
+                      {book.name}
                     </h3>
                     <p className="text-xs text-gray-500 truncate">
                       {book.author}
@@ -198,10 +200,10 @@ export default function BorrowBookManagement() {
                     <Button
                       size="sm"
                       className="flex-1 text-xs"
-                      disabled={book.status === 'Subscribed'}
+                      disabled={book.status === "Borrowed"}
                       onClick={() => handleBorrowBook(book)}
                     >
-                      {book.status === 'Subscribed' ? 'Borrowed' : 'Borrow'}
+                      {book.status === "Borrowed" ? "Borrowed" : "Borrow"}
                     </Button>
                     <Button
                       size="sm"
@@ -226,8 +228,8 @@ export default function BorrowBookManagement() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {books
-              .filter((book) => book.status === 'Subscribed')
+            {mockBooks
+              .filter((book) => book.status === "Borrowed")
               .slice(0, 3)
               .map((book) => (
                 <div
@@ -239,7 +241,7 @@ export default function BorrowBookManagement() {
                       <Book className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-medium text-sm">{book.title}</p>
+                      <p className="font-medium text-sm">{book.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {book.author}
                       </p>
@@ -260,5 +262,5 @@ export default function BorrowBookManagement() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
