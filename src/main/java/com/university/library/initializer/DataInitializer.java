@@ -55,39 +55,63 @@ public class DataInitializer implements CommandLineRunner {
         createUsers();
 
         //Create BookCopy
-//        createBookCopy();
+        createBookCopy();
 
     }
 //Comment for delpoy by Docker, cant converse bookCopyId from String to UUID
-//    private void createBookCopy() {
-//        if (bookCopyRepository.count() == 0) {
-//            Book book = bookRepository.findAll().stream().findFirst()
-//                    .orElseThrow(() -> new RuntimeException("Chưa có Book trong DB"));
-//            Campus campus = campusRepository.findAll().stream().findFirst()
-//                    .orElseThrow(() -> new RuntimeException("Chưa có Campus trong DB"));
-//
-//            // Tạo BookCopy 1
-//            BookCopy[] bookCopy = {
-//                    BookCopy.builder()
-//                            .bookCopyId("BC001")
-//                            .book(book)
-//                            .campus(campus)
-//                            .status(BookCopy.BookStatus.AVAILABLE)
-//                            .shelfLocation("Shelf A1")
-//                            .build(),
-//                    BookCopy.builder()
-//                            .bookCopyId("BC002")
-//                            .book(book)
-//                            .campus(campus)
-//                            .status(BookCopy.BookStatus.AVAILABLE)
-//                            .shelfLocation("Shelf A2")
-//                            .build()
-//            };
-//
-//            // Lưu vào DB
-//            bookCopyRepository.saveAll(Arrays.asList(bookCopy));
-//        }
-//    }
+private void createBookCopy() {
+    if (bookCopyRepository.count() == 0) {
+        List<Book> books = bookRepository.findAll();
+        if (books.size() < 2) {
+            throw new RuntimeException("Cần ít nhất 2 Book trong DB để tạo BookCopy test");
+        }
+
+        Campus campus = campusRepository.findAll().stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Chưa có Campus trong DB"));
+
+        Book book1 = books.get(0);
+        Book book2 = books.get(1);
+
+        // Tạo các BookCopy
+        BookCopy[] bookCopies = {
+                // 2 copy cho book1
+                BookCopy.builder()
+                        .bookCopyId(UUID.randomUUID())
+                        .book(book1)
+                        .campus(campus)
+                        .status(BookCopy.BookStatus.AVAILABLE)
+                        .shelfLocation("Shelf A1")
+                        .build(),
+                BookCopy.builder()
+                        .bookCopyId(UUID.randomUUID())
+                        .book(book1)
+                        .campus(campus)
+                        .status(BookCopy.BookStatus.AVAILABLE)
+                        .shelfLocation("Shelf A2")
+                        .build(),
+                // 2 copy cho book2
+                BookCopy.builder()
+                        .bookCopyId(UUID.randomUUID())
+                        .book(book2)
+                        .campus(campus)
+                        .status(BookCopy.BookStatus.AVAILABLE)
+                        .shelfLocation("Shelf B1")
+                        .build(),
+                BookCopy.builder()
+                        .bookCopyId(UUID.randomUUID())
+                        .book(book2)
+                        .campus(campus)
+                        .status(BookCopy.BookStatus.AVAILABLE)
+                        .shelfLocation("Shelf B2")
+                        .build()
+        };
+
+        // Lưu vào DB
+        bookCopyRepository.saveAll(Arrays.asList(bookCopies));
+    }
+}
+
 
     private void createPermissions() {
         Permission[] permissions = {
