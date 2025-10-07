@@ -1,32 +1,32 @@
-import axios from 'axios'
-import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import axios from "axios";
+import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
 // Create axios instance with base configuration
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: "http://localhost:8080/api/v1/",
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json'
-  }
-})
+    "Content-Type": "application/json",
+  },
+});
 
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    return config
+    return config;
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
 // Response interceptor for error handling
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    return response.data
+    return response.data;
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-export default axiosClient
+export default axiosClient;
