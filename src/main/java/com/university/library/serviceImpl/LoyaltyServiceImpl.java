@@ -1,6 +1,8 @@
 package com.university.library.serviceImpl;
 
+import com.university.library.dto.response.account.AccountResponse;
 import com.university.library.dto.response.loyalty.LoyaltyHistoryResponse;
+import com.university.library.dto.response.loyalty.LoyaltyTopResponse;
 import com.university.library.entity.BookCopy;
 import com.university.library.entity.LoyaltyHistory;
 import com.university.library.entity.User;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 @Slf4j
 @Service
@@ -96,6 +100,23 @@ public class LoyaltyServiceImpl implements LoyaltyService {
         LocalDateTime sixMonths = LocalDateTime.now().minusMonths(6);
         int deletedLoyaltyHistory= loyaltyHistoryRepository.deleteByCreatedAtBefore(sixMonths);
         log.info("Deleted loyalty history for user with quantity: {}", deletedLoyaltyHistory);
+    }
+
+    @Override
+    public List<LoyaltyTopResponse> getTop5LoyaltyUsersByMonth(int month, int year) {
+        List<Object[]> results = loyaltyHistoryRepository.findTopUsersByMonth(month, year);
+
+        return results.stream()
+                .map(obj -> new LoyaltyTopResponse(
+                        (UUID) obj[0],
+                        (String) obj[1],
+                        (String) obj[2],
+                        ((Number) obj[3]).intValue(),
+                        ((Number) obj[4]).intValue(),
+                        ((Number) obj[5]).intValue(),
+                        ((Number) obj[6]).intValue()
+                ))
+                .toList();
     }
 
 
