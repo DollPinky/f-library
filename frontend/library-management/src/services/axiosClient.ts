@@ -4,9 +4,9 @@ import type {
   AxiosResponse,
   InternalAxiosRequestConfig
 } from 'axios'
-import type { StandardResponse } from '@/types/authTypes'
+import type { StandardResponse } from '@/types'
 
-const BASE_URL = 'http://localhost:8080'
+const BASE_URL = 'http://localhost:8080/api/v1'
 
 const axiosClient = axios.create({
   baseURL: BASE_URL,
@@ -15,6 +15,7 @@ const axiosClient = axios.create({
   withCredentials: true
 })
 
+// Token refresh queue
 let isRefreshing = false
 let failedQueue: Array<{
   resolve: (token?: string) => void
@@ -32,11 +33,18 @@ const processQueue = (error: AxiosError | null = null, newToken?: string) => {
   failedQueue = []
 }
 
-const handleLogout = () => {
-  localStorage.clear()
+const clearAuthData = (): void => {
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('user')
+}
+
+const handleLogout = (): void => {
+  clearAuthData()
   window.location.replace('/')
 }
 
+// Add token to requests
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('accessToken')
@@ -48,16 +56,21 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
+// Handle responses
 axiosClient.interceptors.response.use(
-  (response: AxiosResponse<StandardResponse<unknown>>) =>
-    response.data as unknown as AxiosResponse<StandardResponse<unknown>>,
+  (response: AxiosResponse<StandardResponse<unknown>>) => response,
   async (error: AxiosError<StandardResponse<unknown>>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean
     }
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      const url = originalRequest.url ?? ''
-      if (url.includes('/refresh-token') || url.includes('/login')) {
+
+    const status = error.response?.status
+    const url = originalRequest.url ?? ''
+
+    // Handle 401 Unauthorized
+    if (status === 401 && !originalRequest._retry) {
+      // Prevent retry on auth endpoints
+      if (url.includes('refresh-token') || url.includes('login')) {
         handleLogout()
         return Promise.reject(error)
       }
@@ -83,12 +96,15 @@ axiosClient.interceptors.response.use(
       }
 
       try {
-        const { data } = await axios.post<
-          StandardResponse<{ accessToken: string }>
-        >(`${BASE_URL}/v1/accounts/refresh-token`, { refreshToken })
+        const res = await axios.post<StandardResponse<{ accessToken: string }>>(
+          `${BASE_URL}/accounts/refresh-token`,
+          { refreshToken }
+        )
 
-        const newToken = data.data?.accessToken
-        if (!data.success || !newToken) throw new Error('Refresh token failed')
+        const newToken = res.data.data?.accessToken
+        if (!res.data.success || !newToken) {
+          throw new Error('Refresh token failed')
+        }
 
         localStorage.setItem('accessToken', newToken)
         processQueue(null, newToken)
@@ -107,9 +123,8 @@ axiosClient.interceptors.response.use(
       }
     }
 
-    console.error('API Error:', error.response?.data?.message || error.message)
     return Promise.reject(error)
   }
-);
+)
 
-export default axiosClient;
+export default axiosClient

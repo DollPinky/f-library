@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { LockKeyhole } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
-import type { LoginRequest } from '@/types/authTypes'
+import type { LoginRequest } from '@/types'
 
 import {
   Card,

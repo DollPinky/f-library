@@ -6,8 +6,8 @@ import {
   type ReactNode
 } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { AuthContextType, User, LoginRequest } from '@/types/authTypes'
-import authService from '@/services/authService'
+import type { AuthContextType, User, LoginRequest } from '@/types'
+import { authService } from '@/services/authService'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
