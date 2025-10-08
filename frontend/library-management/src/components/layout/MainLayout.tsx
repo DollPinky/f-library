@@ -5,13 +5,13 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { adminNavItems, userNavItems } from '@/data/mockData'
 
 export default function MainLayout() {
-  const [activateItemId, setActiveItemId] = useState<string>('admin-dashboard')
+  const [activateItemId, setActiveItemId] = useState<string>('user-dashboard')
   const location = useLocation()
   const navigate = useNavigate()
 
   // Determine if we're in admin or user section
-  const isUserSection = location.pathname.startsWith('/user')
-  const currentNavItems = isUserSection ? userNavItems : adminNavItems
+  const isAdminSection = location.pathname.startsWith('/admin')
+  const currentNavItems = isAdminSection ? adminNavItems : userNavItems
 
   useEffect(() => {
     const currPath = location.pathname
@@ -25,7 +25,11 @@ export default function MainLayout() {
         matchingItem = currentNavItems.find(
           (item) => item.id === 'admin-dashboard'
         )
-      } else if (currPath === '/user' || currPath === '/user/dashboard') {
+      } else if (
+        currPath === '/' ||
+        currPath === '/user' ||
+        currPath === '/user/dashboard'
+      ) {
         matchingItem = currentNavItems.find(
           (item) => item.id === 'user-dashboard'
         )
