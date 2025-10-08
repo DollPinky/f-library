@@ -1,17 +1,20 @@
 import { Link } from 'react-router-dom'
-import { FileQuestion } from 'lucide-react'
+import { ShieldX } from 'lucide-react'
 
-export default function NotFound() {
+export default function Forbidden() {
   return (
     <div className="h-screen w-screen flex items-center justify-center flex-col gap-6 bg-gray-50">
       <div className="flex flex-col items-center gap-4">
-        <FileQuestion className="w-24 h-24 text-orange-500" />
+        <ShieldX className="w-24 h-24 text-red-500" />
         <h1 className="text-5xl font-bold text-gray-800">
-          <strong>404</strong>
+          <strong>403</strong>
         </h1>
-        <h2 className="text-2xl font-semibold text-gray-700">Page Not Found</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">
+          Access Forbidden
+        </h2>
         <p className="text-gray-600 text-center max-w-md">
-          The page you're looking for doesn't exist or has been moved.
+          You don't have permission to access this resource. Please contact your
+          administrator if you believe this is an error.
         </p>
       </div>
       <Link
