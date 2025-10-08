@@ -1,17 +1,22 @@
 package com.university.library.serviceImpl;
 
 import com.university.library.base.PagedResponse;
+import com.university.library.constants.BookConstants;
 import com.university.library.constants.BookCopyConstants;
 import com.university.library.dto.request.bookCopy.BookCopySearchParams;
+import com.university.library.dto.request.bookCopy.BookDonationRequest;
 import com.university.library.dto.request.bookCopy.CreateBookCopyCommand;
 import com.university.library.dto.request.bookCopy.CreateBookCopyFromBookCommand;
 import com.university.library.dto.response.bookCopy.BookCopyResponse;
 import com.university.library.entity.Book;
 import com.university.library.entity.BookCopy;
 import com.university.library.entity.Campus;
+import com.university.library.entity.User;
+import com.university.library.exception.exceptions.NotFoundException;
 import com.university.library.repository.BookCopyRepository;
 import com.university.library.repository.BookRepository;
 import com.university.library.repository.CampusRepository;
+import com.university.library.repository.UserRepository;
 import com.university.library.service.BookCopyService;
 import com.university.library.specification.BookCopySpecification;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -50,6 +56,7 @@ public class BookCopyServiceImpl implements BookCopyService {
     private final QRCodeServiceImpl qrCodeService;
     private final BookRepository bookRepository;
     private final CampusRepository campusRepository;
+    private final UserRepository userRepository;
 
 
     @Value("${app.cors.allowed-origins:*}")
@@ -125,7 +132,7 @@ public class BookCopyServiceImpl implements BookCopyService {
 
             for (String fontPath : fontPaths) {
                 try {
-                    java.io.File fontFile = new java.io.File(fontPath);
+                    File fontFile = new File(fontPath);
                     if (fontFile.exists()) {
                         return PDType0Font.load(document, fontFile);
                     }
@@ -355,9 +362,37 @@ public class BookCopyServiceImpl implements BookCopyService {
         log.info("Successfully created {} book copies for book: {}", bookCopies.size(), command.getBookId());
     }
 
+    @Override
+    public BookCopyResponse bookDonation(BookDonationRequest request) {
+        User user = userRepository.findByEmail(request.getUsername()).orElseThrow(()->
+                new NotFoundException("User not found with username: " + request.getUsername())
+        );
+        Book b = bookRepository.findByTitleEqualsIgnoreCase(request.getTitle());
+        if (b == null) {
 
-
-
+            Book book = Book.builder()
+                    .title(request.getTitle())
+                    .build();
+            b = bookRepository.save(book);
+        }
+        Campus c = campusRepository.findByCode( request.getCampusCode());
+        if(c == null) {
+            throw new RuntimeException("Campus not found with code: " + request.getCampusCode());
+        }
+        BookCopy bc = BookCopy.builder()
+                .book(b)
+                .campus(c)
+                .donors(user)
+                .status(BookCopy.BookStatus.AVAILABLE)
+                .build();
+        BookCopy savedCopy = bookCopyRepository.save(bc);
+        user.getBookDonation().add(savedCopy);
+        b.getBookCopies().add(savedCopy)  ;
+        userRepository.save(user);
+        bookRepository.save(b);
+       BookCopyResponse response = BookCopyResponse.fromEntity(savedCopy);
+        return response;
+    }
 
     private BookCopy.BookStatus convertBookStatus(CreateBookCopyCommand.BookStatus status) {
         if (status == null) {

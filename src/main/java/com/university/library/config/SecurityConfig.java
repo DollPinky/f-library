@@ -54,7 +54,7 @@ public class SecurityConfig {
                                 "/api/v1/accounts/login",
                                 "/api/chat-with-guest",
                                 "/swagger-ui/**",
-//                                "/api/v1/**",
+                                "/api/v1/book-copies/donation",
                                 "/v3/api-docs",
                                 "/v3/api-docs/**",
                                 "/api-docs/**",

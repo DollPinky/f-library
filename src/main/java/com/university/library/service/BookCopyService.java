@@ -3,6 +3,7 @@ package com.university.library.service;
 
 import com.university.library.base.PagedResponse;
 import com.university.library.dto.request.bookCopy.BookCopySearchParams;
+import com.university.library.dto.request.bookCopy.BookDonationRequest;
 import com.university.library.dto.request.bookCopy.CreateBookCopyCommand;
 import com.university.library.dto.request.bookCopy.CreateBookCopyFromBookCommand;
 import com.university.library.dto.response.bookCopy.BookCopyResponse;
@@ -33,4 +34,5 @@ public interface BookCopyService {
    void deleteBookCopy(UUID bookCopyId);
    BookCopyResponse changeBookCopyStatus(UUID bookCopyId, CreateBookCopyCommand.BookStatus newStatus);
   void createBookCopiesFromBook(CreateBookCopyFromBookCommand command);
+  BookCopyResponse bookDonation(BookDonationRequest request);
 }

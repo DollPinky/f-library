@@ -17,5 +17,7 @@ public interface CampusRepository extends JpaRepository<Campus, UUID> {
     Campus findByCode(String code);
 
     boolean existsByCode(String code);
+
+    Campus findByName(String name);
 }
 

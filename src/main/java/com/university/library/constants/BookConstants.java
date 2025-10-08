@@ -14,6 +14,7 @@ public final class BookConstants {
     public static final String ERROR_CATEGORY_NOT_FOUND = "Category not found with ID: ";
     public static final String ERROR_SEARCH_FAILED = "Error occurred while searching books";
     public static final String ERROR_DELETE_FAILED = "Error occurred while deleting book";
+    public static final String BOOK_NOT_FOUND_TITLE = "Book not found with title: ";
 
     // Success Messages
     public static final String SUCCESS_BOOK_CREATED = "Book created successfully";

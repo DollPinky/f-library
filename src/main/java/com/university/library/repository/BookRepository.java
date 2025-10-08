@@ -17,5 +17,10 @@ public interface BookRepository extends JpaRepository<Book, UUID>, JpaSpecificat
     Optional<Book> findByTitleAndAuthorAndPublisherAndYear(@Param("title") String title, @Param("author") String author, @Param("publisher") String publisher, @Param("year") Integer year);
 
 
+    Book findByTitle(String title);
+  @Query("""
+  SELECT b FROM Book b WHERE lower(b.title)  = lower( :title)
+""")
+    Book findByTitleEqualsIgnoreCase(String title);
 }
 

@@ -2,6 +2,7 @@ package com.university.library.controller;
 
 import com.university.library.base.PagedResponse;
 import com.university.library.base.StandardResponse;
+import com.university.library.dto.request.bookCopy.BookDonationRequest;
 import com.university.library.dto.response.bookCopy.BookCopyResponse;
 import com.university.library.dto.request.bookCopy.BookCopySearchParams;
 import com.university.library.dto.request.bookCopy.CreateBookCopyCommand;
@@ -256,7 +257,10 @@ public class BookCopyController {
         List<BookCopyResponse> copies = bookCopyService.findByCategoryAndStatus(categoryId, status);
         return ResponseEntity.ok(StandardResponse.success(copies));
     }
-
+    @PostMapping("/donation")
+    private ResponseEntity<StandardResponse<BookCopyResponse>> donateBookCopy(@RequestBody BookDonationRequest request) {
+        return ResponseEntity.ok(StandardResponse.success(bookCopyService.bookDonation(request)));
+    }
 
 }
 
