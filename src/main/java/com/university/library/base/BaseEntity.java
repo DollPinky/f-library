@@ -43,7 +43,7 @@ public abstract class BaseEntity {
 
   @PrePersist
   protected void onCreate() {
-    LocalDateTime now = LocalDateTime.now().minusMonths(1);
+    LocalDateTime now = LocalDateTime.now();
     isDeleted = false;
     createdAt = now;
     updatedAt = now;
