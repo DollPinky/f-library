@@ -26,11 +26,12 @@ export default function BookBorrowModal({
   onConfirm,
 }: BookBorrowModalProps) {
   const [username, setUsername] = useState("");
-  const availableCopy = book.bookId;
+  const availableCopy = book.bookCopies.find(
+    (copy) => copy.status === "AVAILABLE"
+  );
 
-  //   .find((copy) => copy.status === "AVAILABLE");
-  const bookCopyId = availableCopy || "";
-
+  //
+  const bookCopyId = availableCopy?.bookCopyId;
   const handleConfirm = () => {
     if (!username.trim() || !bookCopyId) return;
     onConfirm({ username, bookCopyId });

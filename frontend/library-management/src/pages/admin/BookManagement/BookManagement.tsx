@@ -24,12 +24,11 @@ export function BookManagement() {
   const [bookToDelete, setBookToDelete] = useState<Book | undefined>();
   const navigate = useNavigate();
   const itemsPerPage = 10;
-  const token =
-    "eyJhbGciOiJIUzUxMiJ9.eyJ0b2tlblZlcnNpb24iOjAsInBlcm1pc3Npb25zIjpbIlVTRVJfVklFVyIsIlJFUE9SVF9WSUVXIiwiVVNFUl9NQU5BR0UiLCJCT09LX1ZJRVciLCJCT09LX01BTkFHRSIsIlNZU1RFTV9DT05GSUciLCJCT1JST1dfTUFOQUdFIl0sInJvbGVzIjpbIlJPTEVfQURNSU4iXSwiZnVsbE5hbWUiOiJOZ3V54buFbiBWxINuIEFkbWluIiwiZW1haWwiOiJhZG1pbkBjb21wYW55LmNvbSIsInVzZXJuYW1lIjoiYWRtaW5AY29tcGFueS5jb20iLCJpYXQiOjE3NTk4NTc4ODgsImV4cCI6MTc1OTg2MTQ4OH0.euwj8kOn6fDnf4LP3syItOI-g--MveDPQueqGhZd31c3crdDlf2OPxROTHtu98qdb8Jpk4PXQIzpn8x7LSF3Ew";
+
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        // const token = localStorage.getItem("token") || "";
+        const token = localStorage.getItem("accessToken") || "";
 
         const data = await getAllBooks(token);
         setBooks(data);

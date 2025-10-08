@@ -3,7 +3,6 @@ import BorrowHistoryTable from "@/components/feature/admin/bookManagerment/bookD
 import { Button } from "@/components/ui/button";
 import { getBookById, getHistoryByBookCopyId } from "@/services/bookApi";
 import type { Book, BrorrowHistory } from "@/types";
-// import { Skeleton } from "@/components/ui/skeleton";
 
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -12,14 +11,11 @@ import { toast } from "sonner";
 
 export default function BookDetail() {
   const { bookId } = useParams<{ bookId: string }>();
-  // console.log(bookId);
   const navigate = useNavigate();
   const [book, setBook] = useState<Book | null>(null);
   const [history, setHistory] = useState<BrorrowHistory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const token =
-    "eyJhbGciOiJIUzUxMiJ9.eyJ0b2tlblZlcnNpb24iOjAsInBlcm1pc3Npb25zIjpbIlVTRVJfVklFVyIsIlJFUE9SVF9WSUVXIiwiVVNFUl9NQU5BR0UiLCJCT09LX1ZJRVciLCJCT09LX01BTkFHRSIsIlNZU1RFTV9DT05GSUciLCJCT1JST1dfTUFOQUdFIl0sInJvbGVzIjpbIlJPTEVfQURNSU4iXSwiZnVsbE5hbWUiOiJOZ3V54buFbiBWxINuIEFkbWluIiwiZW1haWwiOiJhZG1pbkBjb21wYW55LmNvbSIsInVzZXJuYW1lIjoiYWRtaW5AY29tcGFueS5jb20iLCJpYXQiOjE3NTk4NTc4ODgsImV4cCI6MTc1OTg2MTQ4OH0.euwj8kOn6fDnf4LP3syItOI-g--MveDPQueqGhZd31c3crdDlf2OPxROTHtu98qdb8Jpk4PXQIzpn8x7LSF3Ew";
 
   useEffect(() => {
     const fetchBookAndHistory = async () => {
@@ -29,20 +25,41 @@ export default function BookDetail() {
       }
       setLoading(true);
       try {
+        const token = localStorage.getItem("accessToken") || "";
+
+        // Fetch book data
         const bookData = await getBookById(bookId, token);
         setBook(bookData);
 
-        const historyData = await getHistoryByBookCopyId(bookId, token);
-        setHistory(historyData ?? []);
+        // Get the first bookCopy's ID directly without checking status
+        if (bookData?.bookCopies?.length > 0) {
+          const firstBookCopyId = bookData.bookCopies[0].bookCopyId;
+
+          if (firstBookCopyId) {
+            // Fetch history using this ID
+            const historyData = await getHistoryByBookCopyId(
+              firstBookCopyId,
+              token
+            );
+            setHistory(historyData ?? []);
+          } else {
+            setHistory([]);
+          }
+        } else {
+          setHistory([]);
+        }
       } catch (error) {
-        console.error("Failed to fetch books:", error);
-        toast.error("Failed to load books");
+        console.error("Failed to fetch book or history:", error);
+        toast.error("Failed to load book details");
+        setError("Failed to load book details");
       } finally {
         setLoading(false);
       }
     };
+
     fetchBookAndHistory();
   }, [bookId]);
+
   const handleGoBack = () => {
     navigate(-1);
   };
@@ -62,6 +79,7 @@ export default function BookDetail() {
       </div>
     );
   }
+
   if (error) {
     return (
       <div className="container mx-auto p-4 space-y-6">
@@ -85,6 +103,7 @@ export default function BookDetail() {
       </div>
     );
   }
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div>
