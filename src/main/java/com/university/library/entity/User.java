@@ -65,8 +65,6 @@ public class User extends BaseEntity implements org.springframework.security.cor
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-    @OneToMany(mappedBy = "donors",fetch = FetchType.LAZY)
-    private List<BookCopy> bookDonation = new ArrayList<>();
     public enum AccountRole {
         ADMIN,
         READER

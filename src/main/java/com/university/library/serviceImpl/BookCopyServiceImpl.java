@@ -8,15 +8,9 @@ import com.university.library.dto.request.bookCopy.BookDonationRequest;
 import com.university.library.dto.request.bookCopy.CreateBookCopyCommand;
 import com.university.library.dto.request.bookCopy.CreateBookCopyFromBookCommand;
 import com.university.library.dto.response.bookCopy.BookCopyResponse;
-import com.university.library.entity.Book;
-import com.university.library.entity.BookCopy;
-import com.university.library.entity.Campus;
-import com.university.library.entity.User;
+import com.university.library.entity.*;
 import com.university.library.exception.exceptions.NotFoundException;
-import com.university.library.repository.BookCopyRepository;
-import com.university.library.repository.BookRepository;
-import com.university.library.repository.CampusRepository;
-import com.university.library.repository.UserRepository;
+import com.university.library.repository.*;
 import com.university.library.service.BookCopyService;
 import com.university.library.specification.BookCopySpecification;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +51,7 @@ public class BookCopyServiceImpl implements BookCopyService {
     private final BookRepository bookRepository;
     private final CampusRepository campusRepository;
     private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
 
 
     @Value("${app.cors.allowed-origins:*}")
@@ -363,35 +358,36 @@ public class BookCopyServiceImpl implements BookCopyService {
     }
 
     @Override
+    @Transactional
     public BookCopyResponse bookDonation(BookDonationRequest request) {
         User user = userRepository.findByEmail(request.getUsername()).orElseThrow(()->
                 new NotFoundException("User not found with username: " + request.getUsername())
         );
+        // + diem cho user
+        Category cate = categoryRepository.findById(request.getCategoryId()).orElseThrow(()
+                ->  new NotFoundException("Category not found with category id: " + request.getCategoryId())
+        );
         Book b = bookRepository.findByTitleEqualsIgnoreCase(request.getTitle());
         if (b == null) {
-
-            Book book = Book.builder()
+           b = Book.builder()
                     .title(request.getTitle())
+                    .category(cate)
                     .build();
-            b = bookRepository.save(book);
+          b =  bookRepository.save(b);
         }
-        Campus c = campusRepository.findByCode( request.getCampusCode());
-        if(c == null) {
-            throw new RuntimeException("Campus not found with code: " + request.getCampusCode());
+        Campus cpus = campusRepository.findByCode( request.getCampusCode());
+        if(cpus == null) {
+            throw new NotFoundException("Campus not found with code: " + request.getCampusCode());
         }
         BookCopy bc = BookCopy.builder()
                 .book(b)
-                .campus(c)
-                .donors(user)
+                .campus(cpus)
                 .status(BookCopy.BookStatus.AVAILABLE)
+                .shelfLocation(request.getShelfLocation())
                 .build();
-        BookCopy savedCopy = bookCopyRepository.save(bc);
-        user.getBookDonation().add(savedCopy);
-        b.getBookCopies().add(savedCopy)  ;
-        userRepository.save(user);
-        bookRepository.save(b);
-       BookCopyResponse response = BookCopyResponse.fromEntity(savedCopy);
-        return response;
+        BookCopy save  =   bookCopyRepository.save(bc);
+       BookCopyResponse response = BookCopyResponse.fromEntity(save);
+       return response;
     }
 
     private BookCopy.BookStatus convertBookStatus(CreateBookCopyCommand.BookStatus status) {
@@ -414,7 +410,4 @@ public class BookCopyServiceImpl implements BookCopyService {
                 return BookCopy.BookStatus.AVAILABLE;
         }
     }
-
-
-
 }

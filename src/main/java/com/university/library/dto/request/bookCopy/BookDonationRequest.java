@@ -9,4 +9,6 @@ public class BookDonationRequest {
     private String username;
     private String title;
     private String campusCode;
+    private String shelfLocation;
+    private UUID categoryId;
 }
