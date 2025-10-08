@@ -4,49 +4,51 @@ import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
 import AuthLayout from "@/components/layout/AuthLayout";
 
-// Admin Components
-import AdminDashboard from "@/pages/admin/Dashboard";
-import { BookManagement } from "@/pages/admin/BookManagement/BookManagement";
+// Routes control
+import PublicRoute from './PublicRoute'
+import ProtectedRoute from './ProtectedRoute'
 
-// User Components
-import UserDashboard from "@/pages/user/Dashboard";
-import BorrowBookManagement from "@/pages/user/BorrowBookManagement/BorrowBookManagement";
-import ReturnBookManagement from "@/pages/user/ReturnBookManagement/ReturnBookManagement";
+// Pages
+import Auth from '@/pages/auth/Auth'
+import NotFound from '@/pages/NotFound'
+import Forbidden from '@/pages/Forbidden'
 
-// Auth Components
-import Auth from "@/pages/auth/Auth";
+// User pages
+import UserDashboard from '@/pages/user/Dashboard'
+import BorrowBookManagement from '@/pages/user/BorrowBookManagement/BorrowBookManagement'
+import ReturnBookManagement from '@/pages/user/ReturnBookManagement/ReturnBookManagement'
 
-import NotFound from "@/pages/NotFound";
-import Forbidden from "@/pages/Forbidden";
-import BookDetail from "@/pages/admin/BookManagement/BookDetail";
+// Admin pages
+import AdminDashboard from '@/pages/admin/Dashboard'
+import { BookManagement } from '@/pages/admin/BookManagement/BookManagement'
 
 const router = createBrowserRouter([
+  // -------------------------------
+  // AUTH ROUTES (no main layout)
+  // -------------------------------
   {
     element: <AuthLayout />,
     children: [
-      // Public routes (login/register) - chỉ truy cập khi chưa đăng nhập
       {
-        element: <PublicRoute />,
+        element: <PublicRoute />, // chỉ truy cập nếu chưa login
         children: [
-          {
-            path: "/login",
-            element: <Auth />,
-          },
-          {
-            path: "/register",
-            element: <div>Register Page (Coming Soon)</div>,
-          },
-        ],
-      },
+          { path: '/login', element: <Auth /> },
+          { path: '/register', element: <div>Register Page (Coming Soon)</div> }
+        ]
+      }
+    ]
+  },
 
-      // Main application routes
-      {
-        path: "/",
-        element: <MainLayout />,
-        errorElement: <NotFound />,
-        children: [
-          // Root path - Mặc định hiển thị User Dashboard
-          { index: true, element: <UserDashboard /> },
+  // -------------------------------
+  // MAIN APP ROUTES
+  // -------------------------------
+  {
+    path: '/',
+    element: <MainLayout />,
+    errorElement: <NotFound />,
+    children: [
+      // Default user routes (no login still ok)
+      { index: true, element: <UserDashboard /> },
 
           // User Routes - Các route user cụ thể
           {
@@ -63,6 +65,32 @@ const router = createBrowserRouter([
             ],
           },
 
+      // -------------------------------
+      // ADMIN ROUTES (requires ADMIN role)
+      // -------------------------------
+      {
+        path: 'admin',
+        element: <ProtectedRoute requiredRole="ADMIN" />,
+        children: [
+          { index: true, element: <AdminDashboard /> },
+          { path: 'dashboard', element: <AdminDashboard /> },
+          { path: 'book-management', element: <BookManagement /> },
+          {
+            path: 'user-management',
+            element: <div>Quản lý người dùng (Sắp ra mắt)</div>
+          },
+          { path: 'reports', element: <div>Báo cáo (Sắp ra mắt)</div> }
+        ]
+      }
+    ]
+  },
+
+  // -------------------------------
+  // SYSTEM ROUTES
+  // -------------------------------
+  { path: '/forbidden', element: <Forbidden /> },
+  { path: '*', element: <NotFound /> }
+])
           // Admin Routes - CHỈ cho role ADMIN
           {
             path: "admin",
