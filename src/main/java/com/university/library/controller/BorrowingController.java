@@ -2,20 +2,22 @@ package com.university.library.controller;
 
 import com.university.library.base.StandardResponse;
 import com.university.library.dto.request.borrowing.BorrowRequest;
+import com.university.library.dto.response.borrowing.BorrowingHistoryResponse;
 import com.university.library.dto.response.borrowing.BorrowingResponse;
+import com.university.library.dto.response.borrowing.BorrowingStateResponse;
 import com.university.library.entity.User;
 import com.university.library.entity.Borrowing;
 import com.university.library.repository.BorrowingRepository;
 import com.university.library.service.BorrowingService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -217,5 +219,26 @@ public class BorrowingController {
                 .body(StandardResponse.error("Không thể lấy thông tin mượn sách: " + e.getMessage()));
         }
     }
+
+    /**
+     * Lấy danh sách book được mượn nhều nhất
+     */
+    @GetMapping("/most-borrowed")
+    public ResponseEntity<StandardResponse<List<BorrowingStateResponse>>> getMostBorrowedBooks(
+            @RequestParam(defaultValue = "2") int limit) {
+        List<BorrowingStateResponse> stats = borrowingService.getMostBorrowStats(limit);
+        return ResponseEntity.ok(StandardResponse.success(stats));
+    }
+
+    /**
+     * Lấy danh sách lịch sử bookCopy
+     */
+    @GetMapping("/{bookCopyId}/history")
+    public ResponseEntity<StandardResponse<List<BorrowingHistoryResponse>>> getBookCopyHistory(@PathVariable UUID bookCopyId) {
+        List<BorrowingHistoryResponse> borrowingHistoryResponses = borrowingService.findBorrowingByBookCopy_BookCopyId(bookCopyId);
+        return ResponseEntity.ok(StandardResponse.success(borrowingHistoryResponses));
+    }
+
+
 
 }

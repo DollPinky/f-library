@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-export default function Dashboard() {
+export default function AdminDashboard() {
   const isMobile = useIsMobile();
   return (
     <div className="flex flex-col space-y-6 md:p-8">
@@ -16,7 +16,7 @@ export default function Dashboard() {
         </div>
 
         <div className="h-full">
-          <Card className="h-full flex flex-col">
+          <Card className="h-full flex flex-col md:m-0 m-3">
             <CardHeader className="pb-2">
               <CardTitle>Visit & Read</CardTitle>
             </CardHeader>
@@ -30,7 +30,7 @@ export default function Dashboard() {
       </div>
 
       <div className={isMobile ? "space-y-4" : "grid gap-6 grid-cols-3"}>
-        <Card>
+        <Card className="md:m-0 m-3">
           <CardHeader className="py-3">
             <CardTitle className={isMobile ? "text-sm" : "text-base"}>
               Total Books
@@ -42,7 +42,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="md:m-0 m-3">
           <CardHeader className="py-3">
             <CardTitle className={isMobile ? "text-sm" : "text-base"}>
               Active Readers
@@ -54,38 +54,36 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="md:m-0 m-3">
           <CardHeader className="py-3">
             <CardTitle className={isMobile ? "text-sm" : "text-base"}>
-              Total Revenue
+              Total Book Borrowed
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className={isMobile ? "text-xl" : "text-2xl font-bold"}>
-              $3,456
+              1,456
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <BookList />
+
+      <Card className="md:m-0 m-3 mt-7">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Book List</CardTitle>
+          <CardTitle>Book Records</CardTitle>
           <Button variant="link" className={isMobile ? "text-xs" : "text-sm"}>
             View All
           </Button>
         </CardHeader>
         <CardContent>
-          <BookList isMobile={isMobile} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Records</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <BookTable isMobile={isMobile} />
+          <BookTable
+            books={[]}
+            onView={() => {}}
+            onEdit={() => {}}
+            onDelete={() => {}}
+          />
         </CardContent>
       </Card>
     </div>

@@ -1,7 +1,9 @@
 package com.university.library.serviceImpl;
 
 import com.university.library.base.PagedResponse;
+import com.university.library.dto.response.borrowing.BorrowingHistoryResponse;
 import com.university.library.dto.response.borrowing.BorrowingResponse;
+import com.university.library.dto.response.borrowing.BorrowingStateResponse;
 import com.university.library.entity.BookCopy;
 import com.university.library.entity.Borrowing;
 import com.university.library.entity.User;
@@ -268,5 +270,28 @@ public class BorrowingServiceImpl implements BorrowingService {
                 borrowing.getBorrowingId(), fine);
         return BorrowingResponse.fromEntity(savedBorrowing);
     }
+
+    @Override
+    public List<BorrowingStateResponse> getMostBorrowStats(int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return borrowingRepository.findMostBorrowedBooks(pageable);
+    }
+
+    @Override
+    public List<BorrowingHistoryResponse> findBorrowingByBookCopy_BookCopyId(UUID bookCopyId) {
+        return borrowingRepository.findBorrowingByBookCopy_BookCopyId(bookCopyId)
+                .stream()
+                .map(b -> new BorrowingHistoryResponse(
+                        b.getBorrower().getUsername(),
+                        b.getBorrowedDate(),
+                        b.getReturnedDate()
+                ))
+                .toList();
+    }
+
+
+
+
+
 
 }

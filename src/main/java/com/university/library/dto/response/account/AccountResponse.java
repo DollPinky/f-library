@@ -1,5 +1,6 @@
 package com.university.library.dto.response.account;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.university.library.entity.User;
 import lombok.*;
 
@@ -11,6 +12,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AccountResponse {
     private UUID accountId;
     private String fullName;
@@ -21,8 +23,11 @@ public class AccountResponse {
     private String companyAccount;
     private User.AccountRole role;
     private CampusResponse campus;
+    private int totalLoyaltyPoints;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String accessToken;
+    private String refreshToken;
 
     public static AccountResponse fromEntity(User account) {
         if (account == null) {
@@ -39,6 +44,7 @@ public class AccountResponse {
                 .companyAccount(account.getCompanyAccount())
                 .role(account.getRole())
                 .campus(CampusResponse.fromEntity(account.getCampus()))
+                .totalLoyaltyPoints(account.getTotalLoyaltyPoints())
                 .createdAt(account.getCreatedAt())
                 .updatedAt(account.getUpdatedAt())
                 .build();

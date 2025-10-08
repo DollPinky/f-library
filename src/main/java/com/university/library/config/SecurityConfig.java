@@ -1,8 +1,12 @@
 package com.university.library.config;
 
+import com.university.library.entity.User;
+import com.university.library.repository.RefreshTokenRepository;
 import com.university.library.repository.UserRepository;
-
+import com.university.library.serviceImpl.CustomeUserDetailService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,10 +21,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 import java.util.List;
 
@@ -28,11 +34,14 @@ import java.util.List;
 @EnableMethodSecurity
 @EnableWebSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
-    private final UserRepository accountRepository;
-
+    private final CustomeUserDetailService userDetailsService;
+    private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     @Value("${app.cors.allowed-origins:*}")
     private String corsAllowedOrigins;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,7 +54,7 @@ public class SecurityConfig {
                                 "/api/v1/accounts/login",
                                 "/api/chat-with-guest",
                                 "/swagger-ui/**",
-                                "/api/v1/**",
+//                                "/api/v1/**",
                                 "/v3/api-docs",
                                 "/v3/api-docs/**",
                                 "/api-docs/**",
@@ -102,55 +111,45 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/books/import").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/books/{bookId}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/books/{bookId}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/books/book-cover-link/{bookId}").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/categories/create").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/categories/{categoryId}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/{categoryId}").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/borrowings/borrow").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/borrowings/borrow").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/return").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/lost").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()
 
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
-                        .invalidSessionUrl("/login?invalid=true")
                         .maximumSessions(1)
                         .maxSessionsPreventsLogin(false)
-                        .expiredUrl("/login?expired=true")
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/api/v1/accounts/logout")
-                        .invalidateHttpSession(true)
-                        .clearAuthentication(true)
-                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()))
+                        )
                 .exceptionHandling()
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setContentType("application/json");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}");
                 });
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> accountRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
-    }
-
-    @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService());
+        authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }

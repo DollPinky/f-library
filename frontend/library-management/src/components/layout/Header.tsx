@@ -1,32 +1,55 @@
-import { Bell, BookOpenIcon, Menu, Search, X } from "lucide-react";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
+import { Bell, Menu, Search, X, LogIn } from 'lucide-react'
+import { Input } from '../ui/input'
+import { Button } from '../ui/button'
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+  DropdownMenuTrigger
+} from '@radix-ui/react-dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "../ui/dropdown-menu";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useState } from "react";
-import { navItems, settingsNavItem } from "@/data/mockData";
-import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
+  DropdownMenuSeparator
+} from '../ui/dropdown-menu'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { useState } from 'react'
+import { settingsNavItem } from '@/data/mockData'
+import type { NavItem } from '@/types'
+import { cn } from '@/lib/utils'
+import logoImage from '@/assets/logo.png'
+import { useAuth } from '@/hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
 
-interface SidebarMobileProps {
-  activateItemId?: string;
-  onNavigate?: (id: string) => void;
+interface HeaderProps {
+  activateItemId?: string
+  onNavigate?: (id: string, href: string) => void
+  navItems: NavItem[]
 }
 
-function Header({ activateItemId, onNavigate }: SidebarMobileProps) {
-  const isMobile = useIsMobile();
-  const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
+  const isMobile = useIsMobile()
+  const [isSearchVisible, setIsSearchVisible] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { isAuthenticated, user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      console.log('🚪 Starting logout process...')
+      await logout()
+      console.log('✅ Logout completed, should redirect to /')
+    } catch (error) {
+      console.error('❌ Logout failed:', error)
+      // Fallback: force navigate về trang chủ
+      navigate('/', { replace: true })
+    }
+  }
+
+  const handleLoginClick = () => {
+    navigate('/login')
+  }
+
   return (
     <>
       <div className="border-b">
@@ -34,8 +57,8 @@ function Header({ activateItemId, onNavigate }: SidebarMobileProps) {
           {/* Mobile menu */}
           {isMobile && (
             <Button
-              variant={"ghost"}
-              size={"icon"}
+              variant={'ghost'}
+              size={'icon'}
               className="mr-2"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
@@ -44,8 +67,14 @@ function Header({ activateItemId, onNavigate }: SidebarMobileProps) {
           )}
 
           <div className="flex items-center space-x-4">
-            <img src="./src/assets/logo.png" className="w-14 h-14" />
-            <h2 className="text-2xl font-bold tracking-tight">Book Library</h2>
+            <img
+              src={logoImage}
+              alt="Book Library Logo"
+              className="w-14 h-14"
+            />
+            <h2 className="lg:text-2xl font-bold tracking-tight sm:text-lg">
+              Book Library
+            </h2>
           </div>
           <div className="ml-auto flex items-center space-x-2 md:space-x-4">
             {!isMobile && (
@@ -74,38 +103,56 @@ function Header({ activateItemId, onNavigate }: SidebarMobileProps) {
               <Bell className="h-5 w-5" />
               <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-600"></span>
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-8 w-8 rounded-full cursor-pointer"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src="https://github.com/shadcn.png"
-                      alt="@user"
-                    />
-                    <AvatarFallback aria-setsize={15}>A</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      Anthony Le
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      Admin
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Log out</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+            {/* Hiển thị nút đăng nhập hoặc avatar tùy theo trạng thái */}
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full cursor-pointer"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src="https://github.com/shadcn.png"
+                        alt="@user"
+                      />
+                      <AvatarFallback aria-setsize={15}>
+                        {user?.fullName?.charAt(0) || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user?.fullName || 'User'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.role || 'User'}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>Profile</DropdownMenuItem>
+                  <DropdownMenuItem>Settings</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="default"
+                size={isMobile ? 'sm' : 'default'}
+                onClick={handleLoginClick}
+                className="gap-2"
+              >
+                <LogIn className="h-4 w-4" />
+                {!isMobile && 'Đăng nhập'}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -134,7 +181,7 @@ function Header({ activateItemId, onNavigate }: SidebarMobileProps) {
                 <h2 className="font-bold text-xl">Menu</h2>
                 <Button
                   variant="ghost"
-                  size={"icon"}
+                  size={'icon'}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <X className="h-5 w-5" />
@@ -145,32 +192,32 @@ function Header({ activateItemId, onNavigate }: SidebarMobileProps) {
                 <div className="space-y-2">
                   {/* mobile button menu */}
                   {navItems.map((item) => (
-                    <Link
+                    <Button
                       key={item.id}
-                      to={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      variant={'ghost'}
+                      className={cn(
+                        'w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal cursor-pointer',
+                        item.id === activateItemId
+                          ? 'bg-primary/10 text-primary-pink hover:bg-primary/20'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                      )}
+                      onClick={() => {
+                        if (onNavigate) {
+                          onNavigate(item.id, item.href)
+                        }
+                        setIsMobileMenuOpen(false)
+                      }}
                     >
-                      <Button
-                        variant={"ghost"}
-                        className={cn(
-                          "w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal cursor-pointer",
-                          item.id === activateItemId
-                            ? "bg-primary/10 text-primary-pink hover:bg-primary/20"
-                            : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                        )}
-                        onClick={() => onNavigate && onNavigate(item.id)}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        {item.label}
-                      </Button>
-                    </Link>
+                      <item.icon className="h-5 w-5" />
+                      {item.label}
+                    </Button>
                   ))}
                 </div>
 
                 <div className="h-px bg-gray-200 my-4"></div>
 
                 <Button
-                  variant={"ghost"}
+                  variant={'ghost'}
                   className="w-full justify-start gap-3 px-3 py-2 text-base font-normal"
                 >
                   <settingsNavItem.icon className="h-5 w-5" />
@@ -182,7 +229,7 @@ function Header({ activateItemId, onNavigate }: SidebarMobileProps) {
         </div>
       )}
     </>
-  );
+  )
 }
 
-export default Header;
+export default Header

@@ -4,10 +4,7 @@ import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
@@ -24,7 +21,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class User extends BaseEntity implements org.springframework.security.core.userdetails.UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -68,6 +65,12 @@ public class User extends BaseEntity implements org.springframework.security.cor
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "loyalty_points")
+    private Integer totalLoyaltyPoints = 0;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL,fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<LoyaltyHistory> loyaltyHistories = new ArrayList<>();
 
     public enum AccountRole {
         ADMIN,

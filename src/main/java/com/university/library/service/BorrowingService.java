@@ -1,7 +1,10 @@
 package com.university.library.service;
 
 import com.university.library.base.PagedResponse;
+import com.university.library.dto.response.borrowing.BorrowingHistoryResponse;
 import com.university.library.dto.response.borrowing.BorrowingResponse;
+import com.university.library.dto.response.borrowing.BorrowingStateResponse;
+import com.university.library.entity.Borrowing;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,5 +23,9 @@ public interface BorrowingService {
     BorrowingResponse Borrow(UUID bookCopyId, UUID borrowerId);
     BorrowingResponse returnBook(UUID bookCopyId);
     BorrowingResponse reportLost(UUID bookCopyId);
+
+    List<BorrowingStateResponse> getMostBorrowStats(int limit);
+
+    List<BorrowingHistoryResponse> findBorrowingByBookCopy_BookCopyId(UUID bookCopyId);
 
 }

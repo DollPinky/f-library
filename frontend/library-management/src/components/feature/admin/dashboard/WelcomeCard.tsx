@@ -13,7 +13,7 @@ export default function WelcomeCard() {
     return "Good Evening";
   };
   return (
-    <Card className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg border-none">
+    <Card className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg border-none md:m-0 m-3">
       <CardContent className="flex h-full items-center justify-between p-6">
         <div className="z-10 flex flex-col gap-4">
           <div className="flex items-center gap-2">
