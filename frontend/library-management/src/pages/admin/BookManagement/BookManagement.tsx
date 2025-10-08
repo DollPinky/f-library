@@ -1,132 +1,132 @@
-import { BookForm } from '@/components/books/BookForm'
-import { ConfirmDialog } from '@/components/common/ConfirmDialog'
-import { SearchAndFilter } from '@/components/common/SearchAndFilter'
-import BookTable from '@/components/feature/admin/dashboard/BookTable'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Pagination } from '@/components/ui/pagination'
-// import { bookCategories, mockBooks } from "@/data/mockData";
-import type { Book } from '@/types'
-import { Plus } from 'lucide-react'
-import { useState, useMemo, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
-import { getAllBooks } from '@/services/bookApi'
-import { deleteBook } from '@/services/bookManagementService'
+import { BookForm } from "@/components/books/BookForm";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { SearchAndFilter } from "@/components/common/SearchAndFilter";
+import BookTable from "@/components/feature/admin/dashboard/BookTable";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Pagination } from "@/components/ui/pagination";
+
+import type { Book } from "@/types";
+import { Plus } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { getAllBooks } from "@/services/bookApi";
+import { deleteBook } from "@/services/bookManagementService";
 
 export function BookManagement() {
-  const [books, setBooks] = useState<Book[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('All Categories')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [selectedBook, setSelectedBook] = useState<Book | undefined>()
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [bookToDelete, setBookToDelete] = useState<Book | undefined>()
-  const [isDeleting, setIsDeleting] = useState(false)
-  const navigate = useNavigate()
-  const itemsPerPage = 10
+  const [books, setBooks] = useState<Book[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All Categories");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedBook, setSelectedBook] = useState<Book | undefined>();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [bookToDelete, setBookToDelete] = useState<Book | undefined>();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const navigate = useNavigate();
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const token = localStorage.getItem('token') || ''
+        const token = localStorage.getItem("accessToken") || "";
 
-        const data = await getAllBooks(token)
-        console.log('API Response:', data) // Debug log
+        const data = await getAllBooks(token);
+        console.log("API Response:", data); // Debug log
 
         // Handle different response structures
         const booksArray = Array.isArray(data)
           ? data
           : data?.data && Array.isArray(data.data)
           ? data.data
-          : []
+          : [];
 
-        setBooks(booksArray)
+        setBooks(booksArray);
       } catch (error) {
-        console.error('Failed to fetch books:', error)
-        toast.error('Failed to load books')
-        setBooks([]) 
+        console.error("Failed to fetch books:", error);
+        toast.error("Failed to load books");
+        setBooks([]);
       }
-    }
+    };
 
-    fetchBooks()
-  }, [])
+    fetchBooks();
+  }, []);
 
   const filteredBooks = useMemo(() => {
     if (!Array.isArray(books)) {
-      console.warn('Books is not an array:', books)
-      return []
+      console.warn("Books is not an array:", books);
+      return [];
     }
 
     return books.filter((book) => {
       const matchesSearch =
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book?.publisher?.toLowerCase().includes(searchTerm.toLowerCase())
+        book?.publisher?.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Handle category being either a string or Category object
       const categoryName =
-        typeof book?.category === 'string'
+        typeof book?.category === "string"
           ? book.category
-          : book?.category?.name || ''
+          : book?.category?.name || "";
 
       const matchesCategory =
-        categoryFilter === 'All Categories' || categoryName === categoryFilter
-      return matchesSearch && matchesCategory
-    })
-  }, [books, searchTerm, categoryFilter])
+        categoryFilter === "All Categories" || categoryName === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [books, searchTerm, categoryFilter]);
 
-  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
+  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedBooks = filteredBooks.slice(
     startIndex,
     startIndex + itemsPerPage
-  )
+  );
 
   const handleAddBook = () => {
-    setSelectedBook(undefined)
-    setIsFormOpen(true)
-  }
+    setSelectedBook(undefined);
+    setIsFormOpen(true);
+  };
 
   const handleEditBook = (book: Book) => {
-    setSelectedBook(book)
-    setIsFormOpen(true)
-  }
+    setSelectedBook(book);
+    setIsFormOpen(true);
+  };
 
   const handleViewBook = (book: Book) => {
-    navigate(`/admin/book-management/book/${book.bookId}`)
-    toast.info(`Viewing details for "${book.title}"`)
-  }
+    navigate(`/admin/book-management/book/${book.bookId}`);
+    toast.info(`Viewing details for "${book.title}"`);
+  };
 
   const handleDeleteBook = (book: Book) => {
-    setBookToDelete(book)
-    setIsDeleteDialogOpen(true)
-  }
+    setBookToDelete(book);
+    setIsDeleteDialogOpen(true);
+  };
 
   const confirmDelete = async () => {
-    if (!bookToDelete) return
+    if (!bookToDelete) return;
 
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
-      const response = await deleteBook(bookToDelete.bookId)
+      const response = await deleteBook(bookToDelete.bookId);
       if (response.success) {
         setBooks((prev) =>
           prev.filter((book) => book.bookId !== bookToDelete.bookId)
-        )
-        toast.success(`Book "${bookToDelete.title}" has been deleted`)
+        );
+        toast.success(`Book "${bookToDelete.title}" has been deleted`);
       } else {
-        toast.error('Failed to delete book')
+        toast.error("Failed to delete book");
       }
     } catch (error) {
-      console.error('Error deleting book:', error)
-      toast.error('Failed to delete book')
+      console.error("Error deleting book:", error);
+      toast.error("Failed to delete book");
     } finally {
-      setIsDeleting(false)
-      setBookToDelete(undefined)
-      setIsDeleteDialogOpen(false)
+      setIsDeleting(false);
+      setBookToDelete(undefined);
+      setIsDeleteDialogOpen(false);
     }
-  }
+  };
 
   const handleSaveBook = (bookData: Book) => {
     if (selectedBook) {
@@ -135,27 +135,27 @@ export function BookManagement() {
         prev.map((book) =>
           book.bookId === selectedBook.bookId ? bookData : book
         )
-      )
-      toast.success(`Book "${bookData.title}" has been updated`)
+      );
+      toast.success(`Book "${bookData.title}" has been updated`);
     } else {
       // Add new book
-      setBooks((prev) => [...prev, bookData])
-      toast.success(`Book "${bookData.title}" has been added`)
+      setBooks((prev) => [...prev, bookData]);
+      toast.success(`Book "${bookData.title}" has been added`);
     }
-    setIsFormOpen(false)
-    setSelectedBook(undefined)
-  }
+    setIsFormOpen(false);
+    setSelectedBook(undefined);
+  };
 
   const handleClearFilters = () => {
-    setSearchTerm('')
-    setCategoryFilter('All Categories')
-    setCurrentPage(1)
-  }
+    setSearchTerm("");
+    setCategoryFilter("All Categories");
+    setCurrentPage(1);
+  };
 
   const categoryOptions = useMemo(() => {
     // Ensure books is an array before processing
     if (!Array.isArray(books)) {
-      return [{ value: 'All Categories', label: 'All Categories' }]
+      return [{ value: "All Categories", label: "All Categories" }];
     }
 
     const uniqueCategories = Array.from(
@@ -163,22 +163,22 @@ export function BookManagement() {
         books
           .map((book) => {
             const categoryName =
-              typeof book?.category === 'string'
+              typeof book?.category === "string"
                 ? book.category
-                : book?.category?.name
-            return categoryName
+                : book?.category?.name;
+            return categoryName;
           })
-          .filter((name): name is string => Boolean(name)) 
+          .filter((name): name is string => Boolean(name))
       )
-    )
+    );
     return [
-      { value: 'All Categories', label: 'All Categories' },
+      { value: "All Categories", label: "All Categories" },
       ...uniqueCategories.map((category) => ({
         value: category,
-        label: category
-      }))
-    ]
-  }, [books])
+        label: category,
+      })),
+    ];
+  }, [books]);
 
   return (
     <div className="space-y-6">
@@ -241,9 +241,9 @@ export function BookManagement() {
         onConfirm={confirmDelete}
         title="Delete Book"
         description={`Are you sure you want to delete "${bookToDelete?.title}"? This action cannot be undone.`}
-        confirmText={isDeleting ? 'Deleting...' : 'Delete'}
+        confirmText={isDeleting ? "Deleting..." : "Delete"}
         isDestructive={true}
       />
     </div>
-  )
+  );
 }

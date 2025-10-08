@@ -30,18 +30,20 @@ export default function BookDetail() {
         // Fetch book data
         const bookData = await getBookById(bookId, token);
         setBook(bookData);
+        console.log(bookData);
 
-        // Get the first bookCopy's ID directly without checking status
-        if (bookData?.bookCopies?.length > 0) {
+        if (bookData.length > 0) {
           const firstBookCopyId = bookData.bookCopies[0].bookCopyId;
+          console.log(firstBookCopyId);
 
           if (firstBookCopyId) {
-            // Fetch history using this ID
             const historyData = await getHistoryByBookCopyId(
               firstBookCopyId,
               token
             );
-            setHistory(historyData ?? []);
+            console.log(historyData);
+
+            setHistory(historyData);
           } else {
             setHistory([]);
           }

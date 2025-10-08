@@ -1,4 +1,4 @@
-import axiosClient from "@/apis/axiosClient";
+import axiosClient from "./axiosClient";
 
 export const getAllBooks = async (token: string) => {
   const res = await axiosClient.get("/books/all", {
@@ -15,7 +15,7 @@ export const getBookById = async (bookId: string, token: string) => {
       Authorization: `Bearer ${token}`,
     },
   });
-  return res.data;
+  return res.data.data;
 };
 
 export const getHistoryByBookCopyId = async (
@@ -34,7 +34,7 @@ export const borrowBookByBookCopyId = async (
   token: string
 ) => {
   const res = await axiosClient.post(
-    "borrowings/borrow",
+    "/borrowings/borrow",
     {
       bookCopyId,
     },

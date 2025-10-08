@@ -26,7 +26,7 @@ export default function BookBorrowModal({
   onConfirm,
 }: BookBorrowModalProps) {
   const [username, setUsername] = useState("");
-  const availableCopy = book.bookCopies.find(
+  const availableCopy = book?.bookCopies?.find(
     (copy) => copy.status === "AVAILABLE"
   );
 
@@ -42,15 +42,13 @@ export default function BookBorrowModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="sm:max-w-xs"
+        className="sm:max-w-sm"
         aria-describedby="borrow-modal-desc"
       >
         <DialogHeader>
           <DialogTitle>Borrow {book.title}</DialogTitle>
         </DialogHeader>
-        <DialogDescription>
-          Nhập account để mượn sách. Bạn cần điền đúng account FPT của mình.
-        </DialogDescription>
+        <DialogDescription>Enter yours account FPT....</DialogDescription>
 
         <div className="space-y-2">
           <Label htmlFor="username">Account</Label>
