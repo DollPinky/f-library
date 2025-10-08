@@ -5,15 +5,16 @@ import BookTable from "@/components/feature/admin/dashboard/BookTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
-import { bookCategories, mockBooks } from "@/data/mockData";
+// import { bookCategories, mockBooks } from "@/data/mockData";
 import type { Book } from "@/types";
 import { Plus } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { getAllBooks } from "@/services/bookApi";
 
 export function BookManagement() {
-  const [books, setBooks] = useState<Book[]>(mockBooks);
+  const [books, setBooks] = useState<Book[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,15 +24,33 @@ export function BookManagement() {
   const [bookToDelete, setBookToDelete] = useState<Book | undefined>();
   const navigate = useNavigate();
   const itemsPerPage = 10;
+  const token =
+    "eyJhbGciOiJIUzUxMiJ9.eyJ0b2tlblZlcnNpb24iOjAsInBlcm1pc3Npb25zIjpbIlVTRVJfVklFVyIsIlJFUE9SVF9WSUVXIiwiVVNFUl9NQU5BR0UiLCJCT09LX1ZJRVciLCJCT09LX01BTkFHRSIsIlNZU1RFTV9DT05GSUciLCJCT1JST1dfTUFOQUdFIl0sInJvbGVzIjpbIlJPTEVfQURNSU4iXSwiZnVsbE5hbWUiOiJOZ3V54buFbiBWxINuIEFkbWluIiwiZW1haWwiOiJhZG1pbkBjb21wYW55LmNvbSIsInVzZXJuYW1lIjoiYWRtaW5AY29tcGFueS5jb20iLCJpYXQiOjE3NTk4NTc4ODgsImV4cCI6MTc1OTg2MTQ4OH0.euwj8kOn6fDnf4LP3syItOI-g--MveDPQueqGhZd31c3crdDlf2OPxROTHtu98qdb8Jpk4PXQIzpn8x7LSF3Ew";
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        // const token = localStorage.getItem("token") || "";
+
+        const data = await getAllBooks(token);
+        setBooks(data);
+      } catch (error) {
+        console.error("Failed to fetch books:", error);
+        toast.error("Failed to load books");
+      }
+    };
+
+    fetchBooks();
+  }, []);
 
   const filteredBooks = useMemo(() => {
     return books.filter((book) => {
       const matchesSearch =
-        book.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.isbn.toLowerCase().includes(searchTerm.toLowerCase());
+        book.publisher.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory =
-        categoryFilter === "All Categories" || book.category === categoryFilter;
+        categoryFilter === "All Categories" ||
+        book.category.name === categoryFilter;
       return matchesSearch && matchesCategory;
     });
   }, [books, searchTerm, categoryFilter]);
@@ -55,8 +74,8 @@ export function BookManagement() {
 
   const handleViewBook = (book: Book) => {
     // In a real app, this would navigate to a detailed view
-    navigate(`book/${book.id}`);
-    toast.info(`Viewing details for "${book.name}"`);
+    navigate(`/admin/book-management/book/${book.bookId}`);
+    toast.info(`Viewing details for "${book.title}"`);
   };
 
   const handleDeleteBook = (book: Book) => {
@@ -66,8 +85,10 @@ export function BookManagement() {
 
   const confirmDelete = () => {
     if (bookToDelete) {
-      setBooks((prev) => prev.filter((book) => book.id !== bookToDelete.id));
-      toast.success(`Book "${bookToDelete.name}" has been deleted`);
+      setBooks((prev) =>
+        prev.filter((book) => book.bookId !== bookToDelete.bookId)
+      );
+      toast.success(`Book "${bookToDelete.title}" has been deleted`);
       setBookToDelete(undefined);
     }
     setIsDeleteDialogOpen(false);
@@ -77,13 +98,15 @@ export function BookManagement() {
     if (selectedBook) {
       // Update existing book
       setBooks((prev) =>
-        prev.map((book) => (book.id === selectedBook.id ? bookData : book))
+        prev.map((book) =>
+          book.bookId === selectedBook.bookId ? bookData : book
+        )
       );
-      toast.success(`Book "${bookData.name}" has been updated`);
+      toast.success(`Book "${bookData.title}" has been updated`);
     } else {
       // Add new book
       setBooks((prev) => [...prev, bookData]);
-      toast.success(`Book "${bookData.name}" has been added`);
+      toast.success(`Book "${bookData.title}" has been added`);
     }
     setIsFormOpen(false);
     setSelectedBook(undefined);
@@ -95,10 +118,18 @@ export function BookManagement() {
     setCurrentPage(1);
   };
 
-  const categoryOptions = bookCategories.map((category) => ({
-    value: category,
-    label: category,
-  }));
+  const categoryOptions = useMemo(() => {
+    const uniqueCategories = Array.from(
+      new Set(books.map((book) => book.category.name))
+    );
+    return [
+      { value: "All Categories", label: "All Categories" },
+      ...uniqueCategories.map((category) => ({
+        value: category,
+        label: category,
+      })),
+    ];
+  }, [books]);
 
   return (
     <div className="space-y-6">
@@ -120,7 +151,7 @@ export function BookManagement() {
             onFilterChange={setCategoryFilter}
             filterOptions={categoryOptions}
             filterPlaceholder="Filter by category"
-            searchPlaceholder="Search books by name, author, or ISBN..."
+            searchPlaceholder="Search books by title, author, or publisher..."
             onClearFilters={handleClearFilters}
             showClearFilters={true}
           />
@@ -160,7 +191,7 @@ export function BookManagement() {
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDelete}
         title="Delete Book"
-        description={`Are you sure you want to delete "${bookToDelete?.name}"? This action cannot be undone.`}
+        description={`Are you sure you want to delete "${bookToDelete?.title}"? This action cannot be undone.`}
         confirmText="Delete"
         isDestructive={true}
       />

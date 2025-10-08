@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
-import Header from './Header'
-import Sidebar from './Sidebar'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { adminNavItems, userNavItems } from '@/data/mockData'
+import { useEffect, useState } from "react";
+import Header from "./Header";
+import Sidebar from "./Sidebar";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { adminNavItems, userNavItems } from "@/data/mockData";
 
 export default function MainLayout() {
   const [activateItemId, setActiveItemId] = useState<string>('user-dashboard')
@@ -14,14 +14,18 @@ export default function MainLayout() {
   const currentNavItems = isAdminSection ? adminNavItems : userNavItems
 
   useEffect(() => {
-    const currPath = location.pathname
+    const currPath = location.pathname;
 
     // Handle exact path matching and also /admin -> /admin/dashboard, /user -> /user/dashboard
-    let matchingItem = currentNavItems.find((item) => item.href === currPath)
+    let matchingItem = currentNavItems.find((item) => item.href === currPath);
 
     // If no exact match, try to find based on path segments
     if (!matchingItem) {
-      if (currPath === '/admin' || currPath === '/admin/dashboard') {
+      if (currPath.startsWith("/admin/book-management")) {
+        matchingItem = currentNavItems.find(
+          (item) => item.id === "admin-book-management"
+        );
+      } else if (currPath === "/admin" || currPath === "/admin/dashboard") {
         matchingItem = currentNavItems.find(
           (item) => item.id === 'admin-dashboard'
         )
@@ -31,26 +35,26 @@ export default function MainLayout() {
         currPath === '/user/dashboard'
       ) {
         matchingItem = currentNavItems.find(
-          (item) => item.id === 'user-dashboard'
-        )
+          (item) => item.id === "user-dashboard"
+        );
       } else {
         // Try to match by path segments
         matchingItem = currentNavItems.find(
           (item) =>
             currPath.startsWith(item.href) || item.href.startsWith(currPath)
-        )
+        );
       }
     }
 
     if (matchingItem) {
-      setActiveItemId(matchingItem.id)
+      setActiveItemId(matchingItem.id);
     }
-  }, [location.pathname, currentNavItems])
+  }, [location.pathname, currentNavItems]);
 
   const handleNavigate = (id: string, href: string) => {
-    setActiveItemId(id)
-    navigate(href)
-  }
+    setActiveItemId(id);
+    navigate(href);
+  };
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -72,5 +76,5 @@ export default function MainLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }
