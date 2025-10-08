@@ -1,8 +1,15 @@
-import { useAuth } from "@/hooks/useAuth";
-import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from '@/hooks/useAuth'
+import { Navigate, Outlet } from 'react-router-dom'
 
 export default function PublicRoute() {
-  const { isAuthenticated } = useAuth();
-  if (isAuthenticated) return <Navigate to={"/"} replace />;
-  return <Outlet />;
+  const { isAuthenticated, user } = useAuth()
+
+  if (isAuthenticated) {
+    if (user?.role === 'ADMIN') {
+      return <Navigate to="/admin" replace />
+    }
+    return <Navigate to="/user" replace />
+  }
+
+  return <Outlet />
 }
