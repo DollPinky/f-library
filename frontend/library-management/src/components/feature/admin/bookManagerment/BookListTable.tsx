@@ -2,6 +2,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
   Table,
   TableBody,
   TableCell,
@@ -12,6 +20,7 @@ import {
 import type { Book } from "@/types";
 import { Avatar } from "@radix-ui/react-avatar";
 import { FileText, Pencil, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface BookListProps {
   isMobile?: boolean;
@@ -30,6 +39,18 @@ export default function BookListTable({
   onView,
 }: // isEdit,
 BookListProps) {
+  const LIMIT_PAGE = 6;
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  const totalPages = Math.ceil(books.length / LIMIT_PAGE);
+
+  const paginatedBook = useMemo(() => {
+    const startIndex = (currentPage - 1) * LIMIT_PAGE;
+    return books.slice(startIndex, startIndex + LIMIT_PAGE);
+  }, [books, currentPage]);
+  const handleChangePage = (page: number) => {
+    setCurrentPage(page);
+  };
   return (
     <>
       {!isMobile ? (
@@ -37,22 +58,20 @@ BookListProps) {
           <Table className="min-w-full">
             <TableHeader>
               <TableRow className="bg-gray-50">
-                <TableHead className="w-[80px] py-3 text-center">ID</TableHead>
                 <TableHead className="py-3 w-[70px]"></TableHead>
-                <TableHead className="py-3 text-center">Name</TableHead>
-                <TableHead className="py-3 text-center">Author</TableHead>
-                <TableHead className="py-3 text-center">Reader</TableHead>
-                <TableHead className="py-3 text-center">Availability</TableHead>
+                <TableHead className="py-4">Name</TableHead>
+                <TableHead className="py-4">Author</TableHead>
+                <TableHead className="py-4">Reader</TableHead>
+                <TableHead className="py-4 ">Availability</TableHead>
                 <TableHead className="text-center pl-12">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {books.map((book) => (
+              {paginatedBook.map((book) => (
                 <TableRow
                   key={book.id}
                   className="border-b hover:bg-gray-50/50 transition-colors"
                 >
-                  <TableCell className="font-medium py-4">{book.id}</TableCell>
                   <TableCell className="py-4">
                     <Avatar className="h-12 w-9 rounded">
                       <img
@@ -116,7 +135,7 @@ BookListProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {books.map((book) => (
+          {paginatedBook.map((book) => (
             <Card
               key={book.id}
               className="overflow-hidden border-l-4 hover:shadow-md transition-all"
@@ -139,9 +158,6 @@ BookListProps) {
 
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center justify-between">
-                      <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium">
-                        ID: {book.id}
-                      </span>
                       <Badge
                         variant={
                           book.status === "Subscribed" ? "outline" : "secondary"
@@ -206,6 +222,53 @@ BookListProps) {
             </Card>
           ))}
         </div>
+      )}
+
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                className={
+                  currentPage === 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+                onClick={() =>
+                  currentPage > 1 && setCurrentPage(Math.max(currentPage - 1))
+                }
+              />
+            </PaginationItem>
+            <PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <PaginationLink
+                    isActive={currentPage === page}
+                    key={page}
+                    href="#"
+                    onClick={() => handleChangePage(page)}
+                  >
+                    {page}
+                  </PaginationLink>
+                )
+              )}
+            </PaginationItem>
+
+            <PaginationItem>
+              <PaginationNext
+                className={
+                  currentPage === totalPages
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+                onClick={() =>
+                  currentPage < totalPages &&
+                  setCurrentPage(Math.min(currentPage + 1))
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
     </>
   );

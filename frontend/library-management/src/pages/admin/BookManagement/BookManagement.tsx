@@ -1,122 +1,168 @@
+import { BookForm } from "@/components/books/BookForm";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { SearchAndFilter } from "@/components/common/SearchAndFilter";
+import BookTable from "@/components/feature/admin/dashboard/BookTable";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
-import { useIsMobile } from "@/hooks/use-mobile";
-import { PlusCircle, Search } from "lucide-react";
-import BookListTable from "@/components/feature/admin/bookManagerment/BookListTable";
-import { books } from "@/data/mockData";
-import { useState } from "react";
-import AddNewBook from "@/components/feature/admin/bookManagerment/AddNewBook";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Pagination } from "@/components/ui/pagination";
+import { bookCategories, mockBooks } from "@/data/mockData";
 import type { Book } from "@/types";
+import { Plus } from "lucide-react";
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import DialogRemoveBook from "@/components/feature/admin/bookManagerment/DialogRemoveBook";
 
-export default function BookManagement() {
-  const isMobile = useIsMobile();
+export function BookManagement() {
+  const [books, setBooks] = useState<Book[]>(mockBooks);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All Categories");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedBook, setSelectedBook] = useState<Book | undefined>();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [bookToDelete, setBookToDelete] = useState<Book | undefined>();
+  const navigate = useNavigate();
+  const itemsPerPage = 10;
 
-  const [open, setOpen] = useState(false);
-  const [isEdit, setIsEdit] = useState(false);
-  const [currBook, setCurrBook] = useState<Book | null>(null);
+  const filteredBooks = useMemo(() => {
+    return books.filter((book) => {
+      const matchesSearch =
+        book.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        book.isbn.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory =
+        categoryFilter === "All Categories" || book.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [books, searchTerm, categoryFilter]);
 
-  const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedBooks = filteredBooks.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
-  // xoa
-  const handleDelete = (id: string) => {
-    const bookDelete = books.find((book) => book.id === id);
-    if (bookDelete && bookDelete.status === "Subscribed") {
-      toast.error("Không thể xóa vì sách đã được mượn");
-      return;
-    }
-    setBookToDelete(bookDelete || null);
-    setDeleteOpen(true);
+  const handleAddBook = () => {
+    setSelectedBook(undefined);
+    setIsFormOpen(true);
+  };
+
+  const handleEditBook = (book: Book) => {
+    setSelectedBook(book);
+    setIsFormOpen(true);
+  };
+
+  const handleViewBook = (book: Book) => {
+    // In a real app, this would navigate to a detailed view
+    navigate(`book/${book.id}`);
+    toast.info(`Viewing details for "${book.name}"`);
+  };
+
+  const handleDeleteBook = (book: Book) => {
+    setBookToDelete(book);
+    setIsDeleteDialogOpen(true);
   };
 
   const confirmDelete = () => {
     if (bookToDelete) {
-      console.log("Deleting book:", bookToDelete.id);
-      toast.success("Đã xóa thành công");
-      setBookToDelete(null);
+      setBooks((prev) => prev.filter((book) => book.id !== bookToDelete.id));
+      toast.success(`Book "${bookToDelete.name}" has been deleted`);
+      setBookToDelete(undefined);
     }
+    setIsDeleteDialogOpen(false);
   };
 
-  // sua
-  const handleEdit = (id: string) => {
-    const updateBook = books.find((book) => book.id === id);
-    if (updateBook && updateBook.status === "Subscribed") {
-      toast.error("Không thể sửa sách vì đã được mượn");
-      return;
-    }
-    setCurrBook(updateBook || null);
-    setIsEdit(true);
-    setOpen(true);
-  };
-
-  // view
-  const handleView = (id: string) => {
-    console.log("Đã xem chi tiết thành công", id);
-  };
-
-  // Add va sua
-  const handleSubmit = (book: Book) => {
-    if (isEdit) {
-      console.log("Update book: ", book);
+  const handleSaveBook = (bookData: Book) => {
+    if (selectedBook) {
+      // Update existing book
+      setBooks((prev) =>
+        prev.map((book) => (book.id === selectedBook.id ? bookData : book))
+      );
+      toast.success(`Book "${bookData.name}" has been updated`);
     } else {
-      console.log("Add thành công", book);
+      // Add new book
+      setBooks((prev) => [...prev, bookData]);
+      toast.success(`Book "${bookData.name}" has been added`);
     }
-
-    setOpen(false);
-    setIsEdit(false);
-    setCurrBook(null);
+    setIsFormOpen(false);
+    setSelectedBook(undefined);
   };
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setCategoryFilter("All Categories");
+    setCurrentPage(1);
+  };
+
+  const categoryOptions = bookCategories.map((category) => ({
+    value: category,
+    label: category,
+  }));
+
   return (
-    <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
-      {/* header */}
-      <div className="flex flex-col sm:flex-row sm: justify-between sm:items-center space-y-4 sm:space-y-0">
-        <h2 className="text-2xl sm:text-3xl font-bold">Book Management</h2>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-800 cursor-pointer"
-            onClick={() => setOpen(true)}
-          >
-            {isMobile ? <PlusCircle size={16} /> : <PlusCircle size={18} />}
-            <span>{isMobile ? "Add Book" : "Add New Book"}</span>
-          </Button>
-          <div className="relative">
-            <Input
-              type="search"
-              placeholder={isMobile ? "Search..." : "Search by ID or name..."}
-              className="pl-10 pr-4 py-2 w-full sm:w-[250px]"
-            />
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-              <Search size={16} />
-            </div>
+    <div className="space-y-6">
+      <Card className="m-3 md:m-8">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <CardTitle>Book Management</CardTitle>
+            <Button onClick={handleAddBook} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add New Book
+            </Button>
           </div>
-        </div>
-      </div>
-      {/* table */}
-      <BookListTable
-        isMobile={isMobile}
-        books={books}
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-        onView={handleView}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <SearchAndFilter
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            filterValue={categoryFilter}
+            onFilterChange={setCategoryFilter}
+            filterOptions={categoryOptions}
+            filterPlaceholder="Filter by category"
+            searchPlaceholder="Search books by name, author, or ISBN..."
+            onClearFilters={handleClearFilters}
+            showClearFilters={true}
+          />
+
+          <div className="text-sm text-muted-foreground">
+            Showing {paginatedBooks.length} of {filteredBooks.length} books
+          </div>
+
+          <BookTable
+            books={paginatedBooks}
+            onView={handleViewBook}
+            onEdit={handleEditBook}
+            onDelete={handleDeleteBook}
+          />
+
+          {totalPages > 1 && (
+            <div className="flex justify-center">
+              <Pagination
+              // currentPage={currentPage}
+              // totalPages={totalPages}
+              // onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <BookForm
+        book={selectedBook}
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSave={handleSaveBook}
       />
 
-      <AddNewBook
-        isEdit={isEdit}
-        open={open}
-        onOpenChange={setOpen}
-        onSubmit={handleSubmit}
-        editData={currBook}
-      />
-
-      <DialogRemoveBook
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDelete}
-        bookTitle={bookToDelete?.title}
+        title="Delete Book"
+        description={`Are you sure you want to delete "${bookToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        isDestructive={true}
       />
     </div>
   );

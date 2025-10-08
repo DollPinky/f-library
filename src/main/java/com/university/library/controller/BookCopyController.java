@@ -256,5 +256,7 @@ public class BookCopyController {
         List<BookCopyResponse> copies = bookCopyService.findByCategoryAndStatus(categoryId, status);
         return ResponseEntity.ok(StandardResponse.success(copies));
     }
+
+
 }
 

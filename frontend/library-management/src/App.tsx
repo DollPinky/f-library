@@ -1,34 +1,42 @@
 import './App.css'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
+
+// Layout
 import MainLayout from './components/layout/MainLayout'
 
-// Admin Components
-import AdminDashboard from './pages/admin/Dashboard'
-import BookManagement from './pages/admin/BookManagement/BookManagement'
+// Auth
+import Auth from './pages/auth/Auth'
 
-// User Components
+// Admin
+import AdminDashboard from './pages/admin/Dashboard'
+import { BookManagement } from './pages/admin/BookManagement/BookManagement'
+
+// User
 import UserDashboard from './pages/user/Dashboard'
 import BorrowBookManagement from './pages/user/BorrowBookManagement/BorrowBookManagement'
 import ReturnBookManagement from './pages/user/ReturnBookManagement/ReturnBookManagement'
 
+// import router from "./routes/index";
 const router = createBrowserRouter([
+  // Auth (no layout)
+  { path: '/login', element: <Auth /> },
+
   {
     path: '/',
     element: <MainLayout />,
     children: [
-      // Default redirect to admin dashboard
       { index: true, element: <Navigate to="/admin" replace /> },
 
       // Admin routes
       {
         path: '/admin',
         children: [
-          { index: true, element: <AdminDashboard /> }, // /admin -> AdminDashboard
-          { path: 'dashboard', element: <AdminDashboard /> }, // /admin/dashboard -> AdminDashboard
+          { index: true, element: <AdminDashboard /> },
+          { path: 'dashboard', element: <AdminDashboard /> },
           { path: 'book-management', element: <BookManagement /> },
           {
-            path: 'reader-management',
-            element: <div>Reader Management (Coming Soon)</div>
+            path: 'user-management',
+            element: <div>User Management (Coming Soon)</div>
           },
           { path: 'reports', element: <div>Reports (Coming Soon)</div> }
         ]
@@ -38,15 +46,14 @@ const router = createBrowserRouter([
       {
         path: '/user',
         children: [
-          { index: true, element: <UserDashboard /> }, // /user -> UserDashboard
-          { path: 'dashboard', element: <UserDashboard /> }, // /user/dashboard -> UserDashboard
+          { index: true, element: <UserDashboard /> },
+          { path: 'dashboard', element: <UserDashboard /> },
           { path: 'borrow-books', element: <BorrowBookManagement /> },
-          { path: 'return-books', element: <ReturnBookManagement /> },
-          { path: 'profile', element: <div>Profile (Coming Soon)</div> }
+          { path: 'return-books', element: <ReturnBookManagement /> }
         ]
       },
 
-      // Legacy routes (for backward compatibility)
+      // Legacy (compatibility)
       { path: '/book-management', element: <BookManagement /> }
     ]
   }

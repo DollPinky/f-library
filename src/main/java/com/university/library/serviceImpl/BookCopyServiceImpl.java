@@ -357,6 +357,8 @@ public class BookCopyServiceImpl implements BookCopyService {
 
 
 
+
+
     private BookCopy.BookStatus convertBookStatus(CreateBookCopyCommand.BookStatus status) {
         if (status == null) {
             return BookCopy.BookStatus.AVAILABLE;
