@@ -55,6 +55,8 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
+                        .requestMatchers("/api/auth/login").permitAll().anyRequest().authenticated()
+
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/book-copies/{bookCopyId}",
                                 "/api/v1/book-copies/search",

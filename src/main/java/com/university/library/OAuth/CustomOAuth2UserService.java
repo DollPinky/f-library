@@ -1,0 +1,106 @@
+package com.university.library.OAuth;
+
+import com.university.library.entity.Role;
+import com.university.library.entity.User;
+import com.university.library.exception.exceptions.AccountDisabledException;
+import com.university.library.repository.CampusRepository;
+import com.university.library.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final CampusRepository campusRepository;
+
+    @Override
+    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
+        OAuth2User oAuth2User = delegate.loadUser(userRequest);
+
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+        String userNameAttributeName = userRequest.getClientRegistration().getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
+
+        //extract user information
+        String email = oAuth2User.getAttribute("email");
+        String name = oAuth2User.getAttribute("name");
+
+
+
+        if (email == null) {
+            throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
+        }
+
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        String campusIdParam = request.getParameter("state");
+        UUID campusId = UUID.fromString(campusIdParam);
+
+//        User account = findOrCreateAccount(email, name, registrationId, campusId);
+        try {
+            User account = findOrCreateAccount(email, name, registrationId, campusId);
+            return new CustomOAuth2User(oAuth2User, account, "sub");
+        } catch (AccountDisabledException ex) {
+            throw new OAuth2AuthenticationException("Account disabled: " + ex.getMessage());
+        }
+
+
+    }
+
+    @Transactional
+    protected User findOrCreateAccount(String email, String name, String registrationId, UUID campusId) throws AccountDisabledException{
+
+        Optional<User> existingAccount = userRepository.findByEmail(email);
+        if(existingAccount.isPresent()) {
+            User account = existingAccount.get();
+
+            if (!account.isAccountNonExpired() || !account.isAccountNonLocked()) {
+                throw new AccountDisabledException(
+                        "Account access denied",
+                        email,
+                        !account.isAccountNonExpired(),
+                        !account.isAccountNonLocked()
+                );
+            }
+            return account;
+        }
+
+                User user = User.builder()
+                        .fullName(name)
+                        .email(email)
+                        .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
+                        .isActive(true)
+                        .createdAt(LocalDateTime.now())
+                        .phone("String")
+                        .role(User.AccountRole.READER)
+                        .companyAccount(email)
+                        .campus(
+                                campusRepository.findByCampusId(campusId)
+                                        .orElseThrow(() -> new RuntimeException("Campus not found with ID: " + campusId))
+                        )
+
+                        .build();
+
+
+
+            return userRepository.save(user);
+        }
+    }
+
+
+
