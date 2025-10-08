@@ -1,7 +1,14 @@
-export function useAuth() {
-  const accessToken = localStorage.getItem("accessToken");
-  const userStr = localStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : null;
+import { useContext } from 'react'
+import { AuthContext } from '@/contexts/AuthContext'
+import type { AuthContextType } from '@/types'
 
-  return { accessToken, user, isAuthenticated: !!accessToken };
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
 }
+
+export { AuthProvider } from '@/contexts/AuthContext'
+export type { User, LoginRequest } from '@/types'
