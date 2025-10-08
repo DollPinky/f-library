@@ -65,12 +65,16 @@ public class User extends BaseEntity implements org.springframework.security.cor
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    @OneToMany(mappedBy = "user")
+    private List<Comment> comments = new ArrayList<>();
+
 
     @Column(name = "loyalty_points")
     private Integer totalLoyaltyPoints = 0;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL,fetch = FetchType.LAZY, orphanRemoval = true)
     private List<LoyaltyHistory> loyaltyHistories = new ArrayList<>();
+
 
     public enum AccountRole {
         ADMIN,
