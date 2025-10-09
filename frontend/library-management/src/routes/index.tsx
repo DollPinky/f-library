@@ -23,6 +23,7 @@ import { BookManagement } from "@/pages/admin/BookManagement/BookManagement";
 import BookDetail from "@/pages/admin/BookManagement/BookDetail";
 
 import RootRedirect from "./RootRedirect";
+import Profile from "@/pages/profile/Profile";
 
 const router = createBrowserRouter([
   {
@@ -66,7 +67,7 @@ const router = createBrowserRouter([
               { path: "return-books", element: <ReturnBookManagement /> },
               {
                 path: "profile",
-                element: <div>Hồ sơ cá nhân (Sắp ra mắt)</div>,
+                element: <Profile />,
               },
             ],
           },
@@ -91,11 +92,14 @@ const router = createBrowserRouter([
                 element: <div>Quản lý người dùng (Sắp ra mắt)</div>,
               },
               { path: "reports", element: <div>Báo cáo (Sắp ra mắt)</div> },
+              {
+                path: "profile",
+                element: <Profile />,
+              },
             ],
           },
         ],
       },
-
       { path: "/forbidden", element: <Forbidden /> },
       { path: "*", element: <NotFound /> },
     ],
