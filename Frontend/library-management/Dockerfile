@@ -1,0 +1,26 @@
+# Use Node.js 18 Alpine as base image
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies for native modules
+RUN apk add --no-cache libc6-compat
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm i
+
+# Copy source code
+COPY . .
+
+# Disable Next.js telemetry
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Expose port 3000
+EXPOSE 3000
+
+# Start development server
+CMD ["npm", "run", "dev"]
