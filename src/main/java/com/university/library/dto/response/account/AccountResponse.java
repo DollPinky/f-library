@@ -23,7 +23,7 @@ public class AccountResponse {
     private String companyAccount;
     private User.AccountRole role;
     private CampusResponse campus;
-    private int totalLoyaltyPoints;
+    private Integer totalLoyaltyPoints;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String accessToken;
@@ -44,7 +44,7 @@ public class AccountResponse {
                 .companyAccount(account.getCompanyAccount())
                 .role(account.getRole())
                 .campus(CampusResponse.fromEntity(account.getCampus()))
-                .totalLoyaltyPoints(account.getTotalLoyaltyPoints())
+                .totalLoyaltyPoints(account.getTotalLoyaltyPoints() == null ?  0 : account.getTotalLoyaltyPoints())
                 .createdAt(account.getCreatedAt())
                 .updatedAt(account.getUpdatedAt())
                 .build();
