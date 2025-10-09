@@ -12,3 +12,4 @@ export interface DonatedBook {
   campus: string;
   points: number;
 }
+export type TitleModalBook = "Borrow" | "Return";
