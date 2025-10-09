@@ -119,6 +119,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/borrowings/borrow").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/return").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/lost").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/borrowings/{bookCopyId}/history").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/borrowings/most-borrowed").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()
                                 .requestMatchers(HttpMethod.GET,"/api/v1/top-5-loyalty-users-by-month").hasRole("ADMIN")

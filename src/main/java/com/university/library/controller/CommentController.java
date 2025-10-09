@@ -4,6 +4,8 @@ import com.university.library.base.StandardResponse;
 import com.university.library.constants.CommentConstants;
 import com.university.library.dto.request.comment.CommentCreateRequest;
 import com.university.library.dto.request.comment.CommentUpdateRequest;
+import com.university.library.dto.response.borrowing.BorrowingStateResponse;
+import com.university.library.dto.response.comment.AvgRatingStarResponse;
 import com.university.library.entity.Comment;
 import com.university.library.entity.User;
 import com.university.library.repository.CommentRepository;
@@ -14,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -69,6 +72,16 @@ public class CommentController {
                                  )
 
                                  );
+    }
+
+    /**
+     * Lấy sách có lượt đánh giá cao nhất chức năng đề xuất sách
+     */
+    @GetMapping("/top-rated")
+    public ResponseEntity<StandardResponse<List<AvgRatingStarResponse>>> getTopRatedBook(
+            @RequestParam(defaultValue = "10") int limit) {
+        List<AvgRatingStarResponse> rating = commentService.findTopRateBook(limit);
+        return ResponseEntity.ok(StandardResponse.success(rating));
     }
 
 
