@@ -18,6 +18,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -61,7 +62,6 @@ public class CustomOAuth2UserDetailsService implements OAuth2UserService<OAuth2U
 
     @Transactional
     protected User findOrCreateAccount(String email, String name, String registrationId) throws AccountDisabledException{
-
         Optional<User> existingAccount = userRepository.findByEmail(email);
         if(existingAccount.isPresent()) {
             User account = existingAccount.get();
@@ -83,7 +83,9 @@ public class CustomOAuth2UserDetailsService implements OAuth2UserService<OAuth2U
                         .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
                         .isActive(true)
                         .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
                         .role(User.AccountRole.READER)
+                        .roles(new HashSet<>())
 
 
                         .build();

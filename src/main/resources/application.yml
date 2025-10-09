@@ -35,7 +35,6 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
             scope:
-              - openid
               - profile
               - email
             redirect-uri: "http://localhost:8080/login/oauth2/code/google"   # -> http://localhost:8080/login/oauth2/code/google

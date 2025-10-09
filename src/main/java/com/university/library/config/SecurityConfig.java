@@ -1,5 +1,7 @@
 package com.university.library.config;
 
+import com.university.library.OAuth.CustomOAuth2User;
+import com.university.library.OAuth.CustomOAuth2UserDetailsService;
 import com.university.library.OAuth.OAuth2LoginSuccessHandler;
 import com.university.library.entity.User;
 import com.university.library.repository.RefreshTokenRepository;
@@ -8,6 +10,7 @@ import com.university.library.serviceImpl.CustomeUserDetailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +24,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
@@ -45,9 +52,9 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins:*}")
     private String corsAllowedOrigins;
     private final CookieJwtAuthFilter cookieJwtAuthFilter;
-
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomOAuth2UserDetailsService customOAuth2UserDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -142,14 +149,18 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 
                 .oauth2Login(oauth -> oauth
+
                         .successHandler(oAuth2LoginSuccessHandler)
                         .failureHandler((req, res, ex) -> {
                             String msg = URLEncoder.encode(ex.getMessage(), StandardCharsets.UTF_8);
                             res.sendRedirect("http://localhost:5173/login?oauth_error=" + msg);
                         })
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserDetailsService) // Use OAuth2UserService instead of OidcUserService
+                        )
                         .authorizationEndpoint(ae -> ae.baseUri("/oauth2/authorization"))
                         .redirectionEndpoint(re -> re.baseUri("/login/oauth2/code/*"))
                 )
@@ -166,16 +177,12 @@ public class SecurityConfig {
 
         return http.build();
     }
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(org.springframework.security.crypto.factory.PasswordEncoderFactories.createDelegatingPasswordEncoder());
         return authProvider;
     }
 
