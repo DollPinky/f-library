@@ -5,7 +5,10 @@ package com.university.library.constants;
  * Sử dụng cho Cache keys, Kafka topics, Event types, và các thông tin khác
  */
 public final class BookCopyConstants {
-    
+    //Data
+    public static final String[] BOOK_COPY_SHELF_LOCATION = {"Learning Hub", "IVS"};
+
+
     // Error Messages
     public static final String ERROR_BOOK_COPY_NOT_FOUND = "Book copy not found with ID: ";
    public static final String ERROR_BOOK_COPY_IN_USE = "Book copy is currently in use and cannot be deleted";
