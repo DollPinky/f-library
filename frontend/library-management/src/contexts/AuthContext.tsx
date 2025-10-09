@@ -3,141 +3,132 @@ import {
   useState,
   useEffect,
   useCallback,
-  type ReactNode
-} from 'react'
-import { useNavigate } from 'react-router-dom'
-import type { AuthContextType, User, LoginRequest } from '@/types'
-import { authService } from '@/services/authService'
+  type ReactNode,
+} from "react";
+import { useNavigate } from "react-router-dom";
+import type { AuthContextType, User, LoginRequest } from "@/types";
+import { authService } from "@/services/authService";
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // ==================== PROVIDER ====================
 
 interface AuthProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  const [user, setUser] = useState<User | null>(null)
-  const [accessToken, setAccessToken] = useState<string | null>(null)
-  const [refreshToken, setRefreshToken] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initializeAuth = () => {
       try {
-        const storedAccessToken = localStorage.getItem('accessToken')
-        const storedRefreshToken = localStorage.getItem('refreshToken')
-        const storedUser = localStorage.getItem('user')
+        const storedAccessToken = localStorage.getItem("accessToken");
+        const storedRefreshToken = localStorage.getItem("refreshToken");
+        const storedUser = localStorage.getItem("user");
 
         if (storedAccessToken && storedRefreshToken && storedUser) {
-          setAccessToken(storedAccessToken)
-          setRefreshToken(storedRefreshToken)
-          setUser(JSON.parse(storedUser))
+          setAccessToken(storedAccessToken);
+          setRefreshToken(storedRefreshToken);
+          setUser(JSON.parse(storedUser));
         }
       } catch (error) {
-        console.error('Error initializing auth:', error)
+        console.error("Error initializing auth:", error);
         // Clear corrupted data
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        localStorage.removeItem('user')
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    initializeAuth()
-  }, [])
+    initializeAuth();
+  }, []);
 
   const login = useCallback(
     async (credentials: LoginRequest) => {
       try {
-        setIsLoading(true)
-        const response = await authService.login(credentials)
+        setIsLoading(true);
+        const response = await authService.login(credentials);
 
-        localStorage.setItem('accessToken', response.accessToken)
-        localStorage.setItem('refreshToken', response.refreshToken)
-        localStorage.setItem('user', JSON.stringify(response))
+        localStorage.setItem("accessToken", response.accessToken);
+        localStorage.setItem("refreshToken", response.refreshToken);
+        localStorage.setItem("user", JSON.stringify(response));
 
-        setAccessToken(response.accessToken)
-        setRefreshToken(response.refreshToken)
-        setUser({
-          accountId: response.accountId,
-          fullName: response.fullName,
-          email: response.email,
-          phone: response.phone,
-          department: response.department,
-          position: response.position,
-          companyAccount: response.companyAccount,
-          role: response.role,
-          campus: response.campus,
-          createdAt: response.createdAt,
-          updatedAt: response.updatedAt
-        })
+        setAccessToken(response.accessToken);
+        setRefreshToken(response.refreshToken);
+        setUser(response);
 
-        if (response.role === 'ADMIN') {
-          navigate('/admin')
-        }
+        setTimeout(() => {
+          if (response.role === "ADMIN") {
+            navigate("/admin", { replace: true });
+          } else {
+            navigate("/user", { replace: true });
+          }
+          setIsLoading(false);
+        }, 100);
       } catch (error) {
-        console.error('Login error:', error)
-        throw error
-      } finally {
-        setIsLoading(false)
+        console.error("Login error:", error);
+        setIsLoading(false);
+        throw error;
       }
     },
     [navigate]
-  )
-
+  );
   const logout = useCallback(async () => {
     try {
-      setIsLoading(true)
-      setAccessToken(null)
-      setRefreshToken(null)
-      setUser(null)
+      setIsLoading(true);
+      setAccessToken(null);
+      setRefreshToken(null);
+      setUser(null);
 
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
 
       try {
-        await authService.logout()
+        await authService.logout();
       } catch (apiError) {
-        console.error('AuthContext: Logout API error (ignored):', apiError)
+        console.error("AuthContext: Logout API error (ignored):", apiError);
       }
-      navigate('/', { replace: true })
+      navigate("/", { replace: true });
     } catch (error) {
-      console.error('AuthContext: Logout error:', error)
-      setAccessToken(null)
-      setRefreshToken(null)
-      setUser(null)
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
-      navigate('/', { replace: true })
+      console.error("AuthContext: Logout error:", error);
+      setAccessToken(null);
+      setRefreshToken(null);
+      setUser(null);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      navigate("/", { replace: true });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [navigate])
+  }, [navigate]);
 
   const refreshAccessTokenFn = useCallback(async (): Promise<string> => {
     if (!refreshToken) {
-      throw new Error('No refresh token available')
+      throw new Error("No refresh token available");
     }
 
     try {
-      const newAccessToken = await authService.refreshAccessToken(refreshToken)
-      localStorage.setItem('accessToken', newAccessToken)
-      setAccessToken(newAccessToken)
+      const newAccessToken = await authService.refreshAccessToken(refreshToken);
+      localStorage.setItem("accessToken", newAccessToken);
+      setAccessToken(newAccessToken);
 
-      return newAccessToken
+      return newAccessToken;
     } catch (error) {
-      console.error('Refresh token error:', error)
-      await logout()
-      throw error
+      console.error("Refresh token error:", error);
+      await logout();
+      throw error;
     }
-  }, [refreshToken, logout])
+  }, [refreshToken, logout]);
 
   const value: AuthContextType = {
     user,
@@ -148,10 +139,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     login,
     logout,
     refreshAccessToken: refreshAccessTokenFn,
-    setUser
-  }
+    setUser,
+  };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
-export { AuthContext }
+export { AuthContext };
