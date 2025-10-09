@@ -413,27 +413,39 @@ public class BookCopyServiceImpl implements BookCopyService {
             log.info("Processing ...");
             Row row = rowIterator.next();
 
-            String username = getCellValue(row.getCell(0));
+            String username = getCellValue(row.getCell(0)) == null ? null : getCellValue(row.getCell(0));
             String title = getCellValue(row.getCell(1));
             String bookCover = getCellValue(row.getCell(2));
             String categoryName = getCellValue(row.getCell(3));
             String campusCode = getCellValue(row.getCell(4));
             String shelfLocation = getCellValue(row.getCell(5));
+          log.info("user  name là {} ,tiêu đề là {} ,book cover {},cate {},campuscode {},sheft {}",username,title,bookCover,categoryName,campusCode,shelfLocation);
 
 
-            if (username == null || title == null) continue;
 
+            log.info("toi day ko {}");
+            User user = userRepository.findByEmail(username).orElse(null);
+            if(user == null) continue;
+           log.info("User xem có null ko {}",user.getUsername());
 
-            User user = userRepository.findByEmail(username)
-                    .orElseThrow(() -> new NotFoundException("User not found: " + username));
+            Category category = categoryRepository.findByName(categoryName).orElse(null);
+            if(category == null){
+                 log.info("tới đây là ko tìm đc phân loại");
+                category =categoryRepository.findByName("Khác").orElse(null);
+                log.info("Category {}",category.getName(),category.getDescription());
+                if(category == null){
+                    category.setName("Khác");
+                }
+            }
 
+log.info("Phân loại sách {}",category.getName());
 
-            Category category = categoryRepository.findByName(categoryName)
-                    .orElseThrow(() -> new NotFoundException("Category not found: " + categoryName));
-
-
+            if ( title == null) continue;
             Book book = bookRepository.findByTitleEqualsIgnoreCase(title);
+            log.info("Tìm tiêu đề sách c1 hay ko {}",book.getTitle() != null ? book.getTitle() :"không có h tạo");
+
             if (book == null) {
+                log.info("Sách lạ vô đây mới đúng");
                 book = Book.builder()
                         .title(title)
                         .bookCover(bookCover)
@@ -457,7 +469,7 @@ public class BookCopyServiceImpl implements BookCopyService {
                     .build();
 
             bookCopy = bookCopyRepository.save(bookCopy);
-
+         log.info("tạo sách copy thành công");
             //cộng điểm quyên góp
             loyaltyService.updateLoyaltyPoint(bookCopy.getBookCopyId(), LoyaltyHistory.LoyaltyAction.DONATE_BOOK,user.getUserId());
 
