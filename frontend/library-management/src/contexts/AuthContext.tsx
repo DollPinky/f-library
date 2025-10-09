@@ -63,20 +63,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         setAccessToken(response.accessToken);
         setRefreshToken(response.refreshToken);
-
-        setUser({
-          accountId: response.accountId,
-          fullName: response.fullName,
-          email: response.email,
-          phone: response.phone,
-          department: response.department,
-          position: response.position,
-          companyAccount: response.companyAccount,
-          role: response.role,
-          campus: response.campus,
-          createdAt: response.createdAt,
-          updatedAt: response.updatedAt,
-        });
+        setUser(response);
 
         setTimeout(() => {
           if (response.role === "ADMIN") {
@@ -88,14 +75,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }, 100);
       } catch (error) {
         console.error("Login error:", error);
-        throw error;
-      } finally {
         setIsLoading(false);
+        throw error;
       }
     },
     [navigate]
   );
-
   const logout = useCallback(async () => {
     try {
       setIsLoading(true);
