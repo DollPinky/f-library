@@ -1,4 +1,4 @@
-import { createBrowserRouter, Outlet } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import MainLayout from "@/components/layout/MainLayout";
 import AuthLayout from "@/components/layout/AuthLayout";
@@ -21,18 +21,14 @@ import ReturnBookManagement from "@/pages/user/ReturnBookManagement/ReturnBookMa
 import AdminDashboard from "@/pages/admin/Dashboard";
 import { BookManagement } from "@/pages/admin/BookManagement/BookManagement";
 import BookDetail from "@/pages/admin/BookManagement/BookDetail";
-import { AuthProvider } from "@/contexts/AuthContext";
 
-const RootProvider = () => (
-  <AuthProvider>
-    <Outlet />
-  </AuthProvider>
-);
+import RootRedirect from "./RootRedirect";
 
 const router = createBrowserRouter([
   {
-    element: <RootProvider />,
+    element: <RootRedirect />,
     children: [
+      // AUTH ROUTES
       {
         element: <AuthLayout />,
         children: [
@@ -48,17 +44,21 @@ const router = createBrowserRouter([
           },
         ],
       },
+
       {
         path: "/",
+        element: <ProtectedRoute />,
+        children: [{ index: true, element: <Navigate to="/user" replace /> }],
+      },
+
+      // USER ROUTES
+      {
+        path: "user",
         element: <MainLayout />,
         errorElement: <NotFound />,
         children: [
-          // Default user routes (no login still ok)
-          { index: true, element: <UserDashboard /> },
-
-          // User Routes - Các route user cụ thể
           {
-            path: "user",
+            element: <ProtectedRoute requiredRole="READER" />,
             children: [
               { index: true, element: <UserDashboard /> },
               { path: "dashboard", element: <UserDashboard /> },
@@ -70,15 +70,19 @@ const router = createBrowserRouter([
               },
             ],
           },
+        ],
+      },
 
-          // -------------------------------
-          // ADMIN ROUTES (requires ADMIN role)
-          // -------------------------------
+      // ADMIN ROUTES
+      {
+        path: "admin",
+        element: <MainLayout />,
+        errorElement: <NotFound />,
+        children: [
           {
-            path: "admin",
-            element: <ProtectedRoute requiredRole="ROLE_ADMIN" />,
+            element: <ProtectedRoute requiredRole="ADMIN" />,
             children: [
-              { element: <AdminDashboard /> },
+              { index: true, element: <AdminDashboard /> },
               { path: "dashboard", element: <AdminDashboard /> },
               { path: "book-management", element: <BookManagement /> },
               { path: "book-management/book/:bookId", element: <BookDetail /> },
@@ -91,6 +95,8 @@ const router = createBrowserRouter([
           },
         ],
       },
+
+      // SYSTEM ROUTES
       { path: "/forbidden", element: <Forbidden /> },
       { path: "*", element: <NotFound /> },
     ],

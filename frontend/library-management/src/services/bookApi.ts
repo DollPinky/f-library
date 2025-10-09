@@ -1,11 +1,7 @@
 import axiosClient from "./axiosClient";
 
-export const getAllBooks = async (token: string) => {
-  const res = await axiosClient.get("/books/all", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export const getAllBooks = async () => {
+  const res = await axiosClient.get("/books/all");
   return res.data;
 };
 

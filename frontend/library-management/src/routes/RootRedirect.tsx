@@ -1,17 +1,9 @@
-import { useAuth } from '@/hooks/useAuth'
-import { Navigate } from 'react-router-dom'
+import { AuthProvider } from "@/contexts/AuthContext";
+import { Outlet } from "react-router";
 
-export default function RootRedirect() {
-  const { user } = useAuth()
-
-  if (!user) {
-    return <Navigate to="/" replace />
-  }
-
-  if (user.role === 'ADMIN') {
-    return <Navigate to="/admin" replace />
-  }
-
-  // Nếu không phải admin → không có quyền truy cập
-  return <Navigate to="/forbidden" replace />
-}
+const RootRedirect = () => (
+  <AuthProvider>
+    <Outlet />
+  </AuthProvider>
+);
+export default RootRedirect;

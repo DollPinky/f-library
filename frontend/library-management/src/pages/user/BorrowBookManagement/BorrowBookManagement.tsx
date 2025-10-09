@@ -29,9 +29,10 @@ export default function BorrowBookManagement() {
   const fetchBooks = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("accessToken") || "";
-      const data = await getAllBooks(token);
+      // const token = localStorage.getItem("accessToken") || "";
+      const data = await getAllBooks();
       setBooks(data);
+      console.log(data);
     } catch (error) {
       console.error("Failed to fetch books:", error);
       toast.error("Failed to load books");
@@ -49,10 +50,10 @@ export default function BorrowBookManagement() {
       const matchesSearch =
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.publisher.toLowerCase().includes(searchTerm.toLowerCase());
+        book.publisher?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory =
         categoryFilter === "All Categories" ||
-        book.category.name === categoryFilter;
+        book.category?.name === categoryFilter;
       return matchesSearch && matchesCategory;
     });
   }, [books, searchTerm, categoryFilter]);
@@ -66,7 +67,7 @@ export default function BorrowBookManagement() {
 
   const categoryOptions = useMemo(() => {
     const uniqueCategories = Array.from(
-      new Set(books.map((book) => book.category.name))
+      new Set(books.map((book) => book.category?.name))
     );
     return [
       { value: "All Categories", label: "All Categories" },
@@ -77,7 +78,6 @@ export default function BorrowBookManagement() {
     ];
   }, [books]);
 
-  // Updated to return a Promise as expected by BookGrid
   const handleBorrow = async (book: Book): Promise<void> => {
     setSelectedBook(book);
     setIsModalOpen(true);
