@@ -1,54 +1,55 @@
-import { Bell, Menu, Search, X, LogIn } from 'lucide-react'
-import { Input } from '../ui/input'
-import { Button } from '../ui/button'
+import { Bell, Menu, Search, X, LogIn } from "lucide-react";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
-  DropdownMenuTrigger
-} from '@radix-ui/react-dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator
-} from '../ui/dropdown-menu'
-import { useIsMobile } from '@/hooks/use-mobile'
-import { useState } from 'react'
-import { settingsNavItem } from '@/data/mockData'
-import type { NavItem } from '@/types'
-import { cn } from '@/lib/utils'
-import logoImage from '@/assets/logo.png'
-import { useAuth } from '@/hooks/useAuth'
-import { useNavigate } from 'react-router-dom'
+  DropdownMenuSeparator,
+} from "../ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
+import { settingsNavItem } from "@/data/mockData";
+import type { NavItem } from "@/types";
+import { cn } from "@/lib/utils";
+import logoImage from "@/assets/logo.png";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
-  activateItemId?: string
-  onNavigate?: (id: string, href: string) => void
-  navItems: NavItem[]
+  activateItemId?: string;
+  onNavigate?: (id: string, href: string) => void;
+  navItems: NavItem[];
 }
 
 function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
-  const isMobile = useIsMobile()
-  const [isSearchVisible, setIsSearchVisible] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { isAuthenticated, user, logout } = useAuth()
-  const navigate = useNavigate()
+  const isMobile = useIsMobile();
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
+  const token = localStorage.getItem("accessToken");
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      console.log('🚪 Starting logout process...')
-      await logout()
-      console.log('✅ Logout completed, should redirect to /')
+      console.log("🚪 Starting logout process...");
+      await logout();
+      console.log("✅ Logout completed, should redirect to /");
     } catch (error) {
-      console.error('❌ Logout failed:', error)
+      console.error("❌ Logout failed:", error);
       // Fallback: force navigate về trang chủ
-      navigate('/', { replace: true })
+      navigate("/", { replace: true });
     }
-  }
+  };
 
   const handleLoginClick = () => {
-    navigate('/login')
-  }
+    navigate("/login");
+  };
 
   return (
     <>
@@ -57,8 +58,8 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
           {/* Mobile menu */}
           {isMobile && (
             <Button
-              variant={'ghost'}
-              size={'icon'}
+              variant={"ghost"}
+              size={"icon"}
               className="mr-2"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
@@ -105,7 +106,7 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
             </Button>
 
             {/* Hiển thị nút đăng nhập hoặc avatar tùy theo trạng thái */}
-            {isAuthenticated ? (
+            {token ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -118,7 +119,7 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
                         alt="@user"
                       />
                       <AvatarFallback aria-setsize={15}>
-                        {user?.fullName?.charAt(0) || 'U'}
+                        {user?.fullName?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -127,10 +128,10 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        {user?.fullName || 'User'}
+                        {user?.fullName || "User"}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {user?.role || 'User'}
+                        {user?.role || "User"}
                       </p>
                     </div>
                   </DropdownMenuLabel>
@@ -145,12 +146,12 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
             ) : (
               <Button
                 variant="default"
-                size={isMobile ? 'sm' : 'default'}
+                size={isMobile ? "sm" : "default"}
                 onClick={handleLoginClick}
                 className="gap-2"
               >
                 <LogIn className="h-4 w-4" />
-                {!isMobile && 'Đăng nhập'}
+                {!isMobile && "Đăng nhập"}
               </Button>
             )}
           </div>
@@ -181,7 +182,7 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
                 <h2 className="font-bold text-xl">Menu</h2>
                 <Button
                   variant="ghost"
-                  size={'icon'}
+                  size={"icon"}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <X className="h-5 w-5" />
@@ -194,18 +195,18 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
                   {navItems.map((item) => (
                     <Button
                       key={item.id}
-                      variant={'ghost'}
+                      variant={"ghost"}
                       className={cn(
-                        'w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal cursor-pointer',
+                        "w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal cursor-pointer",
                         item.id === activateItemId
-                          ? 'bg-primary/10 text-primary-pink hover:bg-primary/20'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                          ? "bg-primary/10 text-primary-pink hover:bg-primary/20"
+                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                       )}
                       onClick={() => {
                         if (onNavigate) {
-                          onNavigate(item.id, item.href)
+                          onNavigate(item.id, item.href);
                         }
-                        setIsMobileMenuOpen(false)
+                        setIsMobileMenuOpen(false);
                       }}
                     >
                       <item.icon className="h-5 w-5" />
@@ -217,7 +218,7 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
                 <div className="h-px bg-gray-200 my-4"></div>
 
                 <Button
-                  variant={'ghost'}
+                  variant={"ghost"}
                   className="w-full justify-start gap-3 px-3 py-2 text-base font-normal"
                 >
                   <settingsNavItem.icon className="h-5 w-5" />
@@ -229,7 +230,7 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
         </div>
       )}
     </>
-  )
+  );
 }
 
-export default Header
+export default Header;
