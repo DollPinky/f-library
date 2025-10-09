@@ -1,6 +1,5 @@
 package com.university.library.OAuth;
 
-import com.university.library.entity.Role;
 import com.university.library.entity.User;
 import com.university.library.exception.exceptions.AccountDisabledException;
 import com.university.library.repository.CampusRepository;
@@ -24,10 +23,9 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+public class CustomOAuth2UserDetailsService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final CampusRepository campusRepository;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -48,12 +46,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         }
 
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String campusIdParam = request.getParameter("state");
-        UUID campusId = UUID.fromString(campusIdParam);
+        UUID campusId = (UUID) request.getSession().getAttribute("campusId");
 
 //        User account = findOrCreateAccount(email, name, registrationId, campusId);
         try {
-            User account = findOrCreateAccount(email, name, registrationId, campusId);
+            User account = findOrCreateAccount(email, name, registrationId);
             return new CustomOAuth2User(oAuth2User, account, "sub");
         } catch (AccountDisabledException ex) {
             throw new OAuth2AuthenticationException("Account disabled: " + ex.getMessage());
@@ -63,7 +60,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     }
 
     @Transactional
-    protected User findOrCreateAccount(String email, String name, String registrationId, UUID campusId) throws AccountDisabledException{
+    protected User findOrCreateAccount(String email, String name, String registrationId) throws AccountDisabledException{
 
         Optional<User> existingAccount = userRepository.findByEmail(email);
         if(existingAccount.isPresent()) {
@@ -86,13 +83,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                         .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
                         .isActive(true)
                         .createdAt(LocalDateTime.now())
-                        .phone("String")
                         .role(User.AccountRole.READER)
-                        .companyAccount(email)
-                        .campus(
-                                campusRepository.findByCampusId(campusId)
-                                        .orElseThrow(() -> new RuntimeException("Campus not found with ID: " + campusId))
-                        )
+
 
                         .build();
 

@@ -12,13 +12,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("api/v1/oauth2")
 public class OAuthController {
-    @GetMapping("/redirect")
-    public ResponseEntity<?> oauth2Redirect(@RequestParam String token) {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "OAuth2 login successful");
-        response.put("token", token);
-        response.put("redirectUrl", "/dashboard");
 
-        return ResponseEntity.ok(response);
+
+    @GetMapping("/redirect")
+    public ResponseEntity<?> oauth2Redirect() {
+        return ResponseEntity.ok(Map.of(
+                "message", "OAuth2 login successful",
+                "redirectUrl", "/dashboard"
+        ));
     }
 }

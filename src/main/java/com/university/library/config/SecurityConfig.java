@@ -1,5 +1,6 @@
 package com.university.library.config;
 
+import com.university.library.OAuth.OAuth2LoginSuccessHandler;
 import com.university.library.entity.User;
 import com.university.library.repository.RefreshTokenRepository;
 import com.university.library.repository.UserRepository;
@@ -28,6 +29,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Configuration
@@ -41,6 +44,9 @@ public class SecurityConfig {
     private final RefreshTokenRepository refreshTokenRepository;
     @Value("${app.cors.allowed-origins:*}")
     private String corsAllowedOrigins;
+    private final CookieJwtAuthFilter cookieJwtAuthFilter;
+
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
@@ -64,7 +70,14 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
-                        .requestMatchers("/api/auth/login").permitAll().anyRequest().authenticated()
+                        .requestMatchers(
+                                "/oauth2/**",
+                                "/login/oauth2/**"
+                        ).permitAll()
+                        .requestMatchers("/api/v1/oauth2/**").permitAll()
+
+
+                        .requestMatchers("/api/auth/login").permitAll()
 
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/book-copies/{bookCopyId}",
@@ -124,19 +137,29 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()
 
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
-                        .maximumSessions(1)
-                        .maxSessionsPreventsLogin(false)
-                        )
-                .exceptionHandling()
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setContentType("application/json");
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}");
-                });
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .oauth2Login(oauth -> oauth
+                        .successHandler(oAuth2LoginSuccessHandler)
+                        .failureHandler((req, res, ex) -> {
+                            String msg = URLEncoder.encode(ex.getMessage(), StandardCharsets.UTF_8);
+                            res.sendRedirect("http://localhost:5173/login?oauth_error=" + msg);
+                        })
+                        .authorizationEndpoint(ae -> ae.baseUri("/oauth2/authorization"))
+                        .redirectionEndpoint(re -> re.baseUri("/login/oauth2/code/*"))
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}");
+                        })
+                )
+                .authenticationProvider(authenticationProvider());
+        http.addFilterBefore(cookieJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
