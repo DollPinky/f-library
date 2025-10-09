@@ -225,7 +225,7 @@ public class BorrowingController {
      */
     @GetMapping("/most-borrowed")
     public ResponseEntity<StandardResponse<List<BorrowingStateResponse>>> getMostBorrowedBooks(
-            @RequestParam(defaultValue = "2") int limit) {
+            @RequestParam(defaultValue = "10") int limit) {
         List<BorrowingStateResponse> stats = borrowingService.getMostBorrowStats(limit);
         return ResponseEntity.ok(StandardResponse.success(stats));
     }

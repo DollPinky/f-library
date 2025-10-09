@@ -5,6 +5,8 @@ import com.university.library.constants.BookConstants;
 import com.university.library.constants.CommentConstants;
 import com.university.library.dto.request.comment.CommentCreateRequest;
 import com.university.library.dto.request.comment.CommentUpdateRequest;
+import com.university.library.dto.response.borrowing.BorrowingStateResponse;
+import com.university.library.dto.response.comment.AvgRatingStarResponse;
 import com.university.library.dto.response.comment.CommentResponse;
 import com.university.library.entity.Book;
 import com.university.library.entity.Comment;
@@ -88,5 +90,14 @@ public class CommentServiceImpl implements CommentService {
         comment.setStar(request.getStar());
         comment.setContent(request.getContent());
         return CommentResponse.fromEnity(commentRepository.save(comment));
+    }
+
+    /**
+     * Lấy sách có lượt đánh giá cao nhất chức năng đề xuất sách
+     */
+    @Override
+    public List<AvgRatingStarResponse> findTopRateBook(int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return commentRepository.findTopRateBook(pageable);
     }
 }
