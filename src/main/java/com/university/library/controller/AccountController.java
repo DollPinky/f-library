@@ -13,15 +13,19 @@ import com.university.library.service.AuthenticationService;
 
 import com.university.library.service.RefreshTokenService;
 
+import com.university.library.service.UserService;
+import com.university.library.serviceImpl.UserServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +43,7 @@ public class AccountController {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService;
 
+    private final UserService userService ;
     @PostMapping("/register")
     public ResponseEntity<StandardResponse<AccountResponse>> register(@Valid @RequestBody RegisterRequest request) {
         try {
@@ -91,5 +96,12 @@ public class AccountController {
      return ResponseEntity.ok(StandardResponse.success(refreshTokenService.refreshAccessToken(request)));
     }
 
+    @GetMapping("/get-info")
+    public ResponseEntity<StandardResponse<AccountResponse>> getAccountInfo(@AuthenticationPrincipal User user) {
+        if(user.getRole().equals(User.AccountRole.ADMIN)){
+            return ResponseEntity.ok(StandardResponse.success("Get profile user successfully",userService.getUserProfile()));
+        }
+        return ResponseEntity.ok(StandardResponse.success("Get profile user successfully",AccountResponse.fromEntity(user)));
+    }
 }
  
