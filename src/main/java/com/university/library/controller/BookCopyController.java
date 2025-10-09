@@ -265,10 +265,11 @@ public class BookCopyController {
     }
 
     @PostMapping("/import-donation-book")
-    public ResponseEntity<StandardResponse<BookCopyResponse>> importDonationBook(
-            MultipartFile file) throws IOException {
-        log.info("File nhận được : {}", file.getOriginalFilename());
-        return ResponseEntity.ok(StandardResponse.success(bookCopyService.importBookDonation(file)));
+    public ResponseEntity<StandardResponse<List<BookCopyResponse>>> importDonationBook(
+          @RequestParam  MultipartFile file) throws IOException {
+
+        return ResponseEntity.ok(StandardResponse.success("Imported books successfully with "+ bookCopyService.importBookDonation(file).size()+" books"
+                ,bookCopyService.importBookDonation(file)));
     }
 
 }

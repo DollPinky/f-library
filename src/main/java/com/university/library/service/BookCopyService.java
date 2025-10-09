@@ -38,5 +38,5 @@ public interface BookCopyService {
   void createBookCopiesFromBook(CreateBookCopyFromBookCommand command);
   BookCopyResponse bookDonation(BookDonationRequest request);
 
-    BookCopyResponse importBookDonation(MultipartFile file) throws IOException;
+   List<BookCopyResponse> importBookDonation(MultipartFile file) throws IOException;
 }
