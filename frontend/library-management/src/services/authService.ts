@@ -35,7 +35,7 @@ export const login = async (
 
 export const logout = async (): Promise<void> => {
   try {
-    const response = await axiosClient.post("accounts/logout");
+    const response = await axiosClient.post("/accounts/logout");
     const apiResponse = response.data as StandardResponse<null>;
 
     if (!apiResponse.success) {
