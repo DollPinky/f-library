@@ -2,7 +2,7 @@ import axiosClient from "./axiosClient";
 
 export const getAllBooks = async () => {
   const res = await axiosClient.get("/books/all");
-  return res.data;
+  return res.data.data;
 };
 
 export const getBookById = async (bookId: string, token: string) => {

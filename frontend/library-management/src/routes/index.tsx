@@ -96,7 +96,6 @@ const router = createBrowserRouter([
         ],
       },
 
-      // SYSTEM ROUTES
       { path: "/forbidden", element: <Forbidden /> },
       { path: "*", element: <NotFound /> },
     ],
