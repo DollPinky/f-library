@@ -102,7 +102,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             request.getPassword()
                     )
             );
-            log.info("Login successful: {}", authentication.getPrincipal());
+//            log.info("Login successful: {}", authentication.getPrincipal());
             SecurityContextHolder.getContext().setAuthentication(authentication);
             User account = (User) authentication.getPrincipal();
             AccountResponse accountResponse = AccountResponse.fromEntity(account);
