@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -98,4 +99,8 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
 
     //lay lich su ai da muon sach
     List<Borrowing> findBorrowingByBookCopy_BookCopyId(UUID bookCopyId);
-} 
+
+    int countByBorrowedDateIsBetween(LocalDateTime borrowedDateAfter, LocalDateTime borrowedDateBefore);
+
+    int countByReturnedDateIsBetween(LocalDateTime returnedDateAfter, LocalDateTime returnedDateBefore);
+}

@@ -2,9 +2,11 @@ import BookBorrowModal from "@/components/feature/user/borrowBooks/BookBorrowMod
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { borrowBookByBookCopyId } from "@/services/bookApi";
 import type { Book } from "@/types";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface BookInfoCardProps {
   book: Book;
@@ -12,7 +14,7 @@ interface BookInfoCardProps {
 
 export default function BookInforCard({ book }: BookInfoCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const token = localStorage.getItem("accessToken") || "";
   const hasCopies =
     Array.isArray(book.bookCopies) && book.bookCopies.length > 0;
   const totalCopies = hasCopies ? book.bookCopies.length : 0;
@@ -46,15 +48,29 @@ export default function BookInforCard({ book }: BookInfoCardProps) {
     setIsModalOpen(false);
   };
 
-  const handleConfirm = ({
+  const handleConfirm = async ({
     username,
     bookCopyId,
   }: {
     username: string;
     bookCopyId: string;
   }) => {
-    console.log("Borrow:", { username, bookCopyId });
-    setIsModalOpen(false);
+    try {
+      console.log("Borrow:", { username, bookCopyId });
+
+      const res = await borrowBookByBookCopyId(bookCopyId, token);
+
+      toast.success(`Book "${book.title}" has been borrowed successfully`);
+
+      setIsModalOpen(false);
+    } catch (error: any) {
+      console.error("Error borrowing book:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to borrow the book. Please try again."
+      );
+    }
   };
   return (
     <Card>

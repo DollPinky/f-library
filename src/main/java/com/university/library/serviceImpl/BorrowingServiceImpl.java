@@ -271,12 +271,18 @@ public class BorrowingServiceImpl implements BorrowingService {
         return BorrowingResponse.fromEntity(savedBorrowing);
     }
 
+    /**
+     * Lấy sách có lượt mượn nhiều nhất chức năng đề xuất sách
+     */
     @Override
     public List<BorrowingStateResponse> getMostBorrowStats(int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         return borrowingRepository.findMostBorrowedBooks(pageable);
     }
 
+    /**
+     * Lấy lịch sử sách do ai mượn
+     */
     @Override
     public List<BorrowingHistoryResponse> findBorrowingByBookCopy_BookCopyId(UUID bookCopyId) {
         return borrowingRepository.findBorrowingByBookCopy_BookCopyId(bookCopyId)

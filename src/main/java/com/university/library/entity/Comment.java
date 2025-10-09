@@ -19,7 +19,7 @@ public class Comment extends BaseEntity {
     private UUID commentId;
     @Column(name = "content")
     private String content;
-    @Column(name = "start")
+    @Column(name = "star")
     private int star;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_Id")
