@@ -30,7 +30,6 @@ export default function BookBorrowModal({
     (copy) => copy.status === "AVAILABLE"
   );
 
-  //
   const bookCopyId = availableCopy?.bookCopyId;
   const handleConfirm = () => {
     if (!username.trim() || !bookCopyId) return;
@@ -42,15 +41,17 @@ export default function BookBorrowModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="sm:max-w-sm"
+        className="sm:max-w-lg h-[250px] flex flex-col justify-between"
         aria-describedby="borrow-modal-desc"
       >
         <DialogHeader>
           <DialogTitle>Borrow {book.title}</DialogTitle>
         </DialogHeader>
-        <DialogDescription>Enter yours account FPT....</DialogDescription>
+        <DialogDescription>
+          Enter your FPT account to borrow this book.
+        </DialogDescription>
 
-        <div className="space-y-2">
+        <div className="space-y-2 flex-1 flex flex-col justify-center">
           <Label htmlFor="username">Account</Label>
           <Input
             id="username"

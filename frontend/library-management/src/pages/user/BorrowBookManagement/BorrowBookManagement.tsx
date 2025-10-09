@@ -2,9 +2,10 @@ import { SearchAndFilter } from "@/components/common/SearchAndFilter";
 import BookBorrowModal from "@/components/feature/user/borrowBooks/BookBorrowModal";
 import BookGrid from "@/components/feature/user/borrowBooks/BookGrid";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { borrowBookByBookCopyId, getAllBooks } from "@/services/bookApi";
+import { getAllBooks } from "@/services/bookManagementService";
+import { borrowBookByBookCopyId } from "@/services/borrowBookService";
 import type { Book } from "@/types";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function BorrowBookManagement() {
@@ -15,8 +16,7 @@ export default function BorrowBookManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loadingBookId, setLoadingBookId] = useState<string | null>(null);
-
+  const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 10;
 
   const handleClearFilters = () => {
@@ -25,26 +25,27 @@ export default function BorrowBookManagement() {
     setCurrentPage(1);
   };
 
-  // Function to fetch books - made reusable with useCallback
-  const fetchBooks = useCallback(async () => {
-    setLoading(true);
-    try {
-      // const token = localStorage.getItem("accessToken") || "";
-      const data = await getAllBooks();
-      setBooks(data);
-      console.log(data);
-    } catch (error) {
-      console.error("Failed to fetch books:", error);
-      toast.error("Failed to load books");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchBooks();
-  }, [fetchBooks]);
-
+    const fetchAllBooks = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await getAllBooks();
+        const booksArray = Array.isArray(res)
+          ? res
+          : res?.data && Array.isArray(res.data)
+          ? res.data
+          : [];
+        setBooks(booksArray);
+      } catch (error: any) {
+        setError("Failed to load book list. Please try again later.");
+        console.log(error, "Error fetching book list");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAllBooks();
+  }, []);
   const filteredBooks = useMemo(() => {
     return books.filter((book) => {
       const matchesSearch =
@@ -81,8 +82,7 @@ export default function BorrowBookManagement() {
   const handleBorrow = async (book: Book): Promise<void> => {
     setSelectedBook(book);
     setIsModalOpen(true);
-    // This doesn't actually perform the borrow operation yet,
-    // it just opens the modal
+
     return Promise.resolve();
   };
 
@@ -100,30 +100,21 @@ export default function BorrowBookManagement() {
   }) => {
     if (!selectedBook) return;
 
-    setLoadingBookId(selectedBook.bookId);
-
     try {
       console.log(
         `Mượn sách ${selectedBook.title} với username ${username} và bookCopyId ${bookCopyId}`
       );
-      const token = localStorage.getItem("accessToken") || "";
-      await borrowBookByBookCopyId(bookCopyId, token);
 
-      toast.success(`Đã mượn sách "${selectedBook.title}" thành công!`);
-
-      // Refresh the book list to update availability
-      await fetchBooks();
+      await borrowBookByBookCopyId(bookCopyId);
 
       closeModal();
     } catch (error: any) {
       console.error("Error borrowing book:", error);
       toast.error(
-        `Không thể mượn sách: ${
-          error?.response?.data?.message || "Đã xảy ra lỗi"
+        `Failed to borrow book: ${
+          error?.response?.data?.message || "An error occurred"
         }`
       );
-    } finally {
-      setLoadingBookId(null);
     }
   };
 
@@ -153,11 +144,7 @@ export default function BorrowBookManagement() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <BookGrid
-              books={paginatedBooks}
-              onBorrow={handleBorrow}
-              refreshBooks={fetchBooks}
-            />
+            <BookGrid books={paginatedBooks} onBorrow={handleBorrow} />
           )}
 
           {selectedBook && (
@@ -166,7 +153,6 @@ export default function BorrowBookManagement() {
               isOpen={isModalOpen}
               onClose={closeModal}
               onConfirm={handleConfirm}
-              isLoading={loadingBookId === selectedBook.bookId}
             />
           )}
         </CardContent>

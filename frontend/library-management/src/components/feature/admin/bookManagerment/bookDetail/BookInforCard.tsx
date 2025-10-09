@@ -2,7 +2,7 @@ import BookBorrowModal from "@/components/feature/user/borrowBooks/BookBorrowMod
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { borrowBookByBookCopyId } from "@/services/bookApi";
+import { borrowBookByBookCopyId } from "@/services/borrowBookService";
 import type { Book } from "@/types";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -14,12 +14,12 @@ interface BookInfoCardProps {
 
 export default function BookInforCard({ book }: BookInfoCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const token = localStorage.getItem("accessToken") || "";
+  // const token = localStorage.getItem("accessToken") || "";
   const hasCopies =
     Array.isArray(book.bookCopies) && book.bookCopies.length > 0;
-  const totalCopies = hasCopies ? book.bookCopies.length : 0;
+  const totalCopies = hasCopies ? book.bookCopies?.length : 0;
   const availableCopies = hasCopies
-    ? book.bookCopies.filter((copy) => copy.status === "AVAILABLE").length
+    ? book.bookCopies?.filter((copy) => copy.status === "AVAILABLE").length
     : 0;
 
   const status = hasCopies ? book.bookCopies[0].status : "Unknown";
@@ -58,9 +58,7 @@ export default function BookInforCard({ book }: BookInfoCardProps) {
     try {
       console.log("Borrow:", { username, bookCopyId });
 
-      const res = await borrowBookByBookCopyId(bookCopyId, token);
-
-      toast.success(`Book "${book.title}" has been borrowed successfully`);
+      await borrowBookByBookCopyId(bookCopyId);
 
       setIsModalOpen(false);
     } catch (error: any) {
