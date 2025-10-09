@@ -218,3 +218,7 @@ export interface BorrowedBookResponse {
   success: boolean;
   message: string;
 }
+export interface ReturnedBookResponse {
+  success: boolean;
+  message: string;
+}

@@ -18,44 +18,46 @@ export default function BookDetail() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchBookAndHistory = async () => {
-      if (!bookId) {
-        setError("Book ID not found.");
-        return;
-      }
+  const fetchBookAndHistory = async () => {
+    if (!bookId) {
+      setError("Book ID not found.");
+      return;
+    }
 
-      setLoading(true);
-      setError(null);
-      try {
-        const bookRes = await getBookByBookId(bookId);
-        setBook(bookRes.data);
+    setLoading(true);
+    setError(null);
+    try {
+      const bookRes = await getBookByBookId(bookId);
+      setBook(bookRes.data);
 
-        if (bookRes.data?.bookCopies && bookRes.data.bookCopies.length > 0) {
-          const allHistory: BrorrowHistory[] = [];
-          for (const his of bookRes.data.bookCopies) {
-            try {
-              const historyRes = await getBorrowHistoryByBookCopyId(
-                his.bookCopyId
-              );
-              if (Array.isArray(historyRes.data)) {
-                allHistory.push(...historyRes.data);
-              } else if (historyRes.data) {
-                allHistory.push(historyRes.data);
-              }
-            } catch (error) {
-              console.log(error, "Error");
+      if (bookRes.data?.bookCopies && bookRes.data.bookCopies.length > 0) {
+        const allHistory: BrorrowHistory[] = [];
+        for (const his of bookRes.data.bookCopies) {
+          try {
+            const historyRes = await getBorrowHistoryByBookCopyId(
+              his.bookCopyId
+            );
+            if (Array.isArray(historyRes.data)) {
+              allHistory.push(...historyRes.data);
+            } else if (historyRes.data) {
+              allHistory.push(historyRes.data);
             }
+          } catch (error) {
+            console.log(error, "Error");
           }
-          setHistory(allHistory);
         }
-      } catch (error) {
-        setError("Failed to load book details or borrow history.");
-        toast.error("Failed to load book details or borrow history.");
-      } finally {
-        setLoading(false);
+        setHistory(allHistory);
+      } else {
+        setHistory([]);
       }
-    };
+    } catch (error) {
+      setError("Failed to load book details or borrow history.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchBookAndHistory();
   }, [bookId]);
 
@@ -116,7 +118,8 @@ export default function BookDetail() {
         </Button>
       </div>
 
-      <BookInforCard book={book} />
+      {/* Truyền hàm refresh xuống BookInforCard */}
+      <BookInforCard book={book} refreshBookAndHistory={fetchBookAndHistory} />
 
       <BorrowHistoryTable history={history} />
     </div>

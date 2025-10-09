@@ -14,28 +14,32 @@ import { toast } from "sonner";
 import type { Book } from "@/types";
 
 interface BookBorrowModalProps {
+  title: string;
   book: Book;
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (payload: { username: string; bookCopyId: string }) => void;
 }
 export default function BookBorrowModal({
+  title,
   book,
   isOpen,
   onClose,
   onConfirm,
 }: BookBorrowModalProps) {
   const [username, setUsername] = useState("");
-  const availableCopy = book?.bookCopies?.find(
-    (copy) => copy.status === "AVAILABLE"
-  );
+  const bookCopyId =
+    title === "Borrow"
+      ? book?.bookCopies?.find((copy) => copy.status === "AVAILABLE")
+          ?.bookCopyId
+      : book?.bookCopies?.find((copy) => copy.status === "BORROWED")
+          ?.bookCopyId;
+  console.log(bookCopyId);
 
-  const bookCopyId = availableCopy?.bookCopyId;
   const handleConfirm = () => {
     if (!username.trim() || !bookCopyId) return;
     onConfirm({ username, bookCopyId });
     setUsername("");
-    toast.success(`Borrow ${book.title} successfully!`);
   };
 
   return (
@@ -45,7 +49,9 @@ export default function BookBorrowModal({
         aria-describedby="borrow-modal-desc"
       >
         <DialogHeader>
-          <DialogTitle>Borrow {book.title}</DialogTitle>
+          <DialogTitle>
+            {title} {book.title}
+          </DialogTitle>
         </DialogHeader>
         <DialogDescription>
           Enter your FPT account to borrow this book.
