@@ -9,7 +9,9 @@ import com.university.library.dto.request.bookCopy.CreateBookCopyFromBookCommand
 import com.university.library.dto.response.bookCopy.BookCopyResponse;
 import com.university.library.entity.BookCopy;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,4 +37,6 @@ public interface BookCopyService {
    BookCopyResponse changeBookCopyStatus(UUID bookCopyId, CreateBookCopyCommand.BookStatus newStatus);
   void createBookCopiesFromBook(CreateBookCopyFromBookCommand command);
   BookCopyResponse bookDonation(BookDonationRequest request);
+
+    BookCopyResponse importBookDonation(MultipartFile file) throws IOException;
 }

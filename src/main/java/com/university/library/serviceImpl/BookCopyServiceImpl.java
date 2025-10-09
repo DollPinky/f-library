@@ -22,6 +22,8 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 
@@ -32,12 +34,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -360,13 +364,14 @@ public class BookCopyServiceImpl implements BookCopyService {
     @Override
     @Transactional
     public BookCopyResponse bookDonation(BookDonationRequest request) {
+        //username is email;
         User user = userRepository.findByEmail(request.getUsername()).orElseThrow(()->
                 new NotFoundException("User not found with username: " + request.getUsername())
         );
-        // + diem cho user
-        Category cate = categoryRepository.findById(request.getCategoryId()).orElseThrow(()
-                ->  new NotFoundException("Category not found with category id: " + request.getCategoryId())
-        );
+        Category cate = categoryRepository.findByName(request.getCategoryName())
+                .orElseThrow(() -> new NotFoundException("Category not found with name: " + request.getCategoryName()));
+
+
         Book b = bookRepository.findByTitleEqualsIgnoreCase(request.getTitle());
         if (b == null) {
            b = Book.builder()
@@ -375,20 +380,106 @@ public class BookCopyServiceImpl implements BookCopyService {
                     .build();
           b =  bookRepository.save(b);
         }
-        Campus cpus = campusRepository.findByCode( request.getCampusCode());
-        if(cpus == null) {
+        Campus campus = campusRepository.findByCode( request.getCampusCode());
+        if(campus == null) {
             throw new NotFoundException("Campus not found with code: " + request.getCampusCode());
         }
         BookCopy bc = BookCopy.builder()
                 .book(b)
-                .campus(cpus)
+                .campus(campus)
                 .status(BookCopy.BookStatus.AVAILABLE)
                 .shelfLocation(request.getShelfLocation())
                 .build();
         BookCopy save  =   bookCopyRepository.save(bc);
-       BookCopyResponse response = BookCopyResponse.fromEntity(save);
-       return response;
+
+       return BookCopyResponse.fromEntity(save);
     }
+
+    @Override
+    @Transactional
+    public BookCopyResponse importBookDonation(MultipartFile file) throws IOException {
+
+        Workbook workbook = WorkbookFactory.create(file.getInputStream());
+
+        Sheet sheet = workbook.getSheetAt(0);
+        log.info("Start with file excel donation ");
+        // Bỏ qua hàng đầu (header)
+        Iterator<Row> rowIterator = sheet.iterator();
+        if (rowIterator.hasNext()) rowIterator.next();
+
+        BookCopyResponse lastResponse = null;
+
+        while (rowIterator.hasNext()) {
+            log.info("Processing ...");
+            Row row = rowIterator.next();
+
+            String username = getCellValue(row.getCell(0));
+            String title = getCellValue(row.getCell(1));
+            String bookCover = getCellValue(row.getCell(2));
+            String categoryName = getCellValue(row.getCell(3));
+            String campusCode = getCellValue(row.getCell(4));
+            String shelfLocation = getCellValue(row.getCell(5));
+
+
+            if (username == null || title == null) continue;
+
+
+            User user = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new NotFoundException("User not found: " + username));
+
+
+            Category category = categoryRepository.findByName(categoryName)
+                    .orElseThrow(() -> new NotFoundException("Category not found: " + categoryName));
+
+
+            Book book = bookRepository.findByTitleEqualsIgnoreCase(title);
+            if (book == null) {
+                book = Book.builder()
+                        .title(title)
+                        .bookCover(bookCover)
+                        .category(category)
+                        .build();
+                book = bookRepository.save(book);
+            }
+
+
+            Campus campus = campusRepository.findByCode(campusCode);
+            if (campus == null) {
+                throw new NotFoundException("Campus not found with code: " + campusCode);
+            }
+
+
+            BookCopy bookCopy = BookCopy.builder()
+                    .book(book)
+                    .campus(campus)
+                    .shelfLocation(shelfLocation)
+                    .status(BookCopy.BookStatus.AVAILABLE)
+                    .build();
+
+            bookCopy = bookCopyRepository.save(bookCopy);
+
+            //cộng điểm quyên góp
+            loyaltyService.updateLoyaltyPoint(bookCopy.getBookCopyId(), LoyaltyHistory.LoyaltyAction.DONATE_BOOK,user.getUserId());
+
+            lastResponse = BookCopyResponse.fromEntity(bookCopy);
+        }
+        log.info("Completed processing excel for book donation");
+        workbook.close();
+        return lastResponse;
+    }
+  private  final   LoyaltyServiceImpl loyaltyService;
+
+
+    private String getCellValue(Cell cell) {
+        if (cell == null) return null;
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue().trim();
+            case NUMERIC -> String.valueOf((int) cell.getNumericCellValue());
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            default -> null;
+        };
+    }
+
 
     private BookCopy.BookStatus convertBookStatus(CreateBookCopyCommand.BookStatus status) {
         if (status == null) {

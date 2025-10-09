@@ -8,7 +8,8 @@ import java.util.UUID;
 public class BookDonationRequest {
     private String username;
     private String title;
+    private String bookCover;
     private String campusCode;
     private String shelfLocation;
-    private UUID categoryId;
+    private String categoryName;
 }

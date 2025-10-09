@@ -81,7 +81,7 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
     implementation("org.apache.poi:poi:5.2.3")
     implementation("org.apache.poi:poi-ooxml:5.2.3")
-
+    implementation("commons-io:commons-io:2.16.1")
 
 
     runtimeOnly("org.postgresql:postgresql")
