@@ -56,6 +56,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
 //                                "/api/v1/**",
                                 "/v3/api-docs",
+                                "/api/v1/configuration",
                                 "/v3/api-docs/**",
                                 "/api-docs/**",
                                 "/swagger-ui.html",
@@ -120,6 +121,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/lost").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()
+                                .requestMatchers(HttpMethod.GET,"/api/v1/top-5-loyalty-users-by-month").hasRole("ADMIN")
 
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
                         .anyRequest().authenticated()
