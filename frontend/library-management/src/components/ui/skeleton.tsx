@@ -1,13 +1,23 @@
-import { cn } from "@/lib/utils"
+import React from "react";
+import { cn } from "@/lib/utils";
 
-function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+function Skeleton({
+  className,
+  rows = 1,
+  ...props
+}: React.ComponentProps<"div"> & { rows?: number }) {
   return (
-    <div
-      data-slot="skeleton"
-      className={cn("bg-accent animate-pulse rounded-md", className)}
-      {...props}
-    />
-  )
+    <>
+      {Array.from({ length: rows }, (_, index) => (
+        <div
+          key={index}
+          data-slot="skeleton"
+          className={cn("bg-accent animate-pulse rounded-md", className)}
+          {...props}
+        />
+      ))}
+    </>
+  );
 }
 
-export { Skeleton }
+export { Skeleton };
