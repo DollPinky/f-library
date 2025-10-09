@@ -53,5 +53,6 @@ public class Book extends BaseEntity {
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<BookCopy> bookCopies = new ArrayList<>();
-
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    private List<Comment> comments = new ArrayList<>();
 }

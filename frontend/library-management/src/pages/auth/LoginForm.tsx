@@ -1,7 +1,8 @@
-import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { LockKeyhole } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAuth } from '@/hooks/useAuth'
+import type { LoginRequest } from '@/types'
 
 import {
   Card,
@@ -28,7 +29,7 @@ interface LoginFormData {
 }
 
 function LoginForm() {
-  const navigate = useNavigate()
+  const { login } = useAuth()
 
   const {
     register,
@@ -38,15 +39,17 @@ function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log('Login data:', data)
+      const credentials: LoginRequest = {
+        email: data.email,
+        password: data.password
+      }
 
-      toast.success('Login successful!')
-      localStorage.setItem('token', 'mock-admin-token')
-      localStorage.setItem('userRole', 'ADMIN')
-      navigate('/admin/dashboard')
-    } catch {
-      toast.error('Login failed. Please try again.')
+      await login(credentials)
+      toast.success('Đăng nhập thành công!')
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Đăng nhập thất bại'
+      toast.error(errorMessage)
     }
   }
 

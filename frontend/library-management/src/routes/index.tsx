@@ -1,86 +1,93 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import PublicRoute from "./PublicRoute";
-import ProtectedRoute from "./ProtectedRoute";
-import MainLayout from "@/components/layout/MainLayout";
+import { createBrowserRouter } from 'react-router-dom'
 
-// Admin Components
-import AdminDashboard from "@/pages/admin/Dashboard";
-import { BookManagement } from "@/pages/admin/BookManagement/BookManagement";
+// Layouts
+import MainLayout from '@/components/layout/MainLayout'
+import AuthLayout from '@/components/layout/AuthLayout'
 
-// User Components
-import UserDashboard from "@/pages/user/Dashboard";
-import BorrowBookManagement from "@/pages/user/BorrowBookManagement/BorrowBookManagement";
-import ReturnBookManagement from "@/pages/user/ReturnBookManagement/ReturnBookManagement";
+// Routes control
+import PublicRoute from './PublicRoute'
+import ProtectedRoute from './ProtectedRoute'
 
-import NotFound from "@/pages/NotFound";
-import RootRedirect from "./RootRedirect";
+// Pages
+import Auth from '@/pages/auth/Auth'
+import NotFound from '@/pages/NotFound'
+import Forbidden from '@/pages/Forbidden'
+
+// User pages
+import UserDashboard from '@/pages/user/Dashboard'
+import BorrowBookManagement from '@/pages/user/BorrowBookManagement/BorrowBookManagement'
+import ReturnBookManagement from '@/pages/user/ReturnBookManagement/ReturnBookManagement'
+
+// Admin pages
+import AdminDashboard from '@/pages/admin/Dashboard'
+import { BookManagement } from '@/pages/admin/BookManagement/BookManagement'
 
 const router = createBrowserRouter([
+  // -------------------------------
+  // AUTH ROUTES (no main layout)
+  // -------------------------------
   {
-    path: "/",
-    element: <RootRedirect />,
-  },
-
-  {
-    element: <PublicRoute />,
+    element: <AuthLayout />,
     children: [
       {
-        path: "/login",
-        element: <div>Login Page</div>,
-      },
-      {
-        path: "/register",
-        element: <div>Register Page</div>,
-      },
-    ],
+        element: <PublicRoute />, // chỉ truy cập nếu chưa login
+        children: [
+          { path: '/login', element: <Auth /> },
+          { path: '/register', element: <div>Register Page (Coming Soon)</div> }
+        ]
+      }
+    ]
   },
 
+  // -------------------------------
+  // MAIN APP ROUTES
+  // -------------------------------
   {
-    path: "/",
+    path: '/',
     element: <MainLayout />,
     errorElement: <NotFound />,
     children: [
-      // Admin Routes
+      // Default user routes (no login still ok)
+      { index: true, element: <UserDashboard /> },
+
       {
-        path: "admin",
-        element: <ProtectedRoute requiredRole="admin" />,
+        path: 'borrow-books',
+        element: <BorrowBookManagement />
+      },
+      {
+        path: 'return-books',
+        element: <ReturnBookManagement />
+      },
+      {
+        path: 'profile',
+        element: <div>Hồ sơ cá nhân (Sắp ra mắt)</div>
+      },
+
+      // -------------------------------
+      // ADMIN ROUTES (requires ADMIN role)
+      // -------------------------------
+      {
+        path: 'admin',
+        element: <ProtectedRoute requiredRole="ADMIN" />,
         children: [
           { index: true, element: <AdminDashboard /> },
-          { path: "dashboard", element: <AdminDashboard /> },
-          { path: "book-management", element: <BookManagement /> },
+          { path: 'dashboard', element: <AdminDashboard /> },
+          { path: 'book-management', element: <BookManagement /> },
           {
-            path: "user-management",
-            element: <div>Quản lý người dùng (Sắp ra mắt)</div>,
+            path: 'user-management',
+            element: <div>Quản lý người dùng (Sắp ra mắt)</div>
           },
-          { path: "reports", element: <div>Báo cáo (Sắp ra mắt)</div> },
-        ],
-      },
-
-      // User Routes
-      {
-        path: "user",
-        element: <ProtectedRoute requiredRole="user" />,
-        children: [
-          { index: true, element: <UserDashboard /> },
-          { path: "dashboard", element: <UserDashboard /> },
-          { path: "borrow-books", element: <BorrowBookManagement /> },
-          { path: "return-books", element: <ReturnBookManagement /> },
-          { path: "profile", element: <div>Hồ sơ cá nhân (Sắp ra mắt)</div> },
-        ],
-      },
-
-      // Legacy routes
-      {
-        path: "book-management",
-        element: <Navigate to="/admin/book-management" replace />,
-      },
-    ],
+          { path: 'reports', element: <div>Báo cáo (Sắp ra mắt)</div> }
+        ]
+      }
+    ]
   },
 
-  {
-    path: "*",
-    element: <NotFound />,
-  },
-]);
+  // -------------------------------
+  // SYSTEM ROUTES
+  // -------------------------------
+  { path: '/forbidden', element: <Forbidden /> },
+  { path: '*', element: <NotFound /> }
+])
 
-export default router;
+export default router

@@ -1,342 +1,337 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+import { Formik, type FormikProps } from 'formik'
+import * as Yup from 'yup'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
-import type { Book, BookStatus } from "@/types";
-import { generateId } from "@/utils/until";
-import { bookCategories } from "@/data/mockData";
-import { Textarea } from "../ui/textarea";
+  DialogTitle
+} from '../ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '../ui/select'
+import type {
+  Book,
+  CreateBookRequest,
+  UpdateBookRequest,
+  Category
+} from '@/types'
+import { Textarea } from '../ui/textarea'
+import { createBooks, updateBook } from '@/services/bookManagementService'
+import { getAllCategories } from '@/services/categoryService'
+import { toast } from 'sonner'
+import { useState, useEffect } from 'react'
 
 interface BookFormProps {
-  book?: Book;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (book: Book) => void;
+  book?: Book
+  isOpen: boolean
+  onClose: () => void
+  onSave: (book: Book) => void
 }
 
-const bookStatuses: BookStatus[] = [
-  "Available",
-  "Borrowed",
-  "Maintenance",
-  "Reserved",
-];
+interface FormValues {
+  title: string
+  author: string
+  publisher: string
+  year: number
+  description: string
+  bookCoverUrl: string
+  categoryId: string
+}
+
+const validationSchema = Yup.object({
+  title: Yup.string().required('Book title is required'),
+  author: Yup.string().required('Author is required'),
+  publisher: Yup.string(),
+  year: Yup.number()
+    .required('Published year is required')
+    .min(1800, 'Year must be after 1800')
+    .max(new Date().getFullYear(), 'Year cannot be in the future'),
+  description: Yup.string(),
+  bookCoverUrl: Yup.string().url('Must be a valid URL').nullable(),
+  categoryId: Yup.string().required('Category is required')
+})
 
 export function BookForm({ book, isOpen, onClose, onSave }: BookFormProps) {
-  const [formData, setFormData] = useState<Partial<Book>>({
-    name: "",
-    author: "",
-    category: "",
-    isbn: "",
-    status: "Available",
-    totalCopies: 1,
-    availableCopies: 1,
-    publishedDate: "",
-    description: "",
-    coverImage: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(false)
 
+  // Fetch categories when component mounts or dialog opens
   useEffect(() => {
-    if (book) {
-      setFormData(book);
-    } else {
-      setFormData({
-        name: "",
-        author: "",
-        category: "",
-        isbn: "",
-        status: "Available",
-        totalCopies: 1,
-        availableCopies: 1,
-        publishedDate: "",
-        description: "",
-        coverImage: "",
-      });
+    if (isOpen) {
+      fetchCategories()
     }
-    setErrors({});
-  }, [book, isOpen]);
+  }, [isOpen])
 
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name?.trim()) {
-      newErrors.name = "Book name is required";
+  const fetchCategories = async () => {
+    setCategoriesLoading(true)
+    try {
+      const response = await getAllCategories()
+      if (response.success && response.data) {
+        setCategories(response.data)
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      toast.error('Failed to load categories')
+    } finally {
+      setCategoriesLoading(false)
     }
-
-    if (!formData.author?.trim()) {
-      newErrors.author = "Author is required";
-    }
-
-    if (!formData.category) {
-      newErrors.category = "Category is required";
-    }
-
-    if (!formData.isbn?.trim()) {
-      newErrors.isbn = "ISBN is required";
-    }
-
-    if (!formData.totalCopies || formData.totalCopies < 1) {
-      newErrors.totalCopies = "Total copies must be at least 1";
-    }
-
-    if (!formData.availableCopies || formData.availableCopies < 0) {
-      newErrors.availableCopies = "Available copies cannot be negative";
-    }
-
-    if (
-      formData.availableCopies &&
-      formData.totalCopies &&
-      formData.availableCopies > formData.totalCopies
-    ) {
-      newErrors.availableCopies = "Available copies cannot exceed total copies";
-    }
-
-    if (!formData.publishedDate) {
-      newErrors.publishedDate = "Published date is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validate()) return;
-
-    const bookData: Book = {
-      id: book?.id || generateId(),
-      name: formData.name!,
-      author: formData.author!,
-      category: formData.category!,
-      isbn: formData.isbn!,
-      status: formData.status!,
-      totalCopies: formData.totalCopies!,
-      availableCopies: formData.availableCopies!,
-      publishedDate: formData.publishedDate!,
-      description: formData.description || "",
-      coverImage: formData.coverImage || undefined,
-    };
-
-    onSave(bookData);
-  };
-
-  const handleInputChange = (field: keyof Book, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{book ? "Edit Book" : "Add New Book"}</DialogTitle>
+          <DialogTitle>{book ? 'Edit Book' : 'Add New Book'}</DialogTitle>
           <DialogDescription>
-            {book ? "Update book information" : "Add a new book to the library"}
+            {book ? 'Update book information' : 'Add a new book to the library'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Book Name *</Label>
-              <Input
-                id="name"
-                value={formData.name || ""}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                className={errors.name ? "border-destructive" : ""}
-              />
-              {errors.name && (
-                <p className="text-sm text-destructive">{errors.name}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="author">Author *</Label>
-              <Input
-                id="author"
-                value={formData.author || ""}
-                onChange={(e) => handleInputChange("author", e.target.value)}
-                className={errors.author ? "border-destructive" : ""}
-              />
-              {errors.author && (
-                <p className="text-sm text-destructive">{errors.author}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
-              <Select
-                value={formData.category || ""}
-                onValueChange={(value) => handleInputChange("category", value)}
-              >
-                <SelectTrigger
-                  className={errors.category ? "border-destructive" : ""}
-                >
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {bookCategories
-                    .filter((cat) => cat !== "All Categories")
-                    .map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              {errors.category && (
-                <p className="text-sm text-destructive">{errors.category}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="isbn">ISBN *</Label>
-              <Input
-                id="isbn"
-                value={formData.isbn || ""}
-                onChange={(e) => handleInputChange("isbn", e.target.value)}
-                placeholder="978-0-123456-78-9"
-                className={errors.isbn ? "border-destructive" : ""}
-              />
-              {errors.isbn && (
-                <p className="text-sm text-destructive">{errors.isbn}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status || "Available"}
-                onValueChange={(value: BookStatus) =>
-                  handleInputChange("status", value)
+        <Formik
+          initialValues={{
+            title: book?.title || '',
+            author: book?.author || '',
+            publisher: book?.publisher || '',
+            year: book?.year || new Date().getFullYear(),
+            description: book?.description || '',
+            bookCoverUrl: book?.bookCoverUrl || '',
+            categoryId: book?.category?.categoryId || ''
+          }}
+          validationSchema={validationSchema}
+          enableReinitialize={true}
+          onSubmit={async (values: FormValues) => {
+            setIsLoading(true)
+            try {
+              if (book?.bookId) {
+                // Update existing book
+                const updatePayload: UpdateBookRequest = {
+                  title: values.title,
+                  author: values.author,
+                  publisher: values.publisher,
+                  publishYear: values.year,
+                  description: values.description,
+                  bookCover: values.bookCoverUrl,
+                  categoryId: values.categoryId
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {bookStatuses.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="totalCopies">Total Copies *</Label>
-              <Input
-                id="totalCopies"
-                type="number"
-                min="1"
-                value={formData.totalCopies || ""}
-                onChange={(e) =>
-                  handleInputChange(
-                    "totalCopies",
-                    parseInt(e.target.value) || 0
-                  )
+                const response = await updateBook(book.bookId, updatePayload)
+                if (response.success && response.data) {
+                  onSave(response.data)
+                  toast.success('Book updated successfully!')
+                  onClose()
                 }
-                className={errors.totalCopies ? "border-destructive" : ""}
-              />
-              {errors.totalCopies && (
-                <p className="text-sm text-destructive">{errors.totalCopies}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="availableCopies">Available Copies *</Label>
-              <Input
-                id="availableCopies"
-                type="number"
-                min="0"
-                value={formData.availableCopies || ""}
-                onChange={(e) =>
-                  handleInputChange(
-                    "availableCopies",
-                    parseInt(e.target.value) || 0
-                  )
+              } else {
+                // Create new book
+                const createPayload: CreateBookRequest = {
+                  title: values.title,
+                  author: values.author,
+                  publisher: values.publisher,
+                  publishYear: values.year,
+                  description: values.description,
+                  bookCover: values.bookCoverUrl,
+                  categoryId: values.categoryId
                 }
-                className={errors.availableCopies ? "border-destructive" : ""}
-              />
-              {errors.availableCopies && (
-                <p className="text-sm text-destructive">
-                  {errors.availableCopies}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="publishedDate">Published Date *</Label>
-            <Input
-              id="publishedDate"
-              type="date"
-              value={formData.publishedDate || ""}
-              onChange={(e) =>
-                handleInputChange("publishedDate", e.target.value)
+                const response = await createBooks(createPayload)
+                if (response.success && response.data) {
+                  onSave(response.data)
+                  toast.success('Book created successfully!')
+                  onClose()
+                }
               }
-              className={errors.publishedDate ? "border-destructive" : ""}
-            />
-            {errors.publishedDate && (
-              <p className="text-sm text-destructive">{errors.publishedDate}</p>
-            )}
-          </div>
+            } catch (error) {
+              console.error('Error submitting book:', error)
+              toast.error(
+                book?.bookId ? 'Failed to update book' : 'Failed to create book'
+              )
+            } finally {
+              setIsLoading(false)
+            }
+          }}
+        >
+          {(formikProps: FormikProps<FormValues>) => {
+            const {
+              values,
+              errors,
+              touched,
+              handleChange,
+              handleBlur,
+              handleSubmit
+            } = formikProps
+            return (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Book Name *</Label>
+                    <Input
+                      id="title"
+                      name="title"
+                      value={values.title}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className={
+                        errors.title && touched.title
+                          ? 'border-destructive'
+                          : ''
+                      }
+                    />
+                    {errors.title && touched.title && (
+                      <p className="text-sm text-destructive">{errors.title}</p>
+                    )}
+                  </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description || ""}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              rows={3}
-              placeholder="Book description..."
-            />
-          </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="author">Author *</Label>
+                    <Input
+                      id="author"
+                      name="author"
+                      value={values.author}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className={
+                        errors.author && touched.author
+                          ? 'border-destructive'
+                          : ''
+                      }
+                    />
+                    {errors.author && touched.author && (
+                      <p className="text-sm text-destructive">
+                        {errors.author}
+                      </p>
+                    )}
+                  </div>
+                </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="coverImage">Cover Image URL</Label>
-            <Input
-              id="coverImage"
-              value={formData.coverImage || ""}
-              onChange={(e) => handleInputChange("coverImage", e.target.value)}
-              placeholder="https://example.com/book-cover.jpg"
-            />
-            <p className="text-sm text-muted-foreground">
-              Optional: Enter a URL for the book cover image
-            </p>
-          </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="publisher">Publisher</Label>
+                    <Input
+                      id="publisher"
+                      name="publisher"
+                      value={values.publisher}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      placeholder="Enter publisher"
+                    />
+                  </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">{book ? "Update Book" : "Add Book"}</Button>
-          </DialogFooter>
-        </form>
+                  <div className="space-y-2">
+                    <Label htmlFor="year">Published Year *</Label>
+                    <Input
+                      id="year"
+                      name="year"
+                      type="number"
+                      value={values.year}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className={
+                        errors.year && touched.year ? 'border-destructive' : ''
+                      }
+                    />
+                    {errors.year && touched.year && (
+                      <p className="text-sm text-destructive">{errors.year}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="categoryId">Category *</Label>
+                  <Select
+                    value={values.categoryId}
+                    onValueChange={(value) => {
+                      formikProps.setFieldValue('categoryId', value)
+                    }}
+                  >
+                    <SelectTrigger
+                      className={
+                        errors.categoryId && touched.categoryId
+                          ? 'border-destructive'
+                          : ''
+                      }
+                    >
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoriesLoading ? (
+                        <SelectItem value="loading" disabled>
+                          Loading categories...
+                        </SelectItem>
+                      ) : categories.length === 0 ? (
+                        <SelectItem value="no-categories" disabled>
+                          No categories available
+                        </SelectItem>
+                      ) : (
+                        categories.map((category) => (
+                          <SelectItem
+                            key={category.categoryId}
+                            value={category.categoryId}
+                          >
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {errors.categoryId && touched.categoryId && (
+                    <p className="text-sm text-destructive">
+                      {errors.categoryId}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={values.description}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    rows={3}
+                    placeholder="Book description..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bookCoverUrl">Cover Image URL</Label>
+                  <Input
+                    id="bookCoverUrl"
+                    name="bookCoverUrl"
+                    value={values.bookCoverUrl}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    placeholder="https://example.com/book-cover.jpg"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Optional: Enter a URL for the book cover image
+                  </p>
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading
+                      ? 'Saving...'
+                      : book
+                      ? 'Update Book'
+                      : 'Add Book'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            )
+          }}
+        </Formik>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
