@@ -2,6 +2,7 @@ package com.university.library.controller;
 
 import com.university.library.base.PagedResponse;
 import com.university.library.base.StandardResponse;
+import com.university.library.dto.request.bookCopy.BookDonationRequest;
 import com.university.library.dto.response.bookCopy.BookCopyResponse;
 import com.university.library.dto.request.bookCopy.BookCopySearchParams;
 import com.university.library.dto.request.bookCopy.CreateBookCopyCommand;
@@ -20,7 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -256,7 +259,18 @@ public class BookCopyController {
         List<BookCopyResponse> copies = bookCopyService.findByCategoryAndStatus(categoryId, status);
         return ResponseEntity.ok(StandardResponse.success(copies));
     }
+    @PostMapping("/donation")
+    private ResponseEntity<StandardResponse<BookCopyResponse>> donateBookCopy(@RequestBody BookDonationRequest request) {
+        return ResponseEntity.ok(StandardResponse.success(bookCopyService.bookDonation(request)));
+    }
 
+    @PostMapping("/import-donation-book")
+    public ResponseEntity<StandardResponse<List<BookCopyResponse>>> importDonationBook(
+          @RequestParam  MultipartFile file) throws IOException {
+
+        return ResponseEntity.ok(StandardResponse.success("Imported books successfully with "+ bookCopyService.importBookDonation(file).size()+" books"
+                ,bookCopyService.importBookDonation(file)));
+    }
 
 }
 

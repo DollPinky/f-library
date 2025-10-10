@@ -212,6 +212,10 @@ private void createBookCopy() {
                 Category.builder()
                         .name("Lịch sử")
                         .description("Sách lịch sử Việt Nam và thế giới")
+                        .build(),
+                Category.builder()
+                        .name("Khác")
+                        .description("none")
                         .build()
         };
 

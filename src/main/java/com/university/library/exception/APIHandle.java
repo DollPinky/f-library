@@ -1,6 +1,7 @@
 package com.university.library.exception;
 
 
+import com.university.library.base.StandardResponse;
 import com.university.library.exception.exceptions.*;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -69,16 +70,19 @@ public class APIHandle {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity handleRuntimeExceptionException(RuntimeException exception) {
+        StandardResponse response = StandardResponse.error(exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(HttpStatus.BAD_REQUEST.value()
-                        );
+                .body(
+                        response);
     }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity handleNotFoundException(NotFoundException exception) {
+        StandardResponse response = StandardResponse.error(exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(
-                        HttpStatus.NOT_FOUND.value());
+                       response);
+
     }
 
     @ExceptionHandler(ConflictException.class)

@@ -3,12 +3,15 @@ package com.university.library.service;
 
 import com.university.library.base.PagedResponse;
 import com.university.library.dto.request.bookCopy.BookCopySearchParams;
+import com.university.library.dto.request.bookCopy.BookDonationRequest;
 import com.university.library.dto.request.bookCopy.CreateBookCopyCommand;
 import com.university.library.dto.request.bookCopy.CreateBookCopyFromBookCommand;
 import com.university.library.dto.response.bookCopy.BookCopyResponse;
 import com.university.library.entity.BookCopy;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,4 +36,7 @@ public interface BookCopyService {
    void deleteBookCopy(UUID bookCopyId);
    BookCopyResponse changeBookCopyStatus(UUID bookCopyId, CreateBookCopyCommand.BookStatus newStatus);
   void createBookCopiesFromBook(CreateBookCopyFromBookCommand command);
+  BookCopyResponse bookDonation(BookDonationRequest request);
+
+   List<BookCopyResponse> importBookDonation(MultipartFile file) throws IOException;
 }

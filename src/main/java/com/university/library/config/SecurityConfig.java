@@ -67,7 +67,7 @@ public class SecurityConfig {
                                 "/api/v1/accounts/login",
                                 "/api/chat-with-guest",
                                 "/swagger-ui/**",
-//                                "/api/v1/**",
+                                "/api/v1/book-copies/donation",
                                 "/v3/api-docs",
                                 "/api/v1/configuration",
                                 "/v3/api-docs/**",
@@ -144,7 +144,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()
                                 .requestMatchers(HttpMethod.GET,"/api/v1/top-5-loyalty-users-by-month").hasRole("ADMIN")
-
+                        .requestMatchers(HttpMethod.POST,"/api/v1/book-copies/import-donation-book").hasRole("ADMIN")
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
 
                         .anyRequest().authenticated()
