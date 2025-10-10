@@ -144,7 +144,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()
                                 .requestMatchers(HttpMethod.GET,"/api/v1/top-5-loyalty-users-by-month").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST,"/api/v1/book-copies/import-donation-book").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/api/v1/book-copies/import-donation-book").hasRole("ADMIN")
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
 
                         .anyRequest().authenticated()
