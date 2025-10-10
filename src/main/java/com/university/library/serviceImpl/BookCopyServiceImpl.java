@@ -12,6 +12,7 @@ import com.university.library.entity.*;
 import com.university.library.exception.exceptions.NotFoundException;
 import com.university.library.repository.*;
 import com.university.library.service.BookCopyService;
+import com.university.library.service.BookDonationService;
 import com.university.library.specification.BookCopySpecification;
 import com.university.library.utils.GetValueFromExcel;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -58,7 +60,7 @@ public class BookCopyServiceImpl implements BookCopyService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final LoyaltyServiceImpl loyaltyService;
-
+    private final BookDonationService bookDonationService;
     @Value("${app.cors.allowed-origins:*}")
     private String corsAllowedOrigins;
 
@@ -390,12 +392,32 @@ public class BookCopyServiceImpl implements BookCopyService {
                 .status(BookCopy.BookStatus.AVAILABLE)
                 .shelfLocation(request.getShelfLocation())
                 .build();
-        BookCopy save = bookCopyRepository.save(bc);
 
-        return BookCopyResponse.fromEntity(save);
+
+        BookCopy saveBc = bookCopyRepository.save(bc);
+        BookDonation bookDonation = BookDonation.builder()
+                .title(request.getTitle())
+                .bookCopy(saveBc)
+                .donor(user)
+                .donationAt(LocalDateTime.now())
+                .build();
+        bookDonationService.save(bookDonation);
+        log.info("Create book donation successfully");
+
+        if (user != null) {
+            loyaltyService.updateLoyaltyPoint(
+                    saveBc.getBookCopyId(),
+                    LoyaltyHistory.LoyaltyAction.DONATE_BOOK,
+                    user.getUserId()
+            );
+            log.info("Loyalty point updated successfully");
+        } else {
+            log.info("Loyalty point not updated user not found in system");
+        }
+        return BookCopyResponse.fromEntity(saveBc);
     }
 
-     //title ,campus code phải có nếu ko sẽ ko tạo đc sách
+    //title ,campus code phải có nếu ko sẽ ko tạo đc sách
     @Override
     @Transactional
     public List<BookCopyResponse> importBookDonation(MultipartFile file) throws IOException {
@@ -413,7 +435,7 @@ public class BookCopyServiceImpl implements BookCopyService {
             Row row = rowIterator.next();
             String username = GetValueFromExcel.getCellValue(row.getCell(0));
             String title = GetValueFromExcel.getCellValue(row.getCell(1));
-            String bookCover =GetValueFromExcel.getCellValue(row.getCell(2));
+            String bookCover = GetValueFromExcel.getCellValue(row.getCell(2));
             String categoryName = GetValueFromExcel.getCellValue(row.getCell(3));
             String campusCode = GetValueFromExcel.getCellValue(row.getCell(4));
             String shelfLocation = GetValueFromExcel.getCellValue(row.getCell(5));
@@ -467,6 +489,17 @@ public class BookCopyServiceImpl implements BookCopyService {
             log.info("Create book copy successfully");
 
             if (user != null) {
+
+                BookDonation bookDonation = BookDonation.builder()
+                        .title(title)
+                        .bookCopy(bookCopy)
+                        .donor(user)
+                        .donationAt(LocalDateTime.now())
+                        .build();
+
+                bookDonationService.save(bookDonation);
+                log.info("Create book donation successfully");
+                bookDonationService.save(bookDonation);
                 loyaltyService.updateLoyaltyPoint(
                         bookCopy.getBookCopyId(),
                         LoyaltyHistory.LoyaltyAction.DONATE_BOOK,
@@ -476,7 +509,6 @@ public class BookCopyServiceImpl implements BookCopyService {
             } else {
                 log.info("Loyalty point not updated user not found in system");
             }
-
             createdCopies.add(BookCopyResponse.fromEntity(bookCopy));
         }
 
@@ -484,8 +516,6 @@ public class BookCopyServiceImpl implements BookCopyService {
         log.info("Completed for donation");
         return createdCopies;
     }
-
-
 
 
     private BookCopy.BookStatus convertBookStatus(CreateBookCopyCommand.BookStatus status) {
