@@ -83,7 +83,7 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
     implementation("org.apache.poi:poi:5.2.3")
     implementation("org.apache.poi:poi-ooxml:5.2.3")
-
+    implementation("commons-io:commons-io:2.16.1")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-security")
