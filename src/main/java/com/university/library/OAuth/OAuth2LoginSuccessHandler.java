@@ -49,6 +49,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         access.setAttribute("SameSite", "Lax");
         response.addCookie(access);
 
-        response.sendRedirect("http://localhost:5173/"); // đổi theo FE của bạn
+        response.sendRedirect("http://localhost:5173/admin"); // đổi theo FE của bạn
     }
 }

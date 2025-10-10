@@ -52,7 +52,7 @@ public class CustomOAuth2UserDetailsService implements OAuth2UserService<OAuth2U
 //        User account = findOrCreateAccount(email, name, registrationId, campusId);
         try {
             User account = findOrCreateAccount(email, name, registrationId);
-            return new CustomOAuth2User(oAuth2User, account, "sub");
+            return CustomOAuth2User.of(oAuth2User, account, "sub");
         } catch (AccountDisabledException ex) {
             throw new OAuth2AuthenticationException("Account disabled: " + ex.getMessage());
         }
