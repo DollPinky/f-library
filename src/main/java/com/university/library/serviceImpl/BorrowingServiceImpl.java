@@ -284,16 +284,34 @@ public class BorrowingServiceImpl implements BorrowingService {
      * Lấy lịch sử sách do ai mượn
      */
     @Override
-    public List<BorrowingHistoryResponse> findBorrowingByBookCopy_BookCopyId(UUID bookCopyId) {
-        return borrowingRepository.findBorrowingByBookCopy_BookCopyId(bookCopyId)
+    public PagedResponse<BorrowingHistoryResponse> findBorrowingByBookCopy_BookCopyId(int page, int size, UUID bookCopyId) {
+        Sort sort = Sort.by("borrowedDate").descending();
+        Pageable pageable = PageRequest.of(page - 1, size, sort);
+
+        // Chỉ gọi repository một lần
+        Page<Borrowing> pageData = borrowingRepository.findBorrowingByBookCopy_BookCopyId(bookCopyId, pageable);
+
+        List<BorrowingHistoryResponse> content = pageData.getContent()
                 .stream()
                 .map(b -> new BorrowingHistoryResponse(
                         b.getBorrower().getUsername(),
+                        b.getBookCopy().getBookCopyId(),
+                        b.getBookCopy().getShelfLocation(),
+                        b.getBookCopy().getStatus(),
+                        b.getBookCopy().getCampus().getName(),
                         b.getBorrowedDate(),
                         b.getReturnedDate()
                 ))
                 .toList();
+
+        return PagedResponse.of(
+                content,
+                pageData.getNumber(),
+                pageData.getSize(),
+                pageData.getTotalElements()
+        );
     }
+
 
 
 

@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,9 +33,14 @@ public class TokenServiceImpl {
     @Value("${jwt.expiration.ms}")
     private int jwtExpirationMs;
 
+    public int getJwtExpirationMs() {
+        return jwtExpirationMs;
+    }
+
     private SecretKey getSigninKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        return Keys.hmacShaKeyFor(keyBytes);
+//        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+//        return Keys.hmacShaKeyFor(keyBytes);
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(User user) {
@@ -56,6 +62,9 @@ public class TokenServiceImpl {
                         .collect(Collectors.toSet()));
 
         return Jwts.builder()
+                .setSubject(user.getEmail())
+                .setIssuer("your-service")
+                .setAudience("your-frontend")
                 .setClaims(claims) // Đặt claims trước
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(new Date().getTime() + jwtExpirationMs))

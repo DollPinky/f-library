@@ -98,10 +98,8 @@ public class AccountController {
 
     @GetMapping("/get-info")
     public ResponseEntity<StandardResponse<AccountResponse>> getAccountInfo(@AuthenticationPrincipal User user) {
-        if(user.getRole().equals(User.AccountRole.ADMIN)){
             return ResponseEntity.ok(StandardResponse.success("Get profile user successfully",userService.getUserProfile()));
-        }
-        return ResponseEntity.ok(StandardResponse.success("Get profile user successfully",AccountResponse.fromEntity(user)));
+
     }
 }
  
