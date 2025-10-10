@@ -98,7 +98,7 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
     List<BorrowingStateResponse> findMostBorrowedBooks(Pageable pageable);
 
     //lay lich su ai da muon sach
-    List<Borrowing> findBorrowingByBookCopy_BookCopyId(UUID bookCopyId);
+    Page<Borrowing> findBorrowingByBookCopy_BookCopyId(UUID bookCopyId, Pageable pageable);
 
     int countByBorrowedDateIsBetween(LocalDateTime borrowedDateAfter, LocalDateTime borrowedDateBefore);
 

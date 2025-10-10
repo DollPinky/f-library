@@ -1,5 +1,6 @@
 package com.university.library.controller;
 
+import com.university.library.base.PagedResponse;
 import com.university.library.base.StandardResponse;
 import com.university.library.dto.request.borrowing.BorrowRequest;
 import com.university.library.dto.response.borrowing.BorrowingHistoryResponse;
@@ -234,8 +235,11 @@ public class BorrowingController {
      * Lấy danh sách lịch sử bookCopy
      */
     @GetMapping("/{bookCopyId}/history")
-    public ResponseEntity<StandardResponse<List<BorrowingHistoryResponse>>> getBookCopyHistory(@PathVariable UUID bookCopyId) {
-        List<BorrowingHistoryResponse> borrowingHistoryResponses = borrowingService.findBorrowingByBookCopy_BookCopyId(bookCopyId);
+    public ResponseEntity<StandardResponse<PagedResponse<BorrowingHistoryResponse>>> getBookCopyHistory(
+            @PathVariable UUID bookCopyId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        PagedResponse<BorrowingHistoryResponse> borrowingHistoryResponses = borrowingService.findBorrowingByBookCopy_BookCopyId(page, size,bookCopyId);
         return ResponseEntity.ok(StandardResponse.success(borrowingHistoryResponses));
     }
 
