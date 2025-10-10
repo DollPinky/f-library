@@ -59,12 +59,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
         } catch (ExpiredJwtException eje) {
-           throw new BadCredentialsException("Expired JWT token");
-            // Token hết hạn
+//           throw new BadCredentialsException("Expired JWT token");
         } catch (Exception ex) {
-            throw new BadCredentialsException(" JWT token invalid");
+//            throw new BadCredentialsException(" JWT token invalid");
 
-            // Token sai
         }
 
         filterChain.doFilter(request, response);

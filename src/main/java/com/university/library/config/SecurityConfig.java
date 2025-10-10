@@ -1,5 +1,8 @@
 package com.university.library.config;
 
+import com.university.library.OAuth.CustomOAuth2User;
+import com.university.library.OAuth.CustomOAuth2UserDetailsService;
+import com.university.library.OAuth.OAuth2LoginSuccessHandler;
 import com.university.library.entity.User;
 import com.university.library.repository.RefreshTokenRepository;
 import com.university.library.repository.UserRepository;
@@ -7,6 +10,7 @@ import com.university.library.serviceImpl.CustomeUserDetailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +24,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
@@ -28,6 +36,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Configuration
@@ -41,7 +51,10 @@ public class SecurityConfig {
     private final RefreshTokenRepository refreshTokenRepository;
     @Value("${app.cors.allowed-origins:*}")
     private String corsAllowedOrigins;
+    private final CookieJwtAuthFilter cookieJwtAuthFilter;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomOAuth2UserDetailsService customOAuth2UserDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -64,6 +77,15 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
+
+                        .requestMatchers(
+                                "/oauth2/**",
+                                "/login/oauth2/**"
+                        ).permitAll()
+                        .requestMatchers("/api/v1/oauth2/**").permitAll()
+
+
+                        .requestMatchers("/api/auth/login").permitAll()
 
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/book-copies/{bookCopyId}",
@@ -119,41 +141,48 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/borrowings/borrow").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/return").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/lost").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/borrowings/{bookCopyId}/history").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/borrowings/most-borrowed").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()
                                 .requestMatchers(HttpMethod.GET,"/api/v1/top-5-loyalty-users-by-month").hasRole("ADMIN")
 
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
-                        .maximumSessions(1)
-                        .maxSessionsPreventsLogin(false)
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+
+                .oauth2Login(oauth -> oauth
+
+                        .successHandler(oAuth2LoginSuccessHandler)
+                        .failureHandler((req, res, ex) -> {
+                            String msg = URLEncoder.encode(ex.getMessage(), StandardCharsets.UTF_8);
+                            res.sendRedirect("http://localhost:5173/login?oauth_error=" + msg);
+                        })
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserDetailsService) // Use OAuth2UserService instead of OidcUserService
                         )
-                .exceptionHandling()
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setContentType("application/json");
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}");
-                });
+                        .authorizationEndpoint(ae -> ae.baseUri("/oauth2/authorization"))
+                        .redirectionEndpoint(re -> re.baseUri("/login/oauth2/code/*"))
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"success\":false,\"message\":\"Unauthorized\"}");
+                        })
+                )
+                .authenticationProvider(authenticationProvider());
+        http.addFilterBefore(cookieJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(org.springframework.security.crypto.factory.PasswordEncoderFactories.createDelegatingPasswordEncoder());
         return authProvider;
     }
 

@@ -37,7 +37,7 @@ public class User extends BaseEntity implements org.springframework.security.cor
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    @Column(name = "phone", nullable = false, length = 20)
+    @Column(name = "phone", nullable = true, length = 20)
     private String phone;
 
     @Enumerated(EnumType.STRING)
@@ -50,14 +50,14 @@ public class User extends BaseEntity implements org.springframework.security.cor
     @Column(name = "position", length = 255)
     private String position;
 
-    @Column(name = "company_account", nullable = false, unique = true, length = 50)
+    @Column(name = "company_account", nullable = true, unique = true, length = 50)
     private String companyAccount;
 
     @Column(name = "is_active")
     private Boolean isActive;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "campus_id", nullable = false)
+    @JoinColumn(name = "campus_id", nullable = true)
     private Campus campus;
 
     @Column(name = "created_at")
