@@ -26,6 +26,6 @@ public interface BorrowingService {
 
     List<BorrowingStateResponse> getMostBorrowStats(int limit);
 
-    List<BorrowingHistoryResponse> findBorrowingByBookCopy_BookCopyId(UUID bookCopyId);
+    PagedResponse<BorrowingHistoryResponse> findBorrowingByBookCopy_BookCopyId(int page, int size, UUID bookCopyId);
 
 }
