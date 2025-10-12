@@ -44,7 +44,6 @@ public class BookCopy extends BaseEntity {
     
     @OneToMany(mappedBy = "bookCopy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Borrowing> borrowings = new ArrayList<>();
-    
     public enum BookStatus {
         AVAILABLE, BORROWED, RESERVED, PENDING, LOST, DAMAGED
     }

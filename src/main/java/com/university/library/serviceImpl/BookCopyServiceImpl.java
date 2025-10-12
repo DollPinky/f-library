@@ -1,19 +1,20 @@
 package com.university.library.serviceImpl;
 
 import com.university.library.base.PagedResponse;
+import com.university.library.constants.BookConstants;
 import com.university.library.constants.BookCopyConstants;
 import com.university.library.dto.request.bookCopy.BookCopySearchParams;
+import com.university.library.dto.request.bookCopy.BookDonationRequest;
 import com.university.library.dto.request.bookCopy.CreateBookCopyCommand;
 import com.university.library.dto.request.bookCopy.CreateBookCopyFromBookCommand;
 import com.university.library.dto.response.bookCopy.BookCopyResponse;
-import com.university.library.entity.Book;
-import com.university.library.entity.BookCopy;
-import com.university.library.entity.Campus;
-import com.university.library.repository.BookCopyRepository;
-import com.university.library.repository.BookRepository;
-import com.university.library.repository.CampusRepository;
+import com.university.library.entity.*;
+import com.university.library.exception.exceptions.NotFoundException;
+import com.university.library.repository.*;
 import com.university.library.service.BookCopyService;
+import com.university.library.service.BookDonationService;
 import com.university.library.specification.BookCopySpecification;
+import com.university.library.utils.GetValueFromExcel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -23,6 +24,8 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 
@@ -33,11 +36,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -50,13 +57,15 @@ public class BookCopyServiceImpl implements BookCopyService {
     private final QRCodeServiceImpl qrCodeService;
     private final BookRepository bookRepository;
     private final CampusRepository campusRepository;
-
-
+    private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
+    private final LoyaltyServiceImpl loyaltyService;
+    private final BookDonationService bookDonationService;
     @Value("${app.cors.allowed-origins:*}")
     private String corsAllowedOrigins;
 
     /**
-    QrCode Book
+     * QrCode Book
      */
     public byte[] generateAllQRCodesPDF() throws Exception {
         // Use the new method name
@@ -125,7 +134,7 @@ public class BookCopyServiceImpl implements BookCopyService {
 
             for (String fontPath : fontPaths) {
                 try {
-                    java.io.File fontFile = new java.io.File(fontPath);
+                    File fontFile = new File(fontPath);
                     if (fontFile.exists()) {
                         return PDType0Font.load(document, fontFile);
                     }
@@ -176,7 +185,7 @@ public class BookCopyServiceImpl implements BookCopyService {
     }
 
     /**
-     BookCopyQuery
+     * BookCopyQuery
      */
 
     public BookCopyResponse getBookCopyById(UUID bookCopyId) {
@@ -241,7 +250,7 @@ public class BookCopyServiceImpl implements BookCopyService {
 
 
     /**
-     BookCopyCommand
+     * BookCopyCommand
      */
 
     public byte[] generateQRCodeImage(UUID bookCopyID) throws Exception {
@@ -276,7 +285,6 @@ public class BookCopyServiceImpl implements BookCopyService {
 
         BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
                 .orElseThrow(() -> new RuntimeException(BookCopyConstants.ERROR_BOOK_COPY_NOT_FOUND + bookCopyId));
-
 
 
         bookCopy.setShelfLocation(command.getShelfLocation());
@@ -339,14 +347,14 @@ public class BookCopyServiceImpl implements BookCopyService {
         for (CreateBookCopyFromBookCommand.BookCopyInfo copyInfo : command.getCopies()) {
             Campus library = campusRepository.findById(copyInfo.getCampusId())
                     .orElseThrow(() -> new RuntimeException("Library not found with ID: " + copyInfo.getCampusId()));
-                BookCopy bookCopy = BookCopy.builder()
-                        .book(book)
-                        .bookCopyId(copyInfo.getBookCopyId())
-                        .campus(library)
-                        .shelfLocation(copyInfo.getLocation())
-                        .status(BookCopy.BookStatus.AVAILABLE)
-                        .build();
-                bookCopies.add(bookCopy);
+            BookCopy bookCopy = BookCopy.builder()
+                    .book(book)
+                    .bookCopyId(copyInfo.getBookCopyId())
+                    .campus(library)
+                    .shelfLocation(copyInfo.getLocation())
+                    .status(BookCopy.BookStatus.AVAILABLE)
+                    .build();
+            bookCopies.add(bookCopy);
 
         }
 
@@ -355,8 +363,159 @@ public class BookCopyServiceImpl implements BookCopyService {
         log.info("Successfully created {} book copies for book: {}", bookCopies.size(), command.getBookId());
     }
 
+    @Override
+    @Transactional
+    public BookCopyResponse bookDonation(BookDonationRequest request) {
+        //username is email;
+        User user = userRepository.findByEmail(request.getUsername()).orElseThrow(() ->
+                new NotFoundException("User not found with username: " + request.getUsername())
+        );
+        Category cate = categoryRepository.findByName(request.getCategoryName())
+                .orElseThrow(() -> new NotFoundException("Category not found with name: " + request.getCategoryName()));
 
 
+        Book b = bookRepository.findByTitleEqualsIgnoreCase(request.getTitle());
+        if (b == null) {
+            b = Book.builder()
+                    .title(request.getTitle())
+                    .category(cate)
+                    .build();
+            b = bookRepository.save(b);
+        }
+        Campus campus = campusRepository.findByCode(request.getCampusCode());
+        if (campus == null) {
+            throw new NotFoundException("Campus not found with code: " + request.getCampusCode());
+        }
+        BookCopy bc = BookCopy.builder()
+                .book(b)
+                .campus(campus)
+                .status(BookCopy.BookStatus.AVAILABLE)
+                .shelfLocation(request.getShelfLocation())
+                .build();
+
+
+        BookCopy saveBc = bookCopyRepository.save(bc);
+        BookDonation bookDonation = BookDonation.builder()
+                .title(request.getTitle())
+                .bookCopy(saveBc)
+                .donor(user)
+                .donationAt(LocalDateTime.now())
+                .build();
+        bookDonationService.save(bookDonation);
+        log.info("Create book donation successfully");
+
+        if (user != null) {
+            loyaltyService.updateLoyaltyPoint(
+                    saveBc.getBookCopyId(),
+                    LoyaltyHistory.LoyaltyAction.DONATE_BOOK,
+                    user.getUserId()
+            );
+            log.info("Loyalty point updated successfully");
+        } else {
+            log.info("Loyalty point not updated user not found in system");
+        }
+        return BookCopyResponse.fromEntity(saveBc);
+    }
+
+    //title ,campus code phải có nếu ko sẽ ko tạo đc sách
+    @Override
+    @Transactional
+    public List<BookCopyResponse> importBookDonation(MultipartFile file) throws IOException {
+        Workbook workbook = WorkbookFactory.create(file.getInputStream());
+
+        Sheet sheet = workbook.getSheetAt(0);
+        Iterator<Row> rowIterator = sheet.iterator();
+        if (rowIterator.hasNext()) rowIterator.next();
+
+        List<BookCopyResponse> createdCopies = new ArrayList<>();
+        int rowNumber = 1;
+
+        while (rowIterator.hasNext()) {
+            rowNumber++;
+            Row row = rowIterator.next();
+            String username = GetValueFromExcel.getCellValue(row.getCell(0));
+            String title = GetValueFromExcel.getCellValue(row.getCell(1));
+            String bookCover = GetValueFromExcel.getCellValue(row.getCell(2));
+            String categoryName = GetValueFromExcel.getCellValue(row.getCell(3));
+            String campusCode = GetValueFromExcel.getCellValue(row.getCell(4));
+            String shelfLocation = GetValueFromExcel.getCellValue(row.getCell(5));
+
+
+            User user = null;
+            if (username != null && !username.isEmpty()) {
+                user = userRepository.findByEmail(username).orElse(null);
+            }
+
+            Category category = categoryRepository.findByName(categoryName).orElse(null);
+            if (category == null) {
+                category = categoryRepository.findByName("Khác").orElse(null);
+                if (category == null) {
+                    category = new Category();
+                    category.setName("Khác");
+                    category = categoryRepository.save(category);
+                }
+            }
+
+            if (title == null || title.isEmpty()) {
+                log.info("Cannot create book& bookCopy because don't have title");
+                continue;
+            }
+
+            Book book = bookRepository.findByTitleEqualsIgnoreCase(title);
+            if (book == null) {
+                book = Book.builder()
+                        .title(title)
+                        .bookCover(bookCover)
+                        .category(category)
+                        .build();
+                book = bookRepository.save(book);
+                log.info("Created new book : {} ", book.getTitle());
+            }
+
+            Campus campus = campusRepository.findByCode(campusCode);
+            if (campus == null) {
+                log.warn("Not found campus code,cannot create book& bookCopy because don't have {} ", campusCode);
+                continue;
+            }
+
+            BookCopy bookCopy = BookCopy.builder()
+                    .book(book)
+                    .campus(campus)
+                    .shelfLocation(shelfLocation)
+                    .status(BookCopy.BookStatus.AVAILABLE)
+                    .build();
+
+            bookCopy = bookCopyRepository.save(bookCopy);
+            log.info("Create book copy successfully");
+
+            if (user != null) {
+
+                BookDonation bookDonation = BookDonation.builder()
+                        .title(title)
+                        .bookCopy(bookCopy)
+                        .donor(user)
+                        .donationAt(LocalDateTime.now())
+                        .build();
+
+                bookDonationService.save(bookDonation);
+                log.info("Create book donation successfully");
+                bookDonationService.save(bookDonation);
+                loyaltyService.updateLoyaltyPoint(
+                        bookCopy.getBookCopyId(),
+                        LoyaltyHistory.LoyaltyAction.DONATE_BOOK,
+                        user.getUserId()
+                );
+                log.info("Loyalty point updated successfully");
+            } else {
+                log.info("Loyalty point not updated user not found in system");
+            }
+            createdCopies.add(BookCopyResponse.fromEntity(bookCopy));
+        }
+
+        workbook.close();
+        log.info("Completed for donation");
+        return createdCopies;
+    }
 
 
     private BookCopy.BookStatus convertBookStatus(CreateBookCopyCommand.BookStatus status) {
@@ -379,7 +538,4 @@ public class BookCopyServiceImpl implements BookCopyService {
                 return BookCopy.BookStatus.AVAILABLE;
         }
     }
-
-
-
 }

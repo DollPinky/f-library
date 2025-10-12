@@ -47,9 +47,9 @@ const handleLogout = (): void => {
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem("accessToken");
-    // if (token && config.headers) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -66,11 +66,8 @@ axiosClient.interceptors.response.use(
     const status = error.response?.status;
     const url = originalRequest.url ?? "";
 
-    // Handle 401 Unauthorized
     if (status === 401 && !originalRequest._retry) {
-      // Prevent retry on auth endpoints
       if (url.includes("refresh-token") || url.includes("login")) {
-        handleLogout();
         return Promise.reject(error);
       }
 

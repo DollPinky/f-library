@@ -1,65 +1,58 @@
-import { Bell, Menu, Search, X, LogIn } from "lucide-react";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Bell, Menu, Search, X, LogIn } from 'lucide-react'
+import { Input } from '../ui/input'
+import { Button } from '../ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "../ui/dropdown-menu";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useState } from "react";
-import { settingsNavItem } from "@/data/mockData";
-import type { NavItem } from "@/types";
-import { cn } from "@/lib/utils";
-import logoImage from "@/assets/logo.png";
-import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+  DropdownMenuSeparator
+} from '../ui/dropdown-menu'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { useAuth } from '@/hooks/useAuth'
+import { settingsNavItem } from '@/data/mockData'
+import { cn } from '@/lib/utils'
+import type { NavItem } from '@/types'
+import logoImage from '@/assets/logo.png'
 
 interface HeaderProps {
-  activateItemId?: string;
-  onNavigate?: (id: string, href: string) => void;
-  navItems: NavItem[];
+  activateItemId?: string
+  onNavigate?: (id: string, href: string) => void
+  navItems: NavItem[]
 }
 
 function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
-  const isMobile = useIsMobile();
-  const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, user, logout } = useAuth();
-  const token = localStorage.getItem("accessToken");
-  const navigate = useNavigate();
+  const isMobile = useIsMobile()
+  const [isSearchVisible, setIsSearchVisible] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { user, logout } = useAuth()
+  const token = localStorage.getItem('accessToken')
+  const navigate = useNavigate()
 
   const handleLogout = async () => {
     try {
-      console.log("🚪 Starting logout process...");
-      await logout();
-      console.log("✅ Logout completed, should redirect to /");
-    } catch (error) {
-      console.error("❌ Logout failed:", error);
-      // Fallback: force navigate về trang chủ
-      navigate("/", { replace: true });
+      await logout()
+      navigate('/', { replace: true })
+    } catch {
+      navigate('/', { replace: true })
     }
-  };
+  }
 
-  const handleLoginClick = () => {
-    navigate("/login");
-  };
+  const handleLoginClick = () => navigate('/login')
 
   return (
     <>
       <div className="border-b">
         <div className="flex h-16 items-center px-4">
-          {/* Mobile menu */}
+          {/* Mobile menu button */}
           {isMobile && (
             <Button
-              variant={"ghost"}
-              size={"icon"}
+              variant="ghost"
+              size="icon"
               className="mr-2"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
@@ -67,6 +60,7 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
             </Button>
           )}
 
+          {/* Logo */}
           <div className="flex items-center space-x-4">
             <img
               src={logoImage}
@@ -77,6 +71,8 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
               Book Library
             </h2>
           </div>
+
+          {/* Right actions */}
           <div className="ml-auto flex items-center space-x-2 md:space-x-4">
             {!isMobile && (
               <Input
@@ -102,10 +98,10 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
 
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
-              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-600"></span>
+              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-600" />
             </Button>
 
-            {/* Hiển thị nút đăng nhập hoặc avatar tùy theo trạng thái */}
+            {/* Auth actions */}
             {token ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -118,23 +114,25 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
                         src="https://github.com/shadcn.png"
                         alt="@user"
                       />
-                      <AvatarFallback aria-setsize={15}>
-                        {user?.fullName?.charAt(0) || "U"}
+                      <AvatarFallback>
+                        {user?.fullName?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
+
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        {user?.fullName || "User"}
+                        {user?.fullName || 'User'}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {user?.role || "User"}
+                        {user?.role || 'User'}
                       </p>
                     </div>
                   </DropdownMenuLabel>
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>Profile</DropdownMenuItem>
                   <DropdownMenuItem>Settings</DropdownMenuItem>
@@ -146,17 +144,18 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
             ) : (
               <Button
                 variant="default"
-                size={isMobile ? "sm" : "default"}
+                size={isMobile ? 'sm' : 'default'}
                 onClick={handleLoginClick}
                 className="gap-2"
               >
                 <LogIn className="h-4 w-4" />
-                {!isMobile && "Đăng nhập"}
+                {!isMobile && 'Đăng nhập'}
               </Button>
             )}
           </div>
         </div>
 
+        {/* Mobile search */}
         {isMobile && isSearchVisible && (
           <div className="px-4 pb-3">
             <Input
@@ -168,6 +167,8 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
           </div>
         )}
       </div>
+
+      {/* Mobile menu overlay */}
       {isMobile && isMobileMenuOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/50"
@@ -178,11 +179,11 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col h-full">
-              <div className="flex item-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4">
                 <h2 className="font-bold text-xl">Menu</h2>
                 <Button
                   variant="ghost"
-                  size={"icon"}
+                  size="icon"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <X className="h-5 w-5" />
@@ -191,22 +192,19 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
 
               <div className="flex-1 overflow-auto">
                 <div className="space-y-2">
-                  {/* mobile button menu */}
                   {navItems.map((item) => (
                     <Button
                       key={item.id}
-                      variant={"ghost"}
+                      variant="ghost"
                       className={cn(
-                        "w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal cursor-pointer",
+                        'w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal cursor-pointer',
                         item.id === activateItemId
-                          ? "bg-primary/10 text-primary-pink hover:bg-primary/20"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          ? 'bg-primary/10 text-primary-pink hover:bg-primary/20'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
                       )}
                       onClick={() => {
-                        if (onNavigate) {
-                          onNavigate(item.id, item.href);
-                        }
-                        setIsMobileMenuOpen(false);
+                        onNavigate?.(item.id, item.href)
+                        setIsMobileMenuOpen(false)
                       }}
                     >
                       <item.icon className="h-5 w-5" />
@@ -215,10 +213,10 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
                   ))}
                 </div>
 
-                <div className="h-px bg-gray-200 my-4"></div>
+                <div className="h-px bg-gray-200 my-4" />
 
                 <Button
-                  variant={"ghost"}
+                  variant="ghost"
                   className="w-full justify-start gap-3 px-3 py-2 text-base font-normal"
                 >
                   <settingsNavItem.icon className="h-5 w-5" />
@@ -230,7 +228,7 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
         </div>
       )}
     </>
-  );
+  )
 }
 
-export default Header;
+export default Header
