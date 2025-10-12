@@ -4,9 +4,12 @@ import type { UserProfile } from "@/types/User";
 import {
   BarChart,
   BookIcon,
+  BookOpen,
+  Heart,
   LayoutDashboard,
   Settings,
   User,
+  Users,
 } from "lucide-react";
 
 // Admin navigation items
@@ -352,3 +355,39 @@ export const profileData: UserProfile = {
   department: "Technology",
   position: "Senior Software Engineer",
 };
+
+export const donationStats = [
+  {
+    icon: BookOpen,
+    label: "Books Donated",
+    value: "2,847",
+    description: "Total books received",
+    color: "text-blue-600",
+    bgColor: "bg-blue-100",
+  },
+  {
+    icon: Users,
+    label: "Active Donors",
+    value: "456",
+    description: "Community contributors",
+    color: "text-green-600",
+    bgColor: "bg-green-100",
+  },
+  {
+    icon: Heart,
+    label: "Impact Score",
+    value: "9.2/10",
+    description: "Community satisfaction",
+    color: "text-pink-600",
+    bgColor: "bg-pink-100",
+  },
+];
+
+export const donationGuidelines = [
+  "Books should be in readable condition",
+  "Academic and educational books are highly appreciated",
+  "Fiction and non-fiction books are both welcome",
+  "Books should be complete (no missing pages)",
+  "Multiple copies of popular books are accepted",
+  "Books in multiple languages are welcome",
+];
