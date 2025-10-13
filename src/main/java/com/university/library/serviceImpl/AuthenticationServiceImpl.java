@@ -95,6 +95,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AccountResponse login(LoginRequest request) {
+        User account = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(()-> new BadRequestException("Email does not exist !"));
+
+       if(!account.getIsActive()) {
+            throw new BadRequestException("Your account is not active !");
+       }
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -102,18 +109,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             request.getPassword()
                     )
             );
-//            log.info("Login successful: {}", authentication.getPrincipal());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            User account = (User) authentication.getPrincipal();
+
             AccountResponse accountResponse = AccountResponse.fromEntity(account);
-            if(account.getRole().equals( User.AccountRole.READER)) {
-                return accountResponse;
-            }
-            else {
+
                 accountResponse.setAccessToken(tokenService.generateToken(account));
                 accountResponse.setRefreshToken(refreshTokenService.createRefreshToken(account).getToken());
                 return accountResponse;
-            }
+
 
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("Email hoặc mật khẩu không đúng.");

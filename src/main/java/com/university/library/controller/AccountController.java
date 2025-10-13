@@ -14,20 +14,20 @@ import com.university.library.service.AuthenticationService;
 import com.university.library.service.RefreshTokenService;
 
 import com.university.library.service.UserService;
-import com.university.library.serviceImpl.UserServiceImpl;
+
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
+
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+
 import org.springframework.web.bind.annotation.*;
 
 
@@ -60,9 +60,7 @@ public class AccountController {
     public ResponseEntity<StandardResponse<AccountResponse>> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
             AccountResponse account = authenticationService.login(request);
-            // Ensure session is created and user is properly authenticated
-            HttpSession session = httpRequest.getSession(true);
-            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+
             return ResponseEntity.ok(StandardResponse.success("Đăng nhập thành công", account));
         } catch (Exception e) {
             log.error("Error logging in: ", e);
@@ -97,7 +95,7 @@ public class AccountController {
     }
 
     @GetMapping("/get-info")
-    public ResponseEntity<StandardResponse<AccountResponse>> getAccountInfo(@AuthenticationPrincipal User user) {
+    public ResponseEntity<StandardResponse<AccountResponse>> getAccountInfo() {
             return ResponseEntity.ok(StandardResponse.success("Get profile user successfully",userService.getUserProfile()));
 
     }
