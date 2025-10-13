@@ -55,7 +55,7 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomOAuth2UserDetailsService customOAuth2UserDetailsService;
-
+    private final PasswordEncoder passwordEncoder;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -145,11 +145,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()
                                 .requestMatchers(HttpMethod.GET,"/api/v1/top-5-loyalty-users-by-month").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST,"/api/v1/book-copies/import-donation-book").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET,  "/api/v1/accounts/get-info").hasAnyRole("READER","ADMIN")
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
 
                 .oauth2Login(oauth -> oauth
 
@@ -182,10 +185,9 @@ public class SecurityConfig {
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(org.springframework.security.crypto.factory.PasswordEncoderFactories.createDelegatingPasswordEncoder());
+        authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
