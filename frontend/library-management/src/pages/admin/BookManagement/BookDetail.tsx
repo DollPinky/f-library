@@ -1,7 +1,8 @@
 import BookInforCard from "@/components/feature/admin/bookManagerment/bookDetail/BookInforCard";
 import BorrowHistoryTable from "@/components/feature/admin/bookManagerment/bookDetail/BorrowHistoryTable";
 import { Button } from "@/components/ui/button";
-import { getBookById, getHistoryByBookCopyId } from "@/services/bookApi";
+import { getBookByBookId } from "@/services/bookManagementService";
+import { getBorrowHistoryByBookCopyId } from "@/services/borrowBookService";
 import type { Book, BrorrowHistory } from "@/types";
 
 import { ArrowLeft } from "lucide-react";
@@ -17,48 +18,46 @@ export default function BookDetail() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchBookAndHistory = async () => {
-      if (!bookId) {
-        setError("Book ID is missing");
-        return;
-      }
-      setLoading(true);
-      try {
-        const token = localStorage.getItem("accessToken") || "";
+  const fetchBookAndHistory = async () => {
+    if (!bookId) {
+      setError("Book ID not found.");
+      return;
+    }
 
-        // Fetch book data
-        const bookData = await getBookById(bookId, token);
-        setBook(bookData);
-        console.log(bookData);
+    setLoading(true);
+    setError(null);
+    try {
+      const bookRes = await getBookByBookId(bookId);
+      setBook(bookRes.data);
 
-        if (bookData.length > 0) {
-          const firstBookCopyId = bookData.bookCopies[0].bookCopyId;
-          console.log(firstBookCopyId);
-
-          if (firstBookCopyId) {
-            const historyData = await getHistoryByBookCopyId(
-              firstBookCopyId,
-              token
+      if (bookRes.data?.bookCopies && bookRes.data.bookCopies.length > 0) {
+        const allHistory: BrorrowHistory[] = [];
+        for (const his of bookRes.data.bookCopies) {
+          try {
+            const historyRes = await getBorrowHistoryByBookCopyId(
+              his.bookCopyId
             );
-            console.log(historyData);
-
-            setHistory(historyData);
-          } else {
-            setHistory([]);
+            if (Array.isArray(historyRes.data)) {
+              allHistory.push(...historyRes.data);
+            } else if (historyRes.data) {
+              allHistory.push(historyRes.data);
+            }
+          } catch (error) {
+            console.log(error, "Error");
           }
-        } else {
-          setHistory([]);
         }
-      } catch (error) {
-        console.error("Failed to fetch book or history:", error);
-        toast.error("Failed to load book details");
-        setError("Failed to load book details");
-      } finally {
-        setLoading(false);
+        setHistory(allHistory);
+      } else {
+        setHistory([]);
       }
-    };
+    } catch (error) {
+      setError("Failed to load book details or borrow history.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchBookAndHistory();
   }, [bookId]);
 
@@ -119,7 +118,8 @@ export default function BookDetail() {
         </Button>
       </div>
 
-      <BookInforCard book={book} />
+      {/* Truyền hàm refresh xuống BookInforCard */}
+      <BookInforCard book={book} refreshBookAndHistory={fetchBookAndHistory} />
 
       <BorrowHistoryTable history={history} />
     </div>

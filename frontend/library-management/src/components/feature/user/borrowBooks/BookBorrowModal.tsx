@@ -14,43 +14,50 @@ import { toast } from "sonner";
 import type { Book } from "@/types";
 
 interface BookBorrowModalProps {
+  title: string;
   book: Book;
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (payload: { username: string; bookCopyId: string }) => void;
 }
 export default function BookBorrowModal({
+  title,
   book,
   isOpen,
   onClose,
   onConfirm,
 }: BookBorrowModalProps) {
   const [username, setUsername] = useState("");
-  const availableCopy = book?.bookCopies?.find(
-    (copy) => copy.status === "AVAILABLE"
-  );
+  const bookCopyId =
+    title === "Borrow"
+      ? book?.bookCopies?.find((copy) => copy.status === "AVAILABLE")
+          ?.bookCopyId
+      : book?.bookCopies?.find((copy) => copy.status === "BORROWED")
+          ?.bookCopyId;
+  console.log(bookCopyId);
 
-  //
-  const bookCopyId = availableCopy?.bookCopyId;
   const handleConfirm = () => {
     if (!username.trim() || !bookCopyId) return;
     onConfirm({ username, bookCopyId });
     setUsername("");
-    toast.success(`Borrow ${book.title} successfully!`);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="sm:max-w-sm"
+        className="sm:max-w-lg h-[250px] flex flex-col justify-between"
         aria-describedby="borrow-modal-desc"
       >
         <DialogHeader>
-          <DialogTitle>Borrow {book.title}</DialogTitle>
+          <DialogTitle>
+            {title} {book.title}
+          </DialogTitle>
         </DialogHeader>
-        <DialogDescription>Enter yours account FPT....</DialogDescription>
+        <DialogDescription>
+          Enter your FPT account to borrow this book.
+        </DialogDescription>
 
-        <div className="space-y-2">
+        <div className="space-y-2 flex-1 flex flex-col justify-center">
           <Label htmlFor="username">Account</Label>
           <Input
             id="username"

@@ -11,8 +11,8 @@ import { Plus } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { getAllBooks } from "@/services/bookApi";
-import { deleteBook } from "@/services/bookManagementService";
+
+import { deleteBook, getAllBooks } from "@/services/bookManagementService";
 
 export function BookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -30,16 +30,14 @@ export function BookManagement() {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const token = localStorage.getItem("accessToken") || "";
-
-        const data = await getAllBooks(token);
-        console.log("API Response:", data); // Debug log
+        const res = await getAllBooks();
+        console.log("API Response:", res); // Debug log
 
         // Handle different response structures
-        const booksArray = Array.isArray(data)
-          ? data
-          : data?.data && Array.isArray(data.data)
-          ? data.data
+        const booksArray = Array.isArray(res)
+          ? res
+          : res?.data && Array.isArray(res.data)
+          ? res.data
           : [];
 
         setBooks(booksArray);
