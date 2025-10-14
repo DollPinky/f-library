@@ -1,3 +1,4 @@
+import type { BookDonationFormData } from "@/types/Book";
 import axiosClient from "./axiosClient";
 
 export const getAllBooks = async () => {
@@ -40,5 +41,12 @@ export const borrowBookByBookCopyId = async (
       },
     }
   );
+  return res;
+};
+
+export const donateBook = async (payload: BookDonationFormData) => {
+  const res = await axiosClient.post("/book-copies/donation", {
+    payload,
+  });
   return res;
 };

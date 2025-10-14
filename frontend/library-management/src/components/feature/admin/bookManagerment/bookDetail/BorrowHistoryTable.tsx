@@ -16,8 +16,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { BrorrowHistory } from "@/types";
+import { formatDate } from "@/utils/formatDate";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface BorrowHistoryTableProps {
   history: BrorrowHistory[];
@@ -28,12 +29,19 @@ export default function BorrowHistoryTable({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const rowsPerPage = 10;
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [history]);
+
   const totalPages = Math.ceil(history.length / rowsPerPage);
   const paginatedHistory = history.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
-
+  const historyData = [...paginatedHistory].sort(
+    (a, b) =>
+      new Date(b.borrowDate).getTime() - new Date(a.borrowDate).getTime()
+  );
   const handleChangePage = (page: number) => {
     setCurrentPage(page);
   };
@@ -47,23 +55,25 @@ export default function BorrowHistoryTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[200px]">Borrower Name</TableHead>
-                <TableHead className="text-center">Borrow Date</TableHead>
-                <TableHead className="text-center">Return Date</TableHead>
+                <TableHead className="w-[200px]">Reader Account</TableHead>
+                <TableHead className="text-center">Borrow Time</TableHead>
+                <TableHead className="text-center">Return Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedHistory.length > 0 ? (
-                paginatedHistory.map((record, index) => (
+              {historyData.length > 0 ? (
+                historyData.map((record, index) => (
                   <TableRow key={index} className="hover:bg-muted/50">
                     <TableCell className="font-medium">
                       {record.username}
                     </TableCell>
                     <TableCell className="text-center">
-                      {record.borrowDate}
+                      {formatDate(record.borrowDate)}
                     </TableCell>
                     <TableCell className="text-center">
-                      {record.returnedDate ? record.returnedDate : "-"}
+                      {record.returnedDate
+                        ? formatDate(record.returnedDate)
+                        : "-"}
                     </TableCell>
                   </TableRow>
                 ))

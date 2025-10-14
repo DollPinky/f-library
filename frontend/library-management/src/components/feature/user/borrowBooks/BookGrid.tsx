@@ -54,10 +54,10 @@ export default function BookGrid({
   return (
     <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-5">
       {books.map((book) => {
-        const availableCopies = book.bookCopies.filter(
+        const availableCopies = book.bookCopies?.filter(
           (copy) => copy.status === "AVAILABLE"
         ).length;
-        const totalCopies = book.bookCopies.length;
+        const totalCopies = book.bookCopies?.length;
         const isAvailable = availableCopies > 0;
         const isLoading = loadingBooks[book.bookId] || false;
 
@@ -100,7 +100,7 @@ export default function BookGrid({
                 </p>
                 <div className="flex flex-wrap gap-1 mb-1 mt-1">
                   <Badge variant="outline" className="text-[10px]">
-                    {book.category.name}
+                    {book.category?.name}
                   </Badge>
                   <Badge variant="outline" className="text-[10px]">
                     {book.year}
