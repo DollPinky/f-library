@@ -2,13 +2,13 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, cicd ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, cicd ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
     - uses: actions/checkout@v4
@@ -34,15 +34,16 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
 
-    - name: Install Docker Compose
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y docker-compose
+    # - name: Install Docker Compose
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install -y docker compose
 
     - name: Start project infrastructure with Docker Compose
       run: |
         echo "Starting project infrastructure..."
-        docker-compose up -d postgres redis kafka zookeeper
+        docker compose down -v
+        docker compose up -d postgres redis kafka zookeeper
 
         echo "Waiting for PostgreSQL to be ready..."
         timeout 120s bash -c 'until docker exec library-postgres pg_isready -U postgres; do sleep 2; done' || echo "PostgreSQL health check timeout"
@@ -113,7 +114,13 @@ jobs:
       if: always()
       run: |
         echo "Stopping project infrastructure..."
-        docker-compose down -v
+        docker compose down -v
+
+    - name: Deploy project to server
+      if: always()
+      run: |
+        echo "Deploy project to server"
+        docker compose up -d --build
 
     - name: Build status
       run: |
@@ -122,6 +129,7 @@ jobs:
           echo "✅ Docker Compose infrastructure working"
           echo "✅ Database initialization verified"
           echo "✅ API endpoints responding"
+          echo "✅ Deploy project to server"
         else
           echo "❌ Project test failed!"
           exit 1

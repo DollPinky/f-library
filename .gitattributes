@@ -41,4 +41,6 @@
 # Docker
 Dockerfile text eol=lf
 *.dockerfile text eol=lf
-docker-compose*.yml text eol=lf 
+docker-compose*.yml text eol=lf
+
+gradlew text eol=lf

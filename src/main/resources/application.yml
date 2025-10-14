@@ -1,47 +1,78 @@
 spring:
   application:
     name: library-management
+    url: ${SPRING_BACKEND_URL}
+  # PostgreSQL Database Configuration
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/library}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
   
   # JPA Configuration
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
         use_sql_comments: true
+        jdbc:
+          time_zone: Asia/Ho_Chi_Minh
     defer-datasource-initialization: true
-  
-  # Cache Configuration
-  cache:
-    type: caffeine
-    caffeine:
-      spec: maximumSize=500,expireAfterWrite=5m
-  
-  # Kafka Configuration
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: library-group
-      auto-offset-reset: earliest
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-  
-  # Redis Configuration
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      timeout: 2000ms
-  
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - profile
+              - email
+            redirect-uri: "http://localhost:8080/login/oauth2/code/google"   # -> http://localhost:8080/login/oauth2/code/google
+        provider:
+          google:
+            issuer-uri: https://accounts.google.com
+
+#  data:
+#    redis:
+#      host: ${REDIS_HOST:localhost}
+#      port: ${REDIS_PORT:6380}
+#      password:
+#      timeout: 2000ms
+#
+#  # Cache Configuration
+#  cache:
+#    type: redis
+#    redis:
+#      time-to-live: 300000 # 5 minutes
+#      cache-null-values: false
+  
+#  # Kafka Configuration
+#  kafka:
+#    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+#    consumer:
+#      group-id: library-group
+#      auto-offset-reset: earliest
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+#      properties:
+#        spring.json.trusted.packages: "*"
+#    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 # Server Configuration
 server:
-  port: 8080
+  port: ${APP_PORT:8080}
 
 # Actuator Configuration
 management:
@@ -56,12 +87,18 @@ management:
 # Logging Configuration
 logging:
   level:
-    com.university.library: DEBUG
+    com.university.library: INFO
+    com.university.library.controller: INFO
+    com.university.library.service: INFO
     org.springframework.kafka: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    org.hibernate.type.descriptor.sql: ERROR
+    org.springframework.boot.context.config: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} | %msg%n"
 
 # OpenAPI Configuration
 springdoc:
@@ -69,4 +106,44 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
-    operations-sorter: method 
+    operations-sorter: method
+    oauth:
+      client-id: YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com
+      scopes: openid, email, profile
+    oauth2-redirect-url: http://localhost:8080/swagger-ui/oauth2-redirect.html
+
+
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent}
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+  embedding-model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-large}
+
+cohere:
+  api-key: ${COHERE_API_KEY:}
+  embedding-model: ${COHERE_EMBEDDING_MODEL:embed-multilingual-v3.0}
+  base-url: ${COHERE_BASE_URL:https://api.cohere.ai}
+
+# Application Configuration
+app:
+  public-base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
+  api-base-url: ${APP_API_BASE_URL:http://localhost:8080/api/v1}
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:5173
+
+
+jwt:
+  secret : a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90
+  expiration:
+    ms: 3600000
+  refresh:
+    expiration:
+      ms: 84600000
+
+
+

@@ -1,12 +1,9 @@
 spring:
-  profiles:
-    active: docker
-  
   # PostgreSQL Database Configuration (Docker)
   datasource:
-    url: jdbc:postgresql://localhost:5432/library
-    username: postgres
-    password: password
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -16,8 +13,8 @@ spring:
   # JPA Configuration for Docker
   jpa:
     hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -34,7 +31,7 @@ spring:
   
   # Kafka Configuration for Docker
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: library-docker-group
       auto-offset-reset: earliest
@@ -52,9 +49,9 @@ spring:
   # Redis Configuration for Docker
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: 
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
       timeout: 2000ms
       lettuce:
         pool:
@@ -78,4 +75,19 @@ logging:
 
 # Server Configuration for Docker
 server:
-  port: 8080 
+  port: ${SERVER_PORT}
+
+
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  base-url: ${GEMINI_BASE_URL}
+
+openai:
+  api-key: ${OPENAI_API_KEY}
+  base-url: ${OPENAI_BASE_URL}
+  embedding-model: ${OPENAI_EMBEDDING_MODEL}
+
+cohere:
+  api-key: ${COHERE_API_KEY}
+  embedding-model: ${COHERE_EMBEDDING_MODEL}
+  base-url: ${COHERE_BASE_URL}

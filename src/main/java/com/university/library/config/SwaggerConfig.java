@@ -1,10 +1,14 @@
 package com.university.library.config;
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,17 +20,17 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI libraryManagementOpenAPI() {
         Server localServer = new Server();
-        localServer.setUrl("http://localhost:8080");
+        String appPublicBaseUrl = "http://localhost:8080";
+        localServer.setUrl(appPublicBaseUrl);
         localServer.setDescription("Local Development Server");
 
         Server dockerServer = new Server();
-        dockerServer.setUrl("http://localhost:8080");
+        dockerServer.setUrl(appPublicBaseUrl);
         dockerServer.setDescription("Docker Development Server");
 
         Contact contact = new Contact();
         contact.setName("Library Management Team");
         contact.setEmail("support@library.edu.vn");
-        contact.setUrl("https://library.edu.vn");
 
         License license = new License()
                 .name("MIT License")
@@ -52,14 +56,21 @@ public class SwaggerConfig {
                         - Apache Kafka
                         - Docker + Docker Compose
                         
-                        ## Authentication:
-                        Hiện tại chưa có authentication. Sẽ được thêm trong phiên bản tiếp theo.
+                        
                         """)
                 .contact(contact)
                 .license(license);
 
         return new OpenAPI()
                 .info(info)
-                .servers(List.of(localServer, dockerServer));
+                .servers(List.of(localServer, dockerServer))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .components(new Components()
+                        .addSecuritySchemes("bearerAuth", new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")));
+
     }
 } 
+

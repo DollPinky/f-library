@@ -1,280 +1,269 @@
+-- =====================================================
+-- LIBRARY MANAGEMENT SYSTEM - INITIALIZATION SCRIPT
+-- =====================================================
+
+-- Drop existing tables if they exist (in reverse dependency order)
+DROP TABLE IF EXISTS borrowings CASCADE;
+DROP TABLE IF EXISTS book_copies CASCADE;
+DROP TABLE IF EXISTS books CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS accounts CASCADE;
+DROP TABLE IF EXISTS staff CASCADE;
+DROP TABLE IF EXISTS libraries CASCADE;
+DROP TABLE IF EXISTS campuses CASCADE;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS vector;
 
--- 1. campuses
+
+
+--chat_history
+CREATE TABLE chat_history (
+                              chat_history_id UUID PRIMARY KEY,
+                              prompt TEXT,
+                              response TEXT,
+                              embedding vector(1024),
+                              created_at TIMESTAMP
+);
+
+
+-- =====================================================
+-- CREATE TABLES
+-- =====================================================
+
+-- Campuses table
 CREATE TABLE campuses (
-                          campus_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                          name VARCHAR(255) NOT NULL,
-                          code VARCHAR(50) UNIQUE NOT NULL,
-                          address TEXT NOT NULL,
-                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    campus_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    address TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. libraries
+-- Libraries table
 CREATE TABLE libraries (
-                           library_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                           campus_id UUID NOT NULL REFERENCES campuses(campus_id),
-                           name VARCHAR(255) NOT NULL,
-                           code VARCHAR(50) UNIQUE NOT NULL,
-                           address TEXT NOT NULL,
-                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    library_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campus_id UUID NOT NULL REFERENCES campuses(campus_id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    address TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. staff
-CREATE TABLE staff (
-                       staff_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                       library_id UUID NOT NULL REFERENCES libraries(library_id),
-                       name VARCHAR(255) NOT NULL,
-                       email VARCHAR(255) UNIQUE NOT NULL,
-                       phone VARCHAR(50),
-                       role VARCHAR(50) NOT NULL CHECK (role IN ('ADMIN', 'LIBRARIAN', 'MANAGER')),
-                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                       is_active BOOLEAN DEFAULT TRUE
-);
-
--- 4. categories
+-- Categories table
 CREATE TABLE categories (
-                            category_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                            name VARCHAR(255) NOT NULL,
-                            description TEXT,
-                            parent_category_id UUID REFERENCES categories(category_id) -- Child categories inside category (Many to One)
+    category_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    color VARCHAR(7) NOT NULL DEFAULT '#5a735a',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 5. books
+-- Books table
 CREATE TABLE books (
-                       book_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                       title VARCHAR(255) NOT NULL,
-                       author VARCHAR(255),
-                       publisher VARCHAR(255),
-                       year INT,
-                       isbn VARCHAR(20),
-                       category_id UUID REFERENCES categories(category_id),
-                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    book_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category_id UUID REFERENCES categories(category_id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(255),
+    publisher VARCHAR(255),
+    year INTEGER,
+    isbn VARCHAR(20) UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6. book_copies -- Many to One towards book
---	 Many to Many towards library
+-- Book copies table
 CREATE TABLE book_copies (
-                             copy_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                             book_id UUID REFERENCES books(book_id),
-                             library_id UUID REFERENCES libraries(library_id),
-                             qr_code VARCHAR(255) UNIQUE,
-                             status VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'BORROWED', 'RESERVED', 'LOST', 'DAMAGED')),
-                             shelf_location VARCHAR(100),
-                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    book_copy_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campus_id UUID REFERENCES campuses(campus_id) ON DELETE CASCADE,
+    book_id UUID NOT NULL REFERENCES books(book_id) ON DELETE CASCADE,
+    library_id UUID NOT NULL REFERENCES libraries(library_id) ON DELETE CASCADE,
+    qr_code VARCHAR(255) UNIQUE,
+    status VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE', -- AVAILABLE, BORROWED, RESERVED, LOST, DAMAGED
+    shelf_location VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 7. readers
-CREATE TABLE readers (
-                         reader_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                         campus_id UUID REFERENCES campuses(campus_id),
-                         name VARCHAR(255) NOT NULL,
-                         student_id VARCHAR(50) UNIQUE,
-                         email VARCHAR(255) UNIQUE NOT NULL,
-                         phone VARCHAR(50),
-                         registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                         is_active BOOLEAN DEFAULT TRUE
+-- Accounts table (for authentication and user management)
+CREATE TABLE accounts (
+    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    full_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(20) NOT NULL,
+    department VARCHAR(255),
+    position VARCHAR(255),
+    company_account VARCHAR(50) NOT NULL UNIQUE,
+    token_version INT,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL, -- ADMIN, READER
+    campus_id UUID NOT NULL REFERENCES campuses(campus_id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 8. borrowings -- Many to One towards readers
+-- Staff table (for library staff management)
+CREATE TABLE staff (
+    staff_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    library_id UUID NOT NULL REFERENCES libraries(library_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES accounts(user_id) ON DELETE CASCADE,
+    hire_date DATE NOT NULL,
+    salary DECIMAL(10,2),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Borrowings table
 CREATE TABLE borrowings (
-                            borrow_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                            copy_id UUID REFERENCES book_copies(copy_id),
-                            reader_id UUID REFERENCES readers(reader_id),
-                            borrowed_at TIMESTAMP NOT NULL,
-                            due_date DATE NOT NULL,
-                            returned_at DATE,
-                            status VARCHAR(50) DEFAULT 'BORROWED' CHECK (status IN ('BORROWED', 'RETURNED', 'OVERDUE')),
-                            fine_amount NUMERIC(10, 2) DEFAULT 0,
-                            note TEXT
+    borrowing_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    book_copy_id UUID NOT NULL REFERENCES book_copies(book_copy_id) ON DELETE CASCADE,
+    borrower_id UUID NOT NULL REFERENCES accounts(user_id) ON DELETE CASCADE,
+    borrowed_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    due_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    returned_date TIMESTAMP WITH TIME ZONE,
+    status VARCHAR(50) NOT NULL DEFAULT 'BORROWED', -- RESERVED, BORROWED, RETURNED, OVERDUE, LOST, CANCELLED
+    fine_amount DECIMAL(10,2) DEFAULT 0.0,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- =====================================================
+-- CREATE INDEXES
+-- =====================================================
 
---- Campuses
-INSERT INTO campuses (campus_id, name, code, address, created_at) VALUES (gen_random_uuid(), 'Hà Nội', 'HN', 'Số 1 Đại Cồ Việt, Hai Bà Trưng, Hà Nội', CURRENT_TIMESTAMP);
-INSERT INTO campuses (campus_id, name, code, address, created_at) VALUES (gen_random_uuid(), 'TP. Hồ Chí Minh', 'HCM', '227 Nguyễn Văn Cừ, Q.5, TP.HCM', CURRENT_TIMESTAMP);
-INSERT INTO campuses (campus_id, name, code, address, created_at) VALUES (gen_random_uuid(), 'Đà Nẵng', 'DN', '41 Lê Duẩn, Hải Châu, Đà Nẵng', CURRENT_TIMESTAMP);
+-- Campus indexes
+CREATE INDEX idx_campuses_code ON campuses(code);
+CREATE INDEX idx_campuses_name ON campuses(name);
 
---- Libraries
-INSERT INTO libraries (library_id, campus_id, name, code, address, created_at) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HN'), 'Thư viện Hà Nội', 'LIB-HN-001', 'Số 1 Đại Cồ Việt, Hai Bà Trưng, Hà Nội', CURRENT_TIMESTAMP);
-INSERT INTO libraries (library_id, campus_id, name, code, address, created_at) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Thư viện TP. Hồ Chí Minh', 'LIB-HCM-001', '227 Nguyễn Văn Cừ, Q.5, TP.HCM', CURRENT_TIMESTAMP);
-INSERT INTO libraries (library_id, campus_id, name, code, address, created_at) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'Thư viện Đà Nẵng', 'LIB-DN-001', '41 Lê Duẩn, Hải Châu, Đà Nẵng', CURRENT_TIMESTAMP);
+-- Library indexes
+CREATE INDEX idx_libraries_campus_id ON libraries(campus_id);
+CREATE INDEX idx_libraries_code ON libraries(code);
+CREATE INDEX idx_libraries_name ON libraries(name);
 
---- Staff
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'Allison Hill', 'staff1@library.edu.vn', '218.196.0013', 'MANAGER', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'Lance Hoffman', 'staff2@library.edu.vn', '001-863-794-0265x423', 'ADMIN', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'Gabrielle Davis', 'staff3@library.edu.vn', '559-407-8161', 'ADMIN', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'Sandra Montgomery', 'staff4@library.edu.vn', '(931)034-1316x475', 'MANAGER', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'Henry Santiago', 'staff5@library.edu.vn', '001-192-832-7648x350', 'LIBRARIAN', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'Andrew Stewart', 'staff6@library.edu.vn', '139-537-6724x238', 'ADMIN', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'Nicole Patterson', 'staff7@library.edu.vn', '001-653-287-1012', 'ADMIN', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'Rebecca Henderson', 'staff8@library.edu.vn', '669-784-8018', 'ADMIN', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'Patricia Peterson', 'staff9@library.edu.vn', '627-048-2814x8932', 'MANAGER', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'Christopher Ashley', 'staff10@library.edu.vn', '095.701.5430x39117', 'ADMIN', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'Vanessa Patel', 'staff11@library.edu.vn', '(278)248-9638', 'MANAGER', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'Melissa Marquez', 'staff12@library.edu.vn', '(578)713-3150x9839', 'MANAGER', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'Benjamin Welch', 'staff13@library.edu.vn', '105.183.4738', 'MANAGER', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'Timothy Duncan', 'staff14@library.edu.vn', '376.311.6566x7010', 'ADMIN', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO staff (staff_id, library_id, name, email, phone, role, created_at, is_active) VALUES (gen_random_uuid(), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'Gerald Hensley', 'staff15@library.edu.vn', '338.726.2473', 'MANAGER', CURRENT_TIMESTAMP, TRUE);
+-- Category indexes
+CREATE INDEX idx_categories_name ON categories(name);
 
---- Categories
-INSERT INTO categories (category_id, name, description) VALUES (gen_random_uuid(), 'Khoa học máy tính', 'Mô tả cho Khoa học máy tính');
-INSERT INTO categories (category_id, name, description) VALUES (gen_random_uuid(), 'Toán học', 'Mô tả cho Toán học');
-INSERT INTO categories (category_id, name, description) VALUES (gen_random_uuid(), 'Văn học', 'Mô tả cho Văn học');
-INSERT INTO categories (category_id, name, description) VALUES (gen_random_uuid(), 'Lịch sử', 'Mô tả cho Lịch sử');
-INSERT INTO categories (category_id, name, description) VALUES (gen_random_uuid(), 'Tâm lý học', 'Mô tả cho Tâm lý học');
+-- Book indexes
+CREATE INDEX idx_books_category_id ON books(category_id);
+CREATE INDEX idx_books_title ON books(title);
+CREATE INDEX idx_books_author ON books(author);
+CREATE INDEX idx_books_isbn ON books(isbn);
 
---- Books
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Kitchen technology.', 'Amber Kidd', 'Novak and Sons', 2013, '978-1136505587', (SELECT category_id FROM categories WHERE name = 'Khoa học máy tính'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Image loss ten.', 'Carmen Smith', 'Baker-Bowers', 2006, '978-3585650756', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Expect recent room situation.', 'Katelyn Lee', 'Novak PLC', 2006, '978-2801823908', (SELECT category_id FROM categories WHERE name = 'Lịch sử'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Article finish anyone live try.', 'Amy Romero', 'Jones Inc', 2018, '978-4733616459', (SELECT category_id FROM categories WHERE name = 'Toán học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Identify walk now.', 'Amanda Miller', 'Silva, Mills and Donovan', 2022, '978-7110082321', (SELECT category_id FROM categories WHERE name = 'Văn học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Prove fire enter.', 'Matthew Bryant', 'Smith PLC', 2004, '978-8574149614', (SELECT category_id FROM categories WHERE name = 'Khoa học máy tính'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'You available defense enter value.', 'Sherry Wood', 'Kim PLC', 2002, '978-2631775357', (SELECT category_id FROM categories WHERE name = 'Văn học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Particularly would pressure.', 'Robert Evans', 'Garcia, Humphrey and Baker', 2011, '978-7887950851', (SELECT category_id FROM categories WHERE name = 'Khoa học máy tính'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Score choice.', 'Daniel Cooper', 'Walters, Baker and Freeman', 2023, '978-9256195745', (SELECT category_id FROM categories WHERE name = 'Khoa học máy tính'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Begin interest.', 'Aaron Wise', 'Whitney, Martin and Ramos', 2017, '978-1298737106', (SELECT category_id FROM categories WHERE name = 'Toán học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Night born war real.', 'Andrew Wood', 'Hernandez, Anderson and Parker', 2024, '978-5728765136', (SELECT category_id FROM categories WHERE name = 'Văn học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Together decide.', 'Brian Deleon', 'Dickson-Brady', 2014, '978-2566942273', (SELECT category_id FROM categories WHERE name = 'Văn học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Ten wish specific.', 'Allison Doyle', 'Patton-Jenkins', 2011, '978-3783290795', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Environment skin blue.', 'Shannon Walker', 'Bailey-Hoover', 2020, '978-4131575764', (SELECT category_id FROM categories WHERE name = 'Toán học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Development process huge.', 'Benjamin Ayala', 'May-Ross', 2014, '978-6924716023', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Former agree theory end oil.', 'Mrs. Linda Reed', 'Graham-Joyce', 2007, '978-8235363119', (SELECT category_id FROM categories WHERE name = 'Khoa học máy tính'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'History office.', 'Michael Smith', 'Mcdaniel, Bentley and Mclaughlin', 2007, '978-4529615275', (SELECT category_id FROM categories WHERE name = 'Văn học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Hair attorney professional.', 'Erik Charles', 'Mccullough, Hunter and Estrada', 2012, '978-2149938334', (SELECT category_id FROM categories WHERE name = 'Toán học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'I fast camera inside.', 'Megan Orr', 'Carroll, Sullivan and Bass', 2018, '978-2351531223', (SELECT category_id FROM categories WHERE name = 'Lịch sử'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Expert involve oil.', 'Julie Ramos', 'Dixon Ltd', 2012, '978-8055995058', (SELECT category_id FROM categories WHERE name = 'Toán học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Probably exist professional.', 'Anna Crane', 'Chambers and Sons', 2008, '978-1599707677', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Challenge animal worker.', 'Patricia Gibson', 'Johnston, Higgins and Cruz', 2017, '978-7805745017', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'During prevent accept seem.', 'Ashley Coleman', 'Brock Ltd', 2012, '978-2554762903', (SELECT category_id FROM categories WHERE name = 'Toán học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Let newspaper true building card.', 'Joseph Hansen', 'Dodson-Vance', 2016, '978-3119634399', (SELECT category_id FROM categories WHERE name = 'Khoa học máy tính'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Spring throughout interview trade knowledge.', 'Scott Cole', 'Larsen LLC', 2003, '978-8217611860', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Machine dream key require doctor.', 'Steven Miller', 'Hall Ltd', 2002, '978-6947530309', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Relationship ask imagine.', 'Jennifer Clark', 'Price-Carrillo', 2014, '978-7567496105', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Task she.', 'Aaron Bell', 'Castaneda-Ashley', 2000, '978-8519962896', (SELECT category_id FROM categories WHERE name = 'Văn học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Mrs same son today.', 'Don Tucker MD', 'Shelton, Powell and Martin', 2003, '978-6555540744', (SELECT category_id FROM categories WHERE name = 'Toán học'), CURRENT_TIMESTAMP);
-INSERT INTO books (book_id, title, author, publisher, year, isbn, category_id, created_at) VALUES (gen_random_uuid(), 'Try wonder move trade.', 'Mary Miller', 'Taylor-Murray', 2014, '978-8385972235', (SELECT category_id FROM categories WHERE name = 'Tâm lý học'), CURRENT_TIMESTAMP);
+-- Book copy indexes
+CREATE INDEX idx_book_copies_book_id ON book_copies(book_id);
+CREATE INDEX idx_book_copies_library_id ON book_copies(library_id);
+CREATE INDEX idx_book_copies_qr_code ON book_copies(qr_code);
+CREATE INDEX idx_book_copies_status ON book_copies(status);
 
---- Book Copies
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-1136505587'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-1-9317', 'RESERVED', 'S1R5', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-1136505587'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-1-4258', 'AVAILABLE', 'S2R6', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-3585650756'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-2-9689', 'BORROWED', 'S1R10', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-3585650756'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-2-1319', 'BORROWED', 'S1R6', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2801823908'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-3-1949', 'AVAILABLE', 'S2R10', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2801823908'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-3-8962', 'AVAILABLE', 'S1R9', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-4733616459'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-4-8787', 'BORROWED', 'S5R3', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-4733616459'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-4-7932', 'RESERVED', 'S2R9', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-7110082321'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-5-4295', 'RESERVED', 'S3R7', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-7110082321'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-5-7118', 'BORROWED', 'S4R9', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8574149614'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-6-5061', 'BORROWED', 'S2R2', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8574149614'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-6-4770', 'AVAILABLE', 'S5R4', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2631775357'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-7-1964', 'AVAILABLE', 'S2R2', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2631775357'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-7-2160', 'BORROWED', 'S5R4', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-7887950851'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-8-8953', 'AVAILABLE', 'S2R9', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-7887950851'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-8-8744', 'BORROWED', 'S2R8', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-9256195745'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-9-2545', 'BORROWED', 'S1R7', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-9256195745'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-9-7735', 'RESERVED', 'S4R1', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-1298737106'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-10-2612', 'RESERVED', 'S1R7', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-1298737106'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-10-2790', 'AVAILABLE', 'S2R4', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-5728765136'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-11-8350', 'AVAILABLE', 'S2R7', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-5728765136'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-11-8579', 'BORROWED', 'S2R2', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2566942273'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-12-2604', 'AVAILABLE', 'S1R9', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2566942273'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-12-4872', 'BORROWED', 'S2R7', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-3783290795'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-13-4502', 'AVAILABLE', 'S4R1', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-3783290795'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-13-1035', 'BORROWED', 'S4R5', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-4131575764'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-14-7930', 'AVAILABLE', 'S5R8', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-4131575764'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-14-5861', 'RESERVED', 'S2R1', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-6924716023'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-15-9883', 'AVAILABLE', 'S1R6', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-6924716023'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-15-8811', 'AVAILABLE', 'S5R9', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8235363119'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-16-9320', 'AVAILABLE', 'S1R3', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8235363119'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-16-2113', 'AVAILABLE', 'S2R7', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-4529615275'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-17-5033', 'AVAILABLE', 'S5R10', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-4529615275'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-17-2343', 'RESERVED', 'S4R10', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2149938334'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-18-6183', 'RESERVED', 'S3R4', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2149938334'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-18-6147', 'BORROWED', 'S2R5', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2351531223'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-19-5915', 'AVAILABLE', 'S4R6', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2351531223'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-19-8508', 'AVAILABLE', 'S5R10', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8055995058'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-20-9808', 'BORROWED', 'S2R9', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8055995058'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-20-6718', 'BORROWED', 'S1R4', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-1599707677'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-21-3584', 'RESERVED', 'S4R9', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-1599707677'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-21-9666', 'BORROWED', 'S1R9', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-7805745017'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-22-2697', 'AVAILABLE', 'S2R5', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-7805745017'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-22-3546', 'RESERVED', 'S3R5', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2554762903'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-23-6617', 'RESERVED', 'S2R5', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-2554762903'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-23-5114', 'RESERVED', 'S1R2', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-3119634399'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-24-5533', 'BORROWED', 'S1R1', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-3119634399'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-24-5291', 'RESERVED', 'S2R8', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8217611860'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-25-8007', 'AVAILABLE', 'S5R1', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8217611860'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-25-3442', 'BORROWED', 'S5R1', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-6947530309'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-26-3426', 'AVAILABLE', 'S4R3', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-6947530309'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-26-6974', 'AVAILABLE', 'S1R6', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-7567496105'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-27-5088', 'RESERVED', 'S1R6', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-7567496105'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-27-3532', 'AVAILABLE', 'S2R3', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8519962896'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-28-1406', 'BORROWED', 'S2R6', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8519962896'), (SELECT library_id FROM libraries WHERE code = 'LIB-DN-001'), 'QR-28-5065', 'RESERVED', 'S3R3', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-6555540744'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-29-7267', 'AVAILABLE', 'S1R8', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-6555540744'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-29-8541', 'AVAILABLE', 'S3R5', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8385972235'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'QR-30-1387', 'BORROWED', 'S2R7', CURRENT_TIMESTAMP);
-INSERT INTO book_copies (copy_id, book_id, library_id, qr_code, status, shelf_location, created_at) VALUES (gen_random_uuid(), (SELECT book_id FROM books WHERE isbn = '978-8385972235'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'QR-30-2137', 'RESERVED', 'S3R6', CURRENT_TIMESTAMP);
+-- Account indexes
+CREATE INDEX idx_accounts_email ON accounts(email);
+CREATE INDEX idx_accounts_company_account ON accounts(company_account);
+CREATE INDEX idx_accounts_campus_id ON accounts(campus_id);
+CREATE INDEX idx_accounts_role ON accounts(role);
 
---- Readers
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'James Lewis', 'SV030001', 'reader1@student.edu.vn', '564-641-7080x53100', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Christina Smith', 'SV020002', 'reader2@student.edu.vn', '(327)193-7452', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'Tracey Higgins', 'SV030003', 'reader3@student.edu.vn', '001-241-904-9663x19314', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'Lindsay Martinez', 'SV030004', 'reader4@student.edu.vn', '001-058-651-8506', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Ashley Yu', 'SV020005', 'reader5@student.edu.vn', '+1-726-284-9877x6945', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HN'), 'Sandra Miller', 'SV010006', 'reader6@student.edu.vn', '379.965.0752x735', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HN'), 'Gina Beard', 'SV010007', 'reader7@student.edu.vn', '001-480-831-3678x377', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Alan Phillips', 'SV020008', 'reader8@student.edu.vn', '(349)578-8568x5574', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HN'), 'David Griffith', 'SV010009', 'reader9@student.edu.vn', '182-337-4989x41343', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'Eric Erickson', 'SV030010', 'reader10@student.edu.vn', '(400)842-7109', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'John Peterson', 'SV020011', 'reader11@student.edu.vn', '4711671902', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HN'), 'Justin Torres', 'SV010012', 'reader12@student.edu.vn', '186.999.3867', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HN'), 'Elizabeth Chapman', 'SV010013', 'reader13@student.edu.vn', '(499)091-3341x23281', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'Jason Norris', 'SV030014', 'reader14@student.edu.vn', '403.447.1349x3618', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Chase Baker', 'SV020015', 'reader15@student.edu.vn', '(102)499-4717', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Melissa Bender', 'SV020016', 'reader16@student.edu.vn', '877.190.6594x01399', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'Yvonne Chambers', 'SV030017', 'reader17@student.edu.vn', '902-787-4296x717', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Gary Santiago', 'SV020018', 'reader18@student.edu.vn', '(567)468-0715', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Brian Barton', 'SV020019', 'reader19@student.edu.vn', '087.603.8597x70348', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'Dwayne Gilmore', 'SV030020', 'reader20@student.edu.vn', '109.324.8086x1317', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'Maria Moore', 'SV030021', 'reader21@student.edu.vn', '001-484-677-3782x639', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HN'), 'Sherry Shields', 'SV010022', 'reader22@student.edu.vn', '658-404-4997x278', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Mr. Phillip Bennett', 'SV020023', 'reader23@student.edu.vn', '339-636-0576x62702', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'Leslie Kane', 'SV030024', 'reader24@student.edu.vn', '187.026.2174x596', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HN'), 'Sarah Phelps', 'SV010025', 'reader25@student.edu.vn', '+1-657-809-1343', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Jessica Garcia', 'SV020026', 'reader26@student.edu.vn', '+1-172-400-5045x5623', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HN'), 'Kylie Sparks', 'SV010027', 'reader27@student.edu.vn', '(219)693-7923', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'DN'), 'David Scott', 'SV030028', 'reader28@student.edu.vn', '7482175946', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HCM'), 'Joyce Turner', 'SV020029', 'reader29@student.edu.vn', '(713)695-9440x6409', CURRENT_TIMESTAMP, TRUE);
-INSERT INTO readers (reader_id, campus_id, name, student_id, email, phone, registered_at, is_active) VALUES (gen_random_uuid(), (SELECT campus_id FROM campuses WHERE code = 'HN'), 'Paula Beltran', 'SV010030', 'reader30@student.edu.vn', '+1-743-953-3942x104', CURRENT_TIMESTAMP, TRUE);
+-- Staff indexes
+CREATE INDEX idx_staff_library_id ON staff(library_id);
+CREATE INDEX idx_staff_user_id ON staff(user_id);
 
---- Borrowings (This section needs careful mapping for copy_id and reader_id)
--- Note: Since the original `copy_id` and `reader_id` values were integers,
--- and they are now UUIDs, direct mapping isn't possible without a lookup table
--- or regenerating the entire dataset with proper UUID associations.
--- For demonstration, I will assume a way to look up the new UUIDs based on old logic,
--- or that you would handle this mapping in your application layer.
--- The `(SELECT copy_id FROM book_copies WHERE qr_code = 'QR-X-YYYY')` and
--- `(SELECT reader_id FROM readers WHERE student_id = 'SVXXZZZZ')` are placeholders
--- for how you might retrieve the new UUIDs based on unique identifiers from the original data.
+-- Borrowing indexes
+CREATE INDEX idx_borrowings_book_copy_id ON borrowings(book_copy_id);
+CREATE INDEX idx_borrowings_borrower_id ON borrowings(borrower_id);
+CREATE INDEX idx_borrowings_status ON borrowings(status);
+CREATE INDEX idx_borrowings_due_date ON borrowings(due_date);
 
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-17-2343'), (SELECT reader_id FROM readers WHERE student_id = 'SV010030'), '2025-07-11', '2025-07-25', '2025-07-22', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-12-4872'), (SELECT reader_id FROM readers WHERE student_id = 'SV030014'), '2025-07-02', '2025-07-16', '2025-07-09', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-22-2697'), (SELECT reader_id FROM readers WHERE student_id = 'SV010030'), '2025-06-22', '2025-07-06', NULL, 'OVERDUE', 6.61, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-22-2697'), (SELECT reader_id FROM readers WHERE student_id = 'SV030028'), '2025-07-06', '2025-07-20', '2025-07-14', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-24-5533'), (SELECT reader_id FROM readers WHERE student_id = 'SV020029'), '2025-06-30', '2025-07-14', '2025-07-14', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-17-5033'), (SELECT reader_id FROM readers WHERE student_id = 'SV030010'), '2025-07-09', '2025-07-23', NULL, 'OVERDUE', 3.94, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-23-6617'), (SELECT reader_id FROM readers WHERE student_id = 'SV030010'), '2025-06-25', '2025-07-09', '2025-07-04', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-7-1964'), (SELECT reader_id FROM readers WHERE student_id = 'SV030014'), '2025-06-24', '2025-07-08', NULL, 'OVERDUE', 7.1, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-29-8541'), (SELECT reader_id FROM readers WHERE student_id = 'SV010006'), '2025-06-29', '2025-07-13', '2025-07-13', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-13-1035'), (SELECT reader_id FROM readers WHERE student_id = 'SV020018'), '2025-06-29', '2025-07-13', '2025-07-04', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-10-2790'), (SELECT reader_id FROM readers WHERE student_id = 'SV030010'), '2025-07-10', '2025-07-24', '2025-07-21', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-14-5861'), (SELECT reader_id FROM readers WHERE student_id = 'SV020026'), '2025-07-02', '2025-07-16', NULL, 'OVERDUE', 5.18, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-15-9883'), (SELECT reader_id FROM readers WHERE student_id = 'SV010022'), '2025-06-26', '2025-07-10', '2025-07-07', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-17-5033'), (SELECT reader_id FROM readers WHERE student_id = 'SV020016'), '2025-06-26', '2025-07-10', '2025-07-06', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-22-2697'), (SELECT reader_id FROM readers WHERE student_id = 'SV030003'), '2025-06-25', '2025-07-09', '2025-07-09', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-17-5033'), (SELECT reader_id FROM readers WHERE student_id = 'SV010022'), '2025-07-11', '2025-07-25', NULL, 'OVERDUE', 1.84, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-25-8007'), (SELECT reader_id FROM readers WHERE student_id = 'SV020008'), '2025-07-05', '2025-07-19', '2025-07-19', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-8-8953'), (SELECT reader_id FROM readers WHERE student_id = 'SV020026'), '2025-06-30', '2025-07-14', '2025-07-11', 'RETURNED', 0, NULL);
-INSERT INTO borrowings (borrow_id, copy_id, reader_id, borrowed_at, due_date, returned_at, status, fine_amount, note) VALUES (gen_random_uuid(), (SELECT copy_id FROM book_copies WHERE qr_code = 'QR-5-7118'), (SELECT reader_id FROM readers WHERE student_id = 'SV030001'), '2025-07-04', '2025-07-18', '2025-07-10', 'RETURNED', 0, NULL);
+-- =====================================================
+-- INSERT SAMPLE DATA
+-- =====================================================
+
+-- Insert campuses
+INSERT INTO campuses (campus_id, name, code, address) VALUES
+('550e8400-e29b-41d4-a716-446655440001', 'Chi nhánh Hà Nội', 'HN', '123 Đường Lê Lợi, Quận Hoàn Kiếm, Hà Nội'),
+('550e8400-e29b-41d4-a716-446655440002', 'Chi nhánh TP.HCM', 'HCM', '456 Đường Nguyễn Huệ, Quận 1, TP.HCM'),
+('550e8400-e29b-41d4-a716-446655440003', 'Chi nhánh Đà Nẵng', 'DN', '789 Đường Trần Phú, Quận Hải Châu, Đà Nẵng');
+
+-- Insert libraries
+INSERT INTO libraries (library_id, campus_id, name, code, address) VALUES
+('660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'Thư viện Hà Nội - Tầng 1', 'HN_LIB_1', 'Tầng 1, Tòa A, Chi nhánh Hà Nội'),
+('660e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440001', 'Thư viện Hà Nội - Tầng 2', 'HN_LIB_2', 'Tầng 2, Tòa A, Chi nhánh Hà Nội'),
+('660e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440002', 'Thư viện TP.HCM - Tầng 1', 'HCM_LIB_1', 'Tầng 1, Tòa B, Chi nhánh TP.HCM'),
+('660e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440002', 'Thư viện TP.HCM - Tầng 2', 'HCM_LIB_2', 'Tầng 2, Tòa B, Chi nhánh TP.HCM'),
+('660e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440003', 'Thư viện Đà Nẵng', 'DN_LIB_1', 'Tầng 1, Tòa C, Chi nhánh Đà Nẵng');
+
+-- Insert categories
+INSERT INTO categories (category_id, name, description, color) VALUES
+('770e8400-e29b-41d4-a716-446655440001', 'Văn học', 'Sách văn học Việt Nam và thế giới', '#5a735a'),
+('770e8400-e29b-41d4-a716-446655440002', 'Khoa học', 'Sách khoa học tự nhiên và xã hội', '#7a907a'),
+('770e8400-e29b-41d4-a716-446655440003', 'Công nghệ', 'Sách về công nghệ thông tin và kỹ thuật', '#a3b3a3'),
+('770e8400-e29b-41d4-a716-446655440004', 'Kinh tế', 'Sách về kinh tế, tài chính và quản lý', '#c7d0c7'),
+('770e8400-e29b-41d4-a716-446655440005', 'Lịch sử', 'Sách lịch sử Việt Nam và thế giới', '#e3e7e3');
+
+-- Insert sample accounts with hashed passwords (password: 12345678)
+INSERT INTO accounts (user_id, full_name, email, phone, department, position, company_account, token_version, password_hash, role, campus_id) VALUES
+-- Admin accounts
+('880e8400-e29b-41d4-a716-446655440001', 'Nguyễn Văn Admin', 'admin@company.com', '0123456789', 'IT', 'System Administrator', 'EMP001', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'ADMIN', '550e8400-e29b-41d4-a716-446655440001'),
+-- Librarian accounts
+-- ('880e8400-e29b-41d4-a716-446655440002', 'Trần Thị Thủ thư HN', 'librarian.hn@company.com', '0123456790', 'Thư viện', 'Thủ thư', 'EMP002', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440001'),
+-- ('880e8400-e29b-41d4-a716-446655440003', 'Lê Văn Thủ thư HCM', 'librarian.hcm@company.com', '0123456791', 'Thư viện', 'Thủ thư', 'EMP003', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440002'),
+-- ('880e8400-e29b-41d4-a716-446655440004', 'Phạm Thị Thủ thư DN', 'librarian.dn@company.com', '0123456792', 'Thư viện', 'Thủ thư', 'EMP004', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'LIBRARIAN', '550e8400-e29b-41d4-a716-446655440003'),
+
+-- Reader accounts (employees)
+('880e8400-e29b-41d4-a716-446655440005', 'Hoàng Văn Nhân viên HN', 'employee.hn1@company.com', '0123456793', 'Marketing', 'Nhân viên Marketing', 'EMP005', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440006', 'Vũ Thị Nhân viên HN', 'employee.hn2@company.com', '0123456794', 'Sales', 'Nhân viên Sales', 'EMP006', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440001'),
+('880e8400-e29b-41d4-a716-446655440007', 'Đỗ Văn Nhân viên HCM', 'employee.hcm1@company.com', '0123456795', 'IT', 'Lập trình viên', 'EMP007', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
+('880e8400-e29b-41d4-a716-446655440008', 'Ngô Thị Nhân viên HCM', 'employee.hcm2@company.com', '0123456796', 'HR', 'Nhân viên HR', 'EMP008', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440002'),
+('880e8400-e29b-41d4-a716-446655440009', 'Bùi Văn Nhân viên DN', 'employee.dn1@company.com', '0123456797', 'Finance', 'Kế toán', 'EMP009', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440003'),
+('880e8400-e29b-41d4-a716-446655440010', 'Lê Văn Nhân viên DN', 'employee.dn2@company.com', '0123456798', 'Finance', 'Kế toán', 'EMP010', 1, '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'READER', '550e8400-e29b-41d4-a716-446655440003');
+
+-- Insert staff records (linking accounts to libraries)
+-- INSERT INTO staff (staff_id, library_id, user_id, hire_date, salary) VALUES
+-- ('990e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', '880e8400-e29b-41d4-a716-446655440002', '2023-01-15', 15000000),
+-- ('990e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440003', '880e8400-e29b-41d4-a716-446655440003', '2023-02-20', 15000000),
+-- ('990e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440005', '880e8400-e29b-41d4-a716-446655440004', '2023-03-10', 15000000);
+
+-- Insert sample books
+INSERT INTO books (book_id, category_id, title, author, publisher, year, isbn, description) VALUES
+('aa0e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440001', 'Truyện Kiều', 'Nguyễn Du', 'NXB Văn học', 1820, '978-604-0-00001-1', 'Tác phẩm văn học kinh điển của Việt Nam'),
+('aa0e8400-e29b-41d4-a716-446655440002', '770e8400-e29b-41d4-a716-446655440002', 'Vũ trụ trong lòng bàn tay', 'Neil deGrasse Tyson', 'NXB Khoa học', 2017, '978-604-0-00002-2', 'Khám phá vũ trụ qua góc nhìn khoa học'),
+('aa0e8400-e29b-41d4-a716-446655440003', '770e8400-e29b-41d4-a716-446655440003', 'Clean Code', 'Robert C. Martin', 'Prentice Hall', 2008, '978-604-0-00003-3', 'Hướng dẫn viết code sạch và dễ bảo trì'),
+('aa0e8400-e29b-41d4-a716-446655440004', '770e8400-e29b-41d4-a716-446655440004', 'Nghĩ giàu làm giàu', 'Napoleon Hill', 'NXB Tổng hợp', 1937, '978-604-0-00004-4', 'Sách về tư duy làm giàu'),
+('aa0e8400-e29b-41d4-a716-446655440005', '770e8400-e29b-41d4-a716-446655440005', 'Lịch sử Việt Nam', 'Trần Trọng Kim', 'NXB Văn hóa', 1920, '978-604-0-00005-5', 'Lịch sử Việt Nam từ thời cổ đại');
+-- --- Sample Accounts (Staff)
+-- INSERT INTO accounts (user_id, username, email, password_hash, full_name, phone, user_type, status, campus_id, library_id, is_deleted, created_at, updated_at) VALUES
+-- (gen_random_uuid(), 'admin1', 'admin1@library.edu.vn', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'Admin User 1', '0123456789', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HN'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- (gen_random_uuid(), 'librarian1', 'librarian1@library.edu.vn', '$2a$10$Wv2vhIXuUQta5.hk4XFIVe8UTq6JChzRZXT.mZHZBOfO72PxHq27a', 'Librarian User 1', '0123456790', 'STAFF', 'ACTIVE', (SELECT campus_id FROM campuses WHERE code = 'HCM'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+--
+-- --- Sample Staff
+-- INSERT INTO staffs (staff_id, user_id, library_id, employee_id, staff_role, department, position, is_active, can_manage_books, can_manage_users, can_manage_staff, can_view_reports, can_process_borrowings, is_deleted, created_at, updated_at) VALUES
+-- (gen_random_uuid(), (SELECT user_id FROM accounts WHERE username = 'admin1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HN-001'), 'EMP001', 'ADMIN', 'IT Department', 'System Administrator', TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- (gen_random_uuid(), (SELECT user_id FROM accounts WHERE username = 'librarian1'), (SELECT library_id FROM libraries WHERE code = 'LIB-HCM-001'), 'EMP002', 'LIBRARIAN', 'Library Department', 'Senior Librarian', TRUE, TRUE, FALSE, FALSE, TRUE, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Insert book copies with new QR code format: BK_ISBN_LIBRARYCODE_COPYNUMBER
+INSERT INTO book_copies (book_copy_id, book_id, library_id, qr_code, status, shelf_location, campus_id) VALUES
+-- HN Library copies
+('bb0e8400-e29b-41d4-a716-446655440001', 'aa0e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', 'BK_9786040000011_HN_LIB_1_001', 'AVAILABLE', 'A1-R1-S1', '550e8400-e29b-41d4-a716-446655440001'),
+('bb0e8400-e29b-41d4-a716-446655440002', 'aa0e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440001', 'BK_9786040000022_HN_LIB_1_001', 'AVAILABLE', 'A2-R1-S1', '550e8400-e29b-41d4-a716-446655440001'),
+('bb0e8400-e29b-41d4-a716-446655440003', 'aa0e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440001', 'BK_9786040000033_HN_LIB_1_001', 'AVAILABLE', 'A3-R1-S1', '550e8400-e29b-41d4-a716-446655440001'),
+
+-- HCM Library copies
+('bb0e8400-e29b-41d4-a716-446655440004', 'aa0e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440003', 'BK_9786040000011_HCM_LIB_1_001', 'AVAILABLE', 'B1-R1-S1', '550e8400-e29b-41d4-a716-446655440002'),
+('bb0e8400-e29b-41d4-a716-446655440005', 'aa0e8400-e29b-41d4-a716-446655440004', '660e8400-e29b-41d4-a716-446655440003', 'BK_9786040000044_HCM_LIB_1_001', 'AVAILABLE', 'B2-R1-S1', '550e8400-e29b-41d4-a716-446655440002'),
+('bb0e8400-e29b-41d4-a716-446655440006', 'aa0e8400-e29b-41d4-a716-446655440005', '660e8400-e29b-41d4-a716-446655440003', 'BK_9786040000055_HCM_LIB_1_001', 'AVAILABLE', 'B3-R1-S1', '550e8400-e29b-41d4-a716-446655440002'),
+
+-- DN Library copies
+('bb0e8400-e29b-41d4-a716-446655440007', 'aa0e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440005', 'BK_9786040000022_DN_LIB_1_001', 'AVAILABLE', 'C1-R1-S1', '550e8400-e29b-41d4-a716-446655440003'),
+('bb0e8400-e29b-41d4-a716-446655440008', 'aa0e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440005', 'BK_9786040000033_DN_LIB_1_001', 'AVAILABLE', 'C2-R1-S1', '550e8400-e29b-41d4-a716-446655440003');
+
+-- Insert sample borrowings
+INSERT INTO borrowings (borrowing_id, book_copy_id, borrower_id, borrowed_date, due_date, status) VALUES
+('cc0e8400-e29b-41d4-a716-446655440001', 'bb0e8400-e29b-41d4-a716-446655440001', '880e8400-e29b-41d4-a716-446655440005', '2024-01-15 09:00:00+07', '2024-02-15 09:00:00+07', 'BORROWED'),
+('cc0e8400-e29b-41d4-a716-446655440002', 'bb0e8400-e29b-41d4-a716-446655440004', '880e8400-e29b-41d4-a716-446655440007', '2024-01-10 14:30:00+07', '2024-02-10 14:30:00+07', 'BORROWED'),
+('cc0e8400-e29b-41d4-a716-446655440003', 'bb0e8400-e29b-41d4-a716-446655440007', '880e8400-e29b-41d4-a716-446655440009', '2024-01-05 11:00:00+07', '2024-02-05 11:00:00+07', 'BORROWED');
+
+-- =====================================================
+-- COMMIT TRANSACTION
+-- =====================================================
+COMMIT;

@@ -1,262 +1,292 @@
-# University Library Management System
+#  Library Management System
 
-Library management solution designed for multi-campus university environments, built with modern Java technologies and scalable architecture patterns.
+A production-ready Library Management System for managing multiple company branches.
+Built on a monolithic Spring Boot architecture, ensuring stability, performance, and easy deployment.
 
-## Architecture Overview
+## 🚀 Key Features
+### 📚 Core Functionality
+- **Comprehensive Book Management**
+  - Manage detailed book information with categories and branches  
+  - Track book conditions (available, borrowed, lost, damaged,reserved)  
+  - Generate QR/barcodes for physical copies  
+  - Handle book donation requests and approvals  
+
+- **User & Access Control**
+  - Role-based authentication (Admin, Reader)  
+  - Secure login using JWT  
+  - Profile and account self-management  
+  - Fine-grained permission for administrative actions  
+
+- **Loan & Circulation**
+  - Borrow and return management with due date tracking  
+  - Automatic fine calculation for late or lost books  
+  - Real-time book availability status  
+  - Loan history tracking across multiple branches  
+
+- **Feedback & Interaction**
+  - Comment and review system for readers  
+  - Rating and feedback on borrowed or donated books  
+
+- **Reporting & Analytics**
+  - Generate reports for loans, donations, and user activities  
+  - Track fines, lost books, and borrowing statistics by branch  
+ 
+## 🏗️ System Architecture
 
 ### Technology Stack
-- **Runtime Environment:** Java 21 with Spring Boot 3.2.0
-- **Data Persistence:** PostgreSQL 15 (production), H2 (development)
-- **Caching Strategy:** Multi-tier caching with Caffeine (L1) and Redis (L2)
-- **Event Processing:** Apache Kafka for asynchronous event handling
-- **Build System:** Gradle 8.5+ with aggressive caching and parallel execution
-- **Continuous Integration:** GitHub Actions with automated testing pipeline
-- **Containerization:** Docker and Docker Compose for development environment
 
-### Data Model
-- **campuses:** University campus entities with geographical distribution
-- **libraries:** Library facilities associated with each campus
-- **staff:** Library personnel with role-based access control (ADMIN, LIBRARIAN, MANAGER)
-- **categories:** Hierarchical book classification system
-- **books:** Bibliographic information at ISBN level
-- **book_copies:** Physical inventory management for individual book instances
-- **readers:** Patron management for students and faculty
-- **borrowings:** Transactional data for book lending and returns
+#### Backend
+- **Core Framework:** Spring Boot 3.2.0 (Java 21)
+- **Persistence:** 
+  - JPA/Hibernate 6.2
+  - QueryDSL for type-safe queries
+  - Flyway for database migrations
+- **Caching:** 
+  - Caffeine (L1 cache)
+  - Redis (L2 cache)
+  - Spring Cache abstraction
+- **Messaging:**
+  - Apache Kafka for event streaming
+  - Spring Cloud Stream
+- **Security:**
+  - Spring Security 6.1
+  - JWT authentication
+  - OAuth 2.0 integration
+- **API Documentation:**
+  - SpringDoc OpenAPI 3.0
+  - Swagger UI
+- **Monitoring:**
+  - Spring Boot Actuator
+  - Micrometer + Prometheus
+  - Distributed tracing with OpenTelemetry
 
-## Development Environment Setup
+#### Frontend
+- **Framework:** React 18 + Vite  
+- **Routing:** React Router DOM  
+- **HTTP Client:** Axios  
+- **Chart:** Chart.js / Recharts  
+
+#### Infrastructure
+- **Containerization:** Docker + Docker Compose
+- **CI/CD:** GitHub Actions
+- **Monitoring:** Grafana, Prometheus
+
+### Cấu Trúc Thư Mục
+```
+Library-Management/
+├── src/main/
+│   ├── java/com/university/library/
+│   │   ├── base/                # Base classes and utilities
+│   │   ├── config/              # Spring configurations
+│   │   ├── constants/           # Application constants
+│   │   ├── controller/          # REST API endpoints
+│   │   ├── dto/                 # Data Transfer Objects
+│   │   │   ├── request/         # API request DTOs
+│   │   │   ├── response/        # API response DTOs
+│   │   ├── entity/              # JPA entities
+│   │   ├── initnizer/           # Initialize default data 
+│   │   ├── OAuth/               # Handles OAuth2 authentication and token management
+│   │   ├── scheduler/           # Manages scheduled background tasks using Spring Scheduler
+│   │   ├── exception/           # Custom exceptions
+│   │   ├── mapper/              # Object mapping (MapStruct)
+│   │   ├── repository/          # Data access layer
+│   │   └── service/             # Defines service interfaces for business logic
+│   │   └── serviceimpl/         # Service implementations
+│   │   └── specification/       # Contains JPA Specifications for dynamic query building.
+│   │   └── utils/               # Common utility/helper classes used across the project.
+│   └── resources/               # Centralized configuration file 
+|
+frontend/
+└── library-management/
+    ├── src/
+    │   ├── assets/       # Static assets (images, fonts, icons, etc.)
+    │   ├── components/   # Reusable UI components
+    │   ├── contexts/     # React Context API providers (global state)
+    │   ├── data/         # Mock data or local JSON for testing
+    │   ├── hooks/        # Custom React hooks (e.g., useFetch, useAuth)
+    │   ├── lib/          # Helper libraries, constants, and configuration files
+    │   ├── pages/        # Page components mapped to routes
+    │   ├── routes/       # Application routing definitions
+    │   ├── services/     # API request handlers (Axios, Fetch)
+    │   ├── types/        # TypeScript type definitions and interfaces
+    │   └── utils/        # Utility functions and helper modules
+
+```
+## 🚀 Quick Start
 
 ### Prerequisites
-- Java Development Kit 21 or higher
-- Docker Desktop with Docker Compose
-- Git version control system
 
-### Initial Setup
+#### Development Environment
+- **Java Development Kit (JDK) 21**
+  - [JDK 21](https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe (sha256))
+#### Containerization
+- **Docker Desktop** (v24.0+)
+  - [Download for Windows/Mac](https://www.docker.com/products/docker-desktop/)
+  - Minimum 4GB RAM allocated to Docker
+
+#### Frontend Development
+- **Node.js** (v18+ LTS)
+  - [Official Installer](https://nodejs.org/)
+  - nvm (Node Version Manager) recommended
+
+#### Recommended IDEs
+- **Backend**: IntelliJ IDEA Ultimate, VS Code with Java extensions
+- **Frontend**: VS Code, WebStorm
+- **Database**: DBeaver, TablePlus
+
+## 🏃‍♂️ Running the Application
+
+### 1. Infrastructure Setup
+
+#### Using Docker Compose (Recommended)
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd Library-Management
-
-# Initialize the project
-gradlew.bat wrapper
-```
-
-### Infrastructure Services
-```bash
-# Start required services (PostgreSQL, Redis, Kafka, Zookeeper)
+# Start all services
 docker-compose up -d
 
-# Verify service status
+# Verify all containers are running
 docker-compose ps
-```
 
-### Application Build and Execution
-```bash
-# Build the application
-gradlew.bat build
-
-# Run with development profile
-gradlew.bat bootRun --args='--spring.profiles.active=docker'
-```
-
-### Service Endpoints
-- **Application Server:** http://localhost:8080
-- **REST API Base:** http://localhost:8080/api
-- **API Documentation:** http://localhost:8080/swagger-ui.html
-- **Health Monitoring:** http://localhost:8080/api/health
-- **Kafka Management:** http://localhost:8081
-- **Redis Management:** http://localhost:8082
-
-## Data Management
-
-### Sample Dataset
-The system includes comprehensive sample data in `library_sample_data(1).sql`:
-- **3 University Campuses:** Hanoi, Ho Chi Minh City, Da Nang
-- **3 Library Facilities:** One library per campus
-- **15 Library Staff:** Various roles across campuses
-- **5 Book Categories:** Academic classification system
-- **30 Book Titles:** Diverse academic literature
-- **60 Book Copies:** Physical inventory distribution
-- **30 Registered Readers:** Students and faculty members
-- **40 Borrowing Transactions:** Historical lending data
-
-### Database Configuration
-- **Development:** H2 in-memory database for rapid iteration
-- **Production:** PostgreSQL with connection pooling and optimization
-
-## Configuration Management
-
-### Environment Profiles
-- **docker:** PostgreSQL + Redis + Kafka (containerized development)
-- **prod:** Production-optimized configuration with managed services
-
-### Production Environment Variables
-```bash
-# Database Configuration
-JDBC_DATABASE_URL=jdbc:postgresql://host:port/database
-JDBC_DATABASE_USERNAME=username
-JDBC_DATABASE_PASSWORD=password
-
-# Cache Configuration
-REDIS_URL=redis-host
-REDIS_PORT=6379
-REDIS_PASSWORD=redis-password
-
-# Message Queue Configuration
-KAFKA_URL=kafka-broker-url
-
-# Application Configuration
-PORT=8080
-```
-
-## Continuous Integration Pipeline
-
-### GitHub Actions Workflow
-- **Trigger Events:** Push to main/develop branches and pull requests
-- **Build Environment:** Ubuntu latest with JDK 21
-- **Service Integration:** PostgreSQL, Redis, and Kafka containers
-- **Testing Framework:** Comprehensive unit and integration tests
-
-### Performance Optimizations
-- **Gradle Caching:** Local and remote build cache
-- **Parallel Execution:** Multi-threaded build and test execution
-- **Configuration Cache:** Incremental build optimization
-- **Dependency Management:** Efficient artifact resolution
-
-### Quality Assurance
-- **Automated Testing:** PostgreSQL, Redis, and Kafka integration tests
-- **Build Performance:** Optimized caching for faster builds
-- **Environment Isolation:** Dedicated test environments
-- **Artifact Management:** Test reports and coverage analysis
-
-## Monitoring and Observability
-
-### Health Monitoring
-- **Application Health:** `/actuator/health` - Comprehensive system status
-- **Application Information:** `/actuator/info` - Version and configuration details
-- **Performance Metrics:** `/actuator/metrics` - Runtime performance indicators
-- **Prometheus Integration:** `/actuator/prometheus` - Time-series metrics export
-
-### Logging Strategy
-- **Development:** Console-based logging with DEBUG level for detailed troubleshooting
-- **Production:** Structured logging with rotation and centralized aggregation
-
-## System Capabilities
-
-### Core Functionality
-- **Multi-Campus Management:** Centralized administration across university branches
-- **Inventory Control:** Comprehensive book and copy management system
-- **Circulation Management:** Automated borrowing and return processing
-- **Role-Based Access:** Granular permission system for staff members
-- **Asset Tracking:** QR code-based physical inventory tracking
-- **Financial Management:** Automated fine calculation and processing
-
-### Enterprise Architecture
-- **Multi-Tier Caching:** Caffeine (L1) and Redis (L2) for optimal performance
-- **Event-Driven Processing:** Kafka-based asynchronous event handling
-- **Database Optimization:** Strategic indexing and query optimization
-- **Connection Management:** Efficient connection pooling and resource utilization
-- **System Monitoring:** Comprehensive health checks and performance metrics
-- **API Documentation:** Interactive OpenAPI documentation with Swagger UI
-
-### Roadmap Features
-- **Reservation System:** Advanced book reservation and hold management
-- **Communication Platform:** Automated email and SMS notifications
-- **Mobile Application:** Cross-platform mobile interface for patrons
-- **Analytics Dashboard:** Business intelligence and reporting capabilities
-- **System Integration:** LMS and SIS integration for seamless data flow
-
-## Containerized Development Environment
-
-### Service Orchestration
-```bash
-# Start all infrastructure services
-docker-compose up -d
-
-# Monitor service logs
+# View logs
 docker-compose logs -f
 
-# Graceful shutdown
+# Stop services
 docker-compose down
 ```
 
-### Infrastructure Components
-- **PostgreSQL 15:** Primary relational database with advanced features
-- **Redis 7:** High-performance in-memory data structure store
-- **Apache Kafka 7.4:** Distributed streaming platform for event processing
-- **Apache Zookeeper:** Distributed coordination service for Kafka
-- **Kafka UI:** Web-based management interface for Kafka clusters
-- **Redis Commander:** Web-based Redis database management tool
+#### Manual Setup (Alternative)
+1. **Database**: Install and configure PostgreSQL 15
+2. **Cache**: Set up Redis server
+3. **Message Broker**: Configure Apache Kafka with Zookeeper
 
-## API Reference
+### 2. Backend Application
 
-### Interactive Documentation
-- **Swagger UI:** http://localhost:8080/swagger-ui.html - Interactive API explorer
-- **OpenAPI Specification:** http://localhost:8080/api-docs - Machine-readable API definition
-
-### Core API Endpoints
-- `GET /api/health` - System health status verification
-- `GET /api/health/ping` - Basic connectivity test
-- `GET /api/health/info` - Application metadata and version information
-- `GET /api/books` - Retrieve paginated book catalog
-- `GET /api/books/{id}` - Fetch detailed book information
-- `POST /api/borrowings` - Create new book borrowing transaction
-- `PUT /api/borrowings/{id}/return` - Process book return operation
-- `GET /api/readers/{id}/borrowings` - Retrieve patron borrowing history
-
-## Security Framework
-
-### Current Security Measures
-- **Input Validation:** Comprehensive request parameter validation
-- **Data Sanitization:** Protection against malicious input injection
-- **SQL Injection Prevention:** JPA/Hibernate parameterized queries
-- **CORS Configuration:** Cross-origin resource sharing policies
-
-### Planned Security Enhancements
-- **Authentication System:** Spring Security with JWT token-based authentication
-- **Authorization Framework:** Role-based access control (RBAC) implementation
-- **API Protection:** Rate limiting and request throttling mechanisms
-- **Audit Logging:** Comprehensive security event tracking and monitoring
-
-## Deployment Strategy
-
-### Cloud Platform Deployment
+#### Development Mode
 ```bash
-# Heroku deployment configuration (currently disabled)
-# deploy:
-#   provider: heroku
-#   api_key: $HEROKU_API_KEY
-#   app: university-library
+# Build and run with development profile
+./gradlew bootRun --args='--spring.profiles.active=dev'
+
+# Run tests with coverage report
+./gradlew test jacocoTestReport
+
+```
+### 3. Frontend Application
+
+#### Development
+```bash
+cd frontend/library-management
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Run tests
+npm test
+
 ```
 
-### Production Deployment
-```bash
-# Build production artifact
-gradlew.bat build
+### 4. Access the System
 
-# Execute with production configuration
-java -Dspring.profiles.active=prod -jar build/libs/library-management-*.jar
+#### Development Environment
+- **Frontend Application**: http://localhost:5173
+- **Backend API**: http://localhost:8080
+- **API Documentation**: http://localhost:8080/api-docs
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+
+#### Admin Credentials
+- **Username**: admin@company.com
+- **Password**: admin123
+### Docker Compose Configuration
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: library-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - library-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: library-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - library-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: library-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - library-network
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: library-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: -1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:${KAFKA_HOST_PORT}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - library-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
+
+networks:
+  library-network:
+    driver: bridge
+
 ```
-
-## Development Guidelines
-
-### Contribution Process
-1. **Repository Fork:** Create a personal fork of the main repository
-2. **Feature Branch:** Develop new features in dedicated branches
-3. **Code Review:** Submit pull requests for peer review
-4. **Quality Assurance:** Ensure all tests pass before merging
-5. **Documentation:** Update relevant documentation for new features
-
-## Licensing
-
-This project is licensed under the MIT License, providing maximum flexibility for academic and commercial use.
-
-## Support and Maintenance
-
-For technical support and inquiries:
-- **Issue Tracking:** Create detailed issues in the project repository
-- **Development Team:** Contact the core development team for urgent matters
-- **Documentation:** Refer to comprehensive project documentation
-
----
-
-**Developed for Academic Excellence in Library Management**

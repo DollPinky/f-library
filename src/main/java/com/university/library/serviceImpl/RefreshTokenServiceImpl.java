@@ -1,0 +1,75 @@
+package com.university.library.serviceImpl;
+
+
+import com.university.library.dto.request.refreshToken.RefreshTokenRequest;
+import com.university.library.dto.response.refreshToken.RefreshTokenResponse;
+import com.university.library.entity.RefreshToken;
+import com.university.library.entity.User;
+import com.university.library.exception.exceptions.NotFoundException;
+import com.university.library.exception.exceptions.TokenRefreshException;
+import com.university.library.repository.RefreshTokenRepository;
+import com.university.library.service.RefreshTokenService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.token.TokenService;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class RefreshTokenServiceImpl implements RefreshTokenService {
+    @Value("${jwt.refresh.expiration.ms}")
+    private Long refreshTokenDurationMs;
+
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenServiceImpl tokenService;
+
+
+    public Optional<RefreshToken> findByToken(String token) {
+        return refreshTokenRepository.findByToken(token);
+    }
+
+    @Override
+    public RefreshToken createRefreshToken(User user) {
+        // Delete any existing refresh token for this account
+        refreshTokenRepository.findByUser(user).ifPresent(refreshTokenRepository::delete);
+
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUser(user);
+        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
+        refreshToken.setToken(UUID.randomUUID().toString());
+
+        refreshToken = refreshTokenRepository.save(refreshToken);
+        return refreshToken;
+    }
+
+    @Override
+    public RefreshTokenResponse refreshAccessToken(RefreshTokenRequest request) {
+        RefreshToken rf = refreshTokenRepository.findByToken(request.getRefreshToken()).orElseGet(()->{
+            throw  new TokenRefreshException(request.getRefreshToken()," not found");
+        });
+
+        verifyExpiration(rf);
+        User user = rf.getUser();
+        if(user == null) {
+            throw  new NotFoundException("User not found");
+        }
+
+        return RefreshTokenResponse.builder().accessToken(tokenService.generateToken(user)).build();
+    }
+
+
+    public RefreshToken verifyExpiration(RefreshToken token) {
+        if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
+            refreshTokenRepository.delete(token);
+            throw new TokenRefreshException(
+                    token.getToken(), "Refresh token was expired. Please make a new login request");
+        }
+        return token;
+    }
+
+}
+

@@ -5,6 +5,7 @@ build/
 !gradle/wrapper/gradle-wrapper.properties
 !**/src/main/**/build/
 !**/src/test/**/build/
+*.bin
 
 # IntelliJ IDEA
 .idea/
@@ -206,7 +207,7 @@ application-test.yml
 docker-compose.override.yml
 
 # Environment variables
-.env
+.env.example
 .env.local
 .env.development.local
 .env.test.local
@@ -347,3 +348,8 @@ test-data/
 # CI/CD artifacts
 .ci/
 .cache/
+
+build/
+.gradle/
+gradle/
+/.gradle/

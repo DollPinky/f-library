@@ -1,148 +1,111 @@
-package com.university.library.domain;
+package com.university.library.entity;
 
+import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "borrowings")
-public class Borrowing {
-    
+@Data
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Borrowing extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "borrow_id")
-    private UUID borrowId;
-    
+    @Column(name = "borrowing_id")
+    private UUID borrowingId;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "copy_id")
+    @JoinColumn(name = "book_copy_id", nullable = false)
     private BookCopy bookCopy;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reader_id")
-    private Reader reader;
-    
-    @Column(name = "borrowed_at", nullable = false)
-    private LocalDateTime borrowedAt;
-    
+    @JoinColumn(name = "borrower_id", nullable = false)
+    private User borrower;
+
+    @Column(name = "borrowed_date", nullable = false)
+    private LocalDateTime borrowedDate;
+
     @Column(name = "due_date", nullable = false)
-    private LocalDate dueDate;
-    
-    @Column(name = "returned_at")
-    private LocalDate returnedAt;
-    
+    private LocalDateTime dueDate;
+
+    @Column(name = "returned_date")
+    private LocalDateTime returnedDate;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
-    private BorrowingStatus status;
-    
-    @Column(name = "fine_amount", precision = 10, scale = 2)
-    private BigDecimal fineAmount;
-    
-    @Column(name = "note", columnDefinition = "TEXT")
-    private String note;
-    
+    private BorrowingStatus status = BorrowingStatus.BORROWED;
+
+    @Column(name = "fine_amount")
+    private Double fineAmount = 0.0;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
     public enum BorrowingStatus {
-        BORROWED, RETURNED, OVERDUE
+        BORROWED,           // Đang mượn
+        RETURNED,           // Đã trả
+        OVERDUE,            // Quá hạn
+        LOST,               // Mất sách
     }
-    
-    public Borrowing() {
-        this.borrowedAt = LocalDateTime.now();
-        this.status = BorrowingStatus.BORROWED;
-        this.fineAmount = BigDecimal.ZERO;
+
+    /**
+     * Kiểm tra xem có quá hạn không
+     */
+    public boolean isOverdue() {
+        if (status == BorrowingStatus.RETURNED || status == BorrowingStatus.OVERDUE) {
+            // Đã trả rồi thì kiểm tra ngày trả
+            return returnedDate != null && returnedDate.isAfter(dueDate);
+        } else if (status == BorrowingStatus.BORROWED) {
+            // Đang mượn thì kiểm tra hiện tại
+            return LocalDateTime.now().isAfter(dueDate);
+        }
+        return false;
     }
-    
-    public Borrowing(BookCopy bookCopy, Reader reader, LocalDate dueDate) {
-        this();
-        this.bookCopy = bookCopy;
-        this.reader = reader;
-        this.dueDate = dueDate;
+
+    /**
+     * Tính số ngày quá hạn
+     */
+    public long getOverdueDays() {
+        if (!isOverdue()) {
+            return 0;
+        }
+
+        LocalDateTime compareDate;
+        if (returnedDate != null) {
+            // Đã trả: tính từ ngày trả
+            compareDate = returnedDate;
+        } else {
+            // Chưa trả: tính đến hiện tại
+            compareDate = LocalDateTime.now();
+        }
+
+        return ChronoUnit.DAYS.between(dueDate, compareDate);
     }
-    
-    public UUID getBorrowId() {
-        return borrowId;
+
+    /**
+     * Tính phí phạt (ví dụ: 10,000 VND/ngày)
+     */
+    public double calculateFine() {
+        long overdueDays = getOverdueDays();
+        if (overdueDays <= 0) {
+            return 0.0;
+        }
+
+        final double DAILY_FINE = 10000.0; // 10,000 VND per day
+        final long MAX_FINE_DAYS = 30; // Tối đa tính phí 30 ngày
+
+        long chargingDays = Math.min(overdueDays, MAX_FINE_DAYS);
+        return chargingDays * DAILY_FINE;
     }
-    
-    public void setBorrowId(UUID borrowId) {
-        this.borrowId = borrowId;
-    }
-    
-    public BookCopy getBookCopy() {
-        return bookCopy;
-    }
-    
-    public void setBookCopy(BookCopy bookCopy) {
-        this.bookCopy = bookCopy;
-    }
-    
-    public Reader getReader() {
-        return reader;
-    }
-    
-    public void setReader(Reader reader) {
-        this.reader = reader;
-    }
-    
-    public LocalDateTime getBorrowedAt() {
-        return borrowedAt;
-    }
-    
-    public void setBorrowedAt(LocalDateTime borrowedAt) {
-        this.borrowedAt = borrowedAt;
-    }
-    
-    public LocalDate getDueDate() {
-        return dueDate;
-    }
-    
-    public void setDueDate(LocalDate dueDate) {
-        this.dueDate = dueDate;
-    }
-    
-    public LocalDate getReturnedAt() {
-        return returnedAt;
-    }
-    
-    public void setReturnedAt(LocalDate returnedAt) {
-        this.returnedAt = returnedAt;
-    }
-    
-    public BorrowingStatus getStatus() {
-        return status;
-    }
-    
-    public void setStatus(BorrowingStatus status) {
-        this.status = status;
-    }
-    
-    public BigDecimal getFineAmount() {
-        return fineAmount;
-    }
-    
-    public void setFineAmount(BigDecimal fineAmount) {
-        this.fineAmount = fineAmount;
-    }
-    
-    public String getNote() {
-        return note;
-    }
-    
-    public void setNote(String note) {
-        this.note = note;
-    }
-    
-    @Override
-    public String toString() {
-        return "Borrowing{" +
-                "borrowId=" + borrowId +
-                ", bookCopy=" + (bookCopy != null ? bookCopy.getQrCode() : "null") +
-                ", reader=" + (reader != null ? reader.getName() : "null") +
-                ", borrowedAt=" + borrowedAt +
-                ", dueDate=" + dueDate +
-                ", returnedAt=" + returnedAt +
-                ", status=" + status +
-                ", fineAmount=" + fineAmount +
-                ", note='" + note + '\'' +
-                '}';
-    }
+
 } 
+
