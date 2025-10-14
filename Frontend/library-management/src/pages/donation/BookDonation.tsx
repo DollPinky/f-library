@@ -8,9 +8,34 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { donationGuidelines, donationStats } from "@/data/mockData";
+import { getAllCategories } from "@/services/categoryService";
+import type { Category } from "@/types";
 import { CheckCircle, Heart } from "lucide-react";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 const BookDonation = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    return () => {
+      const getCategories = async () => {
+        try {
+          const response = await getAllCategories();
+          if (response.success && response.data) {
+            setCategories(response.data);
+          }
+        } catch (err) {
+          toast.error("Something when wrong!");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      getCategories();
+    };
+  }, []);
+
   return (
     <div className="space-y-6 m-6">
       <div className="flex flex-col space-y-2">
@@ -56,7 +81,7 @@ const BookDonation = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <BookDonationForm />
+          <BookDonationForm categories={categories} />
         </div>
 
         <div className="space-y-6">

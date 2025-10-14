@@ -75,6 +75,13 @@ export const userNavItems: NavItem[] = [
     current: true,
   },
   {
+    id: "donate-book",
+    label: "Book Donation",
+    icon: User,
+    href: "/user/donate-book",
+    current: true,
+  },
+  {
     id: "my-profile",
     label: "My Profile",
     icon: User,
@@ -390,4 +397,11 @@ export const donationGuidelines = [
   "Books should be complete (no missing pages)",
   "Multiple copies of popular books are accepted",
   "Books in multiple languages are welcome",
+];
+
+export const campusCodes = [
+  { code: "HN001", name: "Hanoi Main Campus" },
+  { code: "HCM001", name: "Ho Chi Minh Campus" },
+  { code: "DN001", name: "Da Nang Campus" },
+  { code: "CT001", name: "Can Tho Campus" },
 ];
