@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Pagination,
@@ -15,96 +16,172 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { BrorrowHistory } from "@/types";
+import BookReturnModal from "@/components/feature/user/borrowBooks/BookReturnModal"; // Import modal có sẵn
+import type { BorrowHistoryPage, BrorrowHistory } from "@/types";
 import { formatDate } from "@/utils/formatDate";
-
+import {
+  returnedBookByBookCopyId,
+  getBorrowHistoryByBookCopyId,
+} from "@/services/borrowBookService";
+import { toast } from "sonner";
 import { useEffect, useState } from "react";
 
 interface BorrowHistoryTableProps {
-  history: BrorrowHistory[];
+  bookCopyId: string;
+  refreshBookAndHistory: () => void;
 }
+
 export default function BorrowHistoryTable({
-  history,
+  bookCopyId,
+  refreshBookAndHistory,
 }: BorrowHistoryTableProps) {
+  const [historyPage, setHistoryPage] = useState<BorrowHistoryPage | null>(
+    null
+  );
   const [currentPage, setCurrentPage] = useState<number>(1);
   const rowsPerPage = 10;
 
+  // State cho modal
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<BrorrowHistory | null>(
+    null
+  );
+
+  const fetchHistory = async (page = 1, size = rowsPerPage) => {
+    if (!bookCopyId) {
+      setHistoryPage(null);
+      return;
+    }
+    try {
+      const res = await getBorrowHistoryByBookCopyId(bookCopyId, page, size);
+      const pageData = res?.data;
+      setHistoryPage(pageData);
+    } catch (error) {
+      console.log(error, "Lỗi");
+      toast.error("Failed to load borrow history");
+    }
+  };
+
   useEffect(() => {
     setCurrentPage(1);
-  }, [history]);
+  }, [bookCopyId]);
 
-  const totalPages = Math.ceil(history.length / rowsPerPage);
-  const paginatedHistory = history.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
-  const historyData = [...paginatedHistory].sort(
-    (a, b) =>
-      new Date(b.borrowDate).getTime() - new Date(a.borrowDate).getTime()
-  );
+  useEffect(() => {
+    fetchHistory(currentPage, rowsPerPage);
+  }, [bookCopyId, currentPage]);
+
   const handleChangePage = (page: number) => {
     setCurrentPage(page);
   };
+
+  const handleReturnBook = (record: BrorrowHistory) => {
+    setSelectedRecord(record);
+
+    setIsReturnModalOpen(true);
+  };
+
+  const handleConfirmReturn = async ({
+    username,
+    bookCopyId,
+  }: {
+    username: string;
+    bookCopyId: string;
+  }) => {
+    try {
+      await returnedBookByBookCopyId(bookCopyId);
+      console.log(bookCopyId);
+
+      toast.success("Returned successfully!");
+      setIsReturnModalOpen(false);
+      refreshBookAndHistory();
+      fetchHistory(currentPage, rowsPerPage);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Return failed!");
+    }
+  };
+
+  const historyData = historyPage?.content ?? [];
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Borrow History</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px]">Reader Account</TableHead>
-                <TableHead className="text-center">Borrow Time</TableHead>
-                <TableHead className="text-center">Return Time</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {historyData.length > 0 ? (
-                historyData.map((record, index) => (
-                  <TableRow key={index} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      {record.username}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {formatDate(record.borrowDate)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {record.returnedDate
-                        ? formatDate(record.returnedDate)
-                        : "-"}
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Borrow History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[200px]">Reader Account</TableHead>
+                  <TableHead className="text-center">Borrow Time</TableHead>
+                  <TableHead className="text-center">Return Time</TableHead>
+                  <TableHead className="text-end">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {historyData.length > 0 ? (
+                  historyData.map((record, index) => (
+                    <TableRow
+                      key={record.bookCopyId + "-" + index}
+                      className="hover:bg-muted/50"
+                    >
+                      <TableCell className="font-medium">
+                        {record.username}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {formatDate(record.borrowDate)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {record.returnedDate
+                          ? formatDate(record.returnedDate)
+                          : "-"}
+                      </TableCell>
+                      <TableCell className="text-end">
+                        {!record.returnedDate && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleReturnBook(record)}
+                          >
+                            Return Book
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-6">
+                      There is no borrowing history.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-6">
-                    There is no borrowing history.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        {totalPages > 1 && (
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  className={
-                    currentPage === 1
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                  onClick={() =>
-                    currentPage > 1 && setCurrentPage(Math.max(currentPage - 1))
-                  }
-                />
-              </PaginationItem>
-              <PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Phân trang giữ nguyên */}
+          {historyPage && (historyPage.totalPages ?? 0) > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    className={
+                      currentPage === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                    onClick={() =>
+                      currentPage > 1 && setCurrentPage(currentPage - 1)
+                    }
+                  />
+                </PaginationItem>
+
+                <PaginationItem>
+                  {Array.from(
+                    { length: historyPage.totalPages },
+                    (_, i) => i + 1
+                  ).map((page) => (
                     <PaginationLink
                       isActive={currentPage === page}
                       key={page}
@@ -112,27 +189,37 @@ export default function BorrowHistoryTable({
                     >
                       {page}
                     </PaginationLink>
-                  )
-                )}
-              </PaginationItem>
+                  ))}
+                </PaginationItem>
 
-              <PaginationItem>
-                <PaginationNext
-                  className={
-                    currentPage === totalPages
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                  onClick={() =>
-                    currentPage < totalPages &&
-                    setCurrentPage(Math.min(currentPage + 1))
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
-      </CardContent>
-    </Card>
+                <PaginationItem>
+                  <PaginationNext
+                    className={
+                      currentPage >= historyPage.totalPages
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                    onClick={() =>
+                      currentPage < historyPage.totalPages &&
+                      setCurrentPage(currentPage + 1)
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Sử dụng BookReturnModal có sẵn */}
+      {selectedRecord && (
+        <BookReturnModal
+          isOpen={isReturnModalOpen}
+          onClose={() => setIsReturnModalOpen(false)}
+          onConfirm={handleConfirmReturn}
+          bookCopyId={selectedRecord.bookCopyId}
+        />
+      )}
+    </>
   );
 }

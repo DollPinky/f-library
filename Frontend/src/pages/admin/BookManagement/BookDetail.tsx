@@ -8,7 +8,6 @@ import type { Book, BrorrowHistory } from "@/types";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
 
 export default function BookDetail() {
   const { bookId } = useParams<{ bookId: string }>();
@@ -118,10 +117,12 @@ export default function BookDetail() {
         </Button>
       </div>
 
-      {/* Truyền hàm refresh xuống BookInforCard */}
       <BookInforCard book={book} refreshBookAndHistory={fetchBookAndHistory} />
 
-      <BorrowHistoryTable history={history} />
+      <BorrowHistoryTable
+        bookCopyId={book.bookCopies?.[0]?.bookCopyId || ""}
+        refreshBookAndHistory={fetchBookAndHistory}
+      />
     </div>
   );
 }

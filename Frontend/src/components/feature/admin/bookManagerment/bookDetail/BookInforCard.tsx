@@ -2,19 +2,16 @@ import BookBorrowModal from "@/components/feature/user/borrowBooks/BookBorrowMod
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  borrowBookByBookCopyId,
-  returnedBookByBookCopyId,
-} from "@/services/borrowBookService";
+import { borrowBookByBookCopyId } from "@/services/borrowBookService";
 import type { Book } from "@/types";
 import type { TitleModalBook } from "@/types/Book";
-import { Plus, RotateCcw } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 interface BookInfoCardProps {
   book: Book;
-  refreshBookAndHistory: () => void;
+  refreshBookAndHistory?: () => void;
 }
 
 export default function BookInforCard({
@@ -24,6 +21,9 @@ export default function BookInforCard({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState<TitleModalBook>("Borrow");
   const [currentBook, setCurrentBook] = useState<Book>(book);
+  const [selectedBookCopyId, setSelectedBookCopyId] = useState<string | null>(
+    null
+  );
 
   const hasCopies =
     Array.isArray(currentBook.bookCopies) && currentBook.bookCopies.length > 0;
@@ -37,7 +37,10 @@ export default function BookInforCard({
         .length
     : 0;
 
-  const status = hasCopies ? currentBook.bookCopies[0].status : "Unknown";
+  let status = "Unknown";
+  if (availableCopies > 0) status = "AVAILABLE";
+  else if (borrowedCopies > 0) status = "BORROWED";
+  else if (hasCopies) status = currentBook?.bookCopies[0].status;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -57,60 +60,66 @@ export default function BookInforCard({
   };
 
   const handleBorrow = () => {
-    setModalTitle("Borrow");
-    setIsModalOpen(true);
-  };
+    const availableCopy = currentBook.bookCopies?.find(
+      (copy) => copy.status === "AVAILABLE"
+    );
 
-  const handleReturn = () => {
-    setModalTitle("Return");
-    setIsModalOpen(true);
+    if (availableCopy) {
+      setSelectedBookCopyId(availableCopy.bookCopyId);
+      console.log(availableCopy.bookCopyId);
+
+      setModalTitle("Borrow");
+      setIsModalOpen(true);
+    } else {
+      toast.error("No available copies to borrow");
+    }
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setSelectedBookCopyId(null);
   };
 
   const handleConfirm = async ({
+    username,
     bookCopyId,
   }: {
     username: string;
     bookCopyId: string;
   }) => {
     try {
-      if (modalTitle === "Borrow") {
-        await borrowBookByBookCopyId(bookCopyId);
-        toast.success("Borrowed successfully!");
+      const copyToUpdate = currentBook.bookCopies?.find(
+        (copy) => copy.bookCopyId === bookCopyId && copy.status === "AVAILABLE"
+      );
 
-        setCurrentBook((prev) => ({
-          ...prev,
-          bookCopies: prev.bookCopies?.map((copy) =>
-            copy.bookCopyId === bookCopyId
-              ? { ...copy, status: "BORROWED" }
-              : copy
-          ),
-        }));
-      } else {
-        await returnedBookByBookCopyId(bookCopyId);
-        // toast.success("Returned successfully!");
-
-        setCurrentBook((prev) => ({
-          ...prev,
-          bookCopies: prev.bookCopies?.map((copy) =>
-            copy.bookCopyId === bookCopyId
-              ? { ...copy, status: "AVAILABLE" }
-              : copy
-          ),
-        }));
+      if (!copyToUpdate) {
+        toast.error("This copy is no longer available");
+        setIsModalOpen(false);
+        return;
       }
+
+      await borrowBookByBookCopyId(bookCopyId);
+      toast.success("Borrowed successfully!");
+
+      setCurrentBook((prev) => ({
+        ...prev,
+        bookCopies: prev.bookCopies?.map((copy) =>
+          copy.bookCopyId === bookCopyId
+            ? { ...copy, status: "BORROWED" }
+            : copy
+        ),
+      }));
+
       setIsModalOpen(false);
-      refreshBookAndHistory();
+
+      if (refreshBookAndHistory) {
+        refreshBookAndHistory();
+      }
     } catch (error: any) {
       console.error("Error:", error);
       toast.error(
         error.response?.data?.message ||
-          `Failed to ${
-            modalTitle === "Borrow" ? "borrow" : "return"
-          } the book. Please try again.`
+          `Failed to borrow the book. Please try again.`
       );
     }
   };
@@ -130,15 +139,6 @@ export default function BookInforCard({
             >
               <Plus className="h-4 w-4" />
               Borrow Book
-            </Button>
-            <Button
-              onClick={handleReturn}
-              className="flex items-center gap-2"
-              variant="secondary"
-              disabled={borrowedCopies === 0}
-            >
-              <RotateCcw className="h-4 w-4" />
-              Return Book
             </Button>
           </div>
         </div>
@@ -200,6 +200,7 @@ export default function BookInforCard({
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onConfirm={handleConfirm}
+        bookCopyId={selectedBookCopyId} // Truyền bookCopyId được chọn vào modal
       />
     </Card>
   );
