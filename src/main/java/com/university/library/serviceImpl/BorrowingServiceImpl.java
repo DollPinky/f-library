@@ -1,16 +1,19 @@
 package com.university.library.serviceImpl;
 
 import com.university.library.base.PagedResponse;
+import com.university.library.dto.request.loyalty.LoyaltyRequest;
 import com.university.library.dto.response.borrowing.BorrowingHistoryResponse;
 import com.university.library.dto.response.borrowing.BorrowingResponse;
 import com.university.library.dto.response.borrowing.BorrowingStateResponse;
 import com.university.library.entity.BookCopy;
 import com.university.library.entity.Borrowing;
+import com.university.library.entity.LoyaltyHistory;
 import com.university.library.entity.User;
 import com.university.library.repository.BookCopyRepository;
 import com.university.library.repository.BorrowingRepository;
 import com.university.library.repository.UserRepository;
 import com.university.library.service.BorrowingService;
+import com.university.library.service.LoyaltyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,6 +39,7 @@ public class BorrowingServiceImpl implements BorrowingService {
     private final BorrowingRepository borrowingRepository;
     private final BookCopyRepository bookCopyRepository;
     private final UserRepository userRepository;
+    private final LoyaltyService loyaltyService;
 
     /**
      * Borrowing Query
@@ -180,6 +184,15 @@ public class BorrowingServiceImpl implements BorrowingService {
         // Cập nhật trạng thái sách thành BORROWED
         bookCopy.setStatus(BookCopy.BookStatus.BORROWED);
         bookCopyRepository.save(bookCopy);
+        LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
+                .bookCopyId(bookCopy.getBookCopyId())
+                .loyaltyAction(LoyaltyHistory.LoyaltyAction.BORROWED)
+                .userId(borrower.getUserId())
+                .build();
+        log.info("Info{} ",loyaltyRequest);
+        loyaltyService.updateLoyaltyPoint(loyaltyRequest);
+
+
 
         return BorrowingResponse.fromEntity(savedBorrowing);
     }
@@ -214,8 +227,22 @@ public class BorrowingServiceImpl implements BorrowingService {
 
         if (returnDate.isAfter(borrowing.getDueDate())) {
             borrowing.setStatus(Borrowing.BorrowingStatus.OVERDUE);
+
+            LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
+                    .bookCopyId(bookCopy.getBookCopyId())
+                    .loyaltyAction(LoyaltyHistory.LoyaltyAction.OVERDUE)
+                    .userId(borrowing.getBorrower().getUserId())
+                    .build();
+            loyaltyService.updateLoyaltyPoint(loyaltyRequest);
         } else {
             borrowing.setStatus(Borrowing.BorrowingStatus.RETURNED);
+
+            LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
+                    .bookCopyId(bookCopy.getBookCopyId())
+                    .loyaltyAction(LoyaltyHistory.LoyaltyAction.RETURNED)
+                    .userId(borrowing.getBorrower().getUserId())
+                    .build();
+            loyaltyService.updateLoyaltyPoint(loyaltyRequest);
         }
 
         borrowing.setReturnedDate(returnDate);
@@ -266,6 +293,13 @@ public class BorrowingServiceImpl implements BorrowingService {
 
         Borrowing savedBorrowing = borrowingRepository.save(borrowing);
 
+        LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
+                .bookCopyId(bookCopy.getBookCopyId())
+                .loyaltyAction(LoyaltyHistory.LoyaltyAction.LOST)
+                .userId(borrowing.getBorrower().getUserId())
+                .build();
+        loyaltyService.updateLoyaltyPoint(loyaltyRequest);
+
         log.info("Successfully reported lost book for borrowing: {} with fine: {}",
                 borrowing.getBorrowingId(), fine);
         return BorrowingResponse.fromEntity(savedBorrowing);
@@ -283,6 +317,7 @@ public class BorrowingServiceImpl implements BorrowingService {
     /**
      * Lấy lịch sử sách do ai mượn
      */
+
     @Override
     public PagedResponse<BorrowingHistoryResponse> findBorrowingByBookCopy_BookCopyId(int page, int size, UUID bookCopyId) {
         Sort sort = Sort.by("borrowedDate").descending();

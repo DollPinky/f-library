@@ -19,21 +19,19 @@ import java.util.List;
 public class APIHandle {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<StandardResponse<?>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         List<String> errorMessages = new ArrayList<>();
 
         ex.getBindingResult()
                 .getFieldErrors()
                 .forEach(error -> errorMessages.add(error.getField() + ": " + error.getDefaultMessage()));
 
-        return ResponseEntity.badRequest()
-                .body(
-                        HttpStatus.BAD_REQUEST.value()
-                );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(StandardResponse.error(errorMessages));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity handleConstraintViolation(ConstraintViolationException ex) {
+    public ResponseEntity<StandardResponse<?>> handleConstraintViolation(ConstraintViolationException ex) {
         List<String> errorMessages = new ArrayList<>();
 
         ex.getConstraintViolations().forEach(violation -> {
@@ -42,89 +40,77 @@ public class APIHandle {
         });
 
 
-        return ResponseEntity.badRequest()
-                .body(HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(StandardResponse.error(errorMessages));
     }
 
     @ExceptionHandler(SQLIntegrityConstraintViolationException.class)
-    public ResponseEntity handleDuplicate(SQLIntegrityConstraintViolationException exception) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(HttpStatus.BAD_REQUEST.value())
-                        ;
+    public ResponseEntity<StandardResponse<?>> handleDuplicate(SQLIntegrityConstraintViolationException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(StandardResponse.error(exception.getMessage()));
     }
 
     @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity handleNullPointer(NullPointerException exception) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(
-                        HttpStatus.BAD_REQUEST.value()
-                        );
+    public  ResponseEntity<StandardResponse<?>> handleNullPointer(NullPointerException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(StandardResponse.error(exception.getMessage()));
     }
 
     @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity handleUnauthorizedException(UnauthorizedException exception) {
+    public ResponseEntity<StandardResponse<?>> handleUnauthorizedException(UnauthorizedException exception) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(HttpStatus.UNAUTHORIZED.value()
-                        );
+                .body(StandardResponse.error(HttpStatus.UNAUTHORIZED.value()));
     }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity handleRuntimeExceptionException(RuntimeException exception) {
-        StandardResponse response = StandardResponse.error(exception.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(
-                        response);
+    public ResponseEntity<StandardResponse<?>> handleRuntimeExceptionException(RuntimeException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(StandardResponse.error(exception.getMessage()));
     }
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity handleNotFoundException(NotFoundException exception) {
-        StandardResponse response = StandardResponse.error(exception.getMessage());
+    public ResponseEntity<StandardResponse<?>> handleNotFoundException(NotFoundException exception) {
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(
-                       response);
+                .body(StandardResponse.error(exception.getMessage()));
 
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ResponseEntity handleConflictException(ConflictException exception) {
+    public ResponseEntity<StandardResponse<?>> handleConflictException(ConflictException exception) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(HttpStatus.CONFLICT.value())
-                       ;
+                .body(StandardResponse.error(exception.getMessage()));
     }
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity handleBadRequestException(BadRequestException exception) {
+    public ResponseEntity<StandardResponse<?>>  handleBadRequestException(BadRequestException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(HttpStatus.BAD_REQUEST.value());
+                .body(StandardResponse.error(exception.getMessage()));
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity handleForbiddenException(ForbiddenException exception) {
+    public ResponseEntity<StandardResponse<?>> handleForbiddenException(ForbiddenException exception) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(HttpStatus.FORBIDDEN.value());
+                .body(StandardResponse.error(exception.getMessage()));
     }
 
     @ExceptionHandler(TokenRefreshException.class)
-    public ResponseEntity handleTokenRefreshException(TokenRefreshException exception) {
+    public ResponseEntity<StandardResponse<?>> handleTokenRefreshException(TokenRefreshException exception) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(HttpStatus.FORBIDDEN.value());
+                .body(StandardResponse.error(exception.getMessage()));
     }
 
     @ExceptionHandler(InternalServerErrorException.class)
-    public ResponseEntity handleTokenRefreshException(InternalServerErrorException exception) {
+    public ResponseEntity<StandardResponse<?>> handleTokenRefreshException(InternalServerErrorException exception) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                .body(StandardResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value()));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity handleResourceNotFoundException(ResourceNotFoundException exception) {
+    public ResponseEntity<StandardResponse<?>> handleResourceNotFoundException(ResourceNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(HttpStatus.NOT_FOUND.value());
+                .body(StandardResponse.error(exception.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity handleIllegalArgumentException(IllegalArgumentException exception) {
+    public ResponseEntity<StandardResponse<?>> handleIllegalArgumentException(IllegalArgumentException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(HttpStatus.BAD_REQUEST.value());
+                .body(StandardResponse.error(exception.getMessage()));
     }
 }

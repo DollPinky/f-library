@@ -73,6 +73,8 @@ public class User extends BaseEntity implements org.springframework.security.cor
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL,fetch = FetchType.LAZY, orphanRemoval = true)
     private List<LoyaltyHistory> loyaltyHistories = new ArrayList<>();
 
+    @OneToMany(mappedBy = "donor", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<BookDonation> bookDonations = new ArrayList<>();
 
     public enum AccountRole {
         ADMIN,

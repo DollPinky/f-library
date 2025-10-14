@@ -1,12 +1,13 @@
 package com.university.library.serviceImpl;
 
 import com.university.library.base.PagedResponse;
-import com.university.library.constants.BookConstants;
+
 import com.university.library.constants.BookCopyConstants;
 import com.university.library.dto.request.bookCopy.BookCopySearchParams;
 import com.university.library.dto.request.bookCopy.BookDonationRequest;
 import com.university.library.dto.request.bookCopy.CreateBookCopyCommand;
 import com.university.library.dto.request.bookCopy.CreateBookCopyFromBookCommand;
+import com.university.library.dto.request.loyalty.LoyaltyRequest;
 import com.university.library.dto.response.bookCopy.BookCopyResponse;
 import com.university.library.entity.*;
 import com.university.library.exception.exceptions.NotFoundException;
@@ -400,16 +401,18 @@ public class BookCopyServiceImpl implements BookCopyService {
                 .bookCopy(saveBc)
                 .donor(user)
                 .donationAt(LocalDateTime.now())
+                .donationPoint(10)
                 .build();
         bookDonationService.save(bookDonation);
         log.info("Create book donation successfully");
 
         if (user != null) {
-            loyaltyService.updateLoyaltyPoint(
-                    saveBc.getBookCopyId(),
-                    LoyaltyHistory.LoyaltyAction.DONATE_BOOK,
-                    user.getUserId()
-            );
+            LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
+                    .bookCopyId(saveBc.getBookCopyId())
+                    .loyaltyAction(LoyaltyHistory.LoyaltyAction.DONATE_BOOK)
+                    .userId(user.getUserId())
+                    .build();
+            loyaltyService.updateLoyaltyPoint(loyaltyRequest);
             log.info("Loyalty point updated successfully");
         } else {
             log.info("Loyalty point not updated user not found in system");
@@ -495,16 +498,17 @@ public class BookCopyServiceImpl implements BookCopyService {
                         .bookCopy(bookCopy)
                         .donor(user)
                         .donationAt(LocalDateTime.now())
+                        .donationPoint(10)
                         .build();
 
-                bookDonationService.save(bookDonation);
+                bookDonation =  bookDonationService.save(bookDonation);
                 log.info("Create book donation successfully");
-                bookDonationService.save(bookDonation);
-                loyaltyService.updateLoyaltyPoint(
-                        bookCopy.getBookCopyId(),
-                        LoyaltyHistory.LoyaltyAction.DONATE_BOOK,
-                        user.getUserId()
-                );
+                LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
+                        .bookCopyId(bookCopy.getBookCopyId())
+                        .loyaltyAction(LoyaltyHistory.LoyaltyAction.DONATE_BOOK)
+                        .userId(user.getUserId())
+                        .build();
+                loyaltyService.updateLoyaltyPoint(loyaltyRequest);
                 log.info("Loyalty point updated successfully");
             } else {
                 log.info("Loyalty point not updated user not found in system");

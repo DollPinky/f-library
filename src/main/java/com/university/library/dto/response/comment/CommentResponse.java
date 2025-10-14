@@ -4,6 +4,8 @@ import com.university.library.entity.*;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -17,6 +19,7 @@ public class CommentResponse {
     private CategoryResponse   categoryResponse;
     private UserResponse   userResponse;
     private CampusResponse   campusResponse;
+    private LocalDate createdAt;
 
 
 
@@ -30,6 +33,7 @@ public class CommentResponse {
                 .campusResponse(CampusResponse.fromEntity(comment.getUser().getCampus()))
                 .userResponse(UserResponse.fromEntity(comment.getUser()))
                 .categoryResponse(CategoryResponse.fromEntity(comment.getBook().getCategory()))
+                .createdAt(LocalDate.from(comment.getCreatedAt()))
                 .build();
     }
 @Data
