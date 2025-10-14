@@ -4,11 +4,12 @@ import com.university.library.dto.response.account.AccountResponse;
 import com.university.library.entity.User;
 import com.university.library.repository.UserRepository;
 import com.university.library.service.UserService;
-import com.university.library.utils.AuthUtils;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.stereotype.Service;
 
 
@@ -21,14 +22,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public AccountResponse getUserProfile() {
-        UserDetails currentUser = AuthUtils.getCurrentUser();
-        if (currentUser == null) {
-            throw new RuntimeException("User Not Found At getCurrentUserProfile()");
-        }
-        String  email = currentUser.getUsername();
-
+        var context = SecurityContextHolder.getContext();
+        String email = context.getAuthentication().getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("UserEmail Not Found At getCurrentUserProfile()" + currentUser.getUsername()));
+                .orElseThrow(() -> new RuntimeException("UserEmail Not Found At getCurrentUserProfile()" + email));
 
         return AccountResponse.fromEntity(user);
 

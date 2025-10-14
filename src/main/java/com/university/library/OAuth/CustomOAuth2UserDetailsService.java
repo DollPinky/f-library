@@ -2,7 +2,7 @@ package com.university.library.OAuth;
 
 import com.university.library.entity.User;
 import com.university.library.exception.exceptions.AccountDisabledException;
-import com.university.library.repository.CampusRepository;
+
 import com.university.library.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

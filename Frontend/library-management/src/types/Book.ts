@@ -21,3 +21,4 @@ export interface BookDonationFormData {
   category: string;
   description: string;
 }
+export type TitleModalBook = "Borrow" | "Return";
