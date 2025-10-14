@@ -13,9 +13,9 @@ public class LoyaltyHistoryLogScheduler {
     private LoyaltyService loyaltyService;
 
 
-    @Scheduled(cron = "0 0 0 * * *")
-    public void cleanOldLogs() {
-        loyaltyService.deleteOldLoyaltyHistories();
-        log.info("Old loyalty history logs cleaned up.");
-    }
+//    @Scheduled(cron = "0 0 0 * * *")
+//    public void cleanOldLogs() {
+//        loyaltyService.deleteOldLoyaltyHistories();
+//        log.info("Old loyalty history logs cleaned up.");
+//    }
 }

@@ -147,6 +147,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,"/api/v1/book-copies/import-donation-book").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET,  "/api/v1/accounts/get-info").hasAnyRole("READER","ADMIN")
+                        .requestMatchers(HttpMethod.GET,  "/api/v1/book-donation-history/{accountId}").hasAnyRole("READER","ADMIN")
+
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
 
                         .anyRequest().authenticated()
