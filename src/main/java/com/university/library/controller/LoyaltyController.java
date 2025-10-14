@@ -27,7 +27,7 @@ public class LoyaltyController {
 
     @PostMapping("/loyalty-point/update")
     public ResponseEntity<StandardResponse<LoyaltyHistoryResponse>> addLoyaltyPoint(@Valid @RequestBody LoyaltyRequest request) {
-        LoyaltyHistoryResponse user=loyaltyService.updateLoyaltyPoint(request.getBookCopyId(),request.getLoyaltyAction(),request.getUserId());
+        LoyaltyHistoryResponse user=loyaltyService.updateLoyaltyPoint(request);
 
         return  ResponseEntity.ok(StandardResponse.success("Update point for user successfully",user));
     }

@@ -264,11 +264,11 @@ public class BookCopyController {
         return ResponseEntity.ok(StandardResponse.success(bookCopyService.bookDonation(request)));
     }
 
-    @PostMapping("/import-donation-book")
+    @PostMapping(value="/import-donation-book",consumes = "multipart/form-data")
     public ResponseEntity<StandardResponse<List<BookCopyResponse>>> importDonationBook(
-          @RequestParam  MultipartFile file) throws IOException {
+          @RequestParam("file")  MultipartFile file) throws IOException {
 
-        return ResponseEntity.ok(StandardResponse.success("Imported books successfully with "+ bookCopyService.importBookDonation(file).size()+" books"
+        return ResponseEntity.ok(StandardResponse.success("Imported books successfully"
                 ,bookCopyService.importBookDonation(file)));
     }
 

@@ -1,12 +1,15 @@
 package com.university.library.serviceImpl;
 
-import com.university.library.dto.response.account.AccountResponse;
+
+import com.university.library.dto.request.loyalty.LoyaltyRequest;
 import com.university.library.dto.response.loyalty.LoyaltyHistoryResponse;
 import com.university.library.dto.response.loyalty.LoyaltyTopResponse;
+import com.university.library.entity.Book;
 import com.university.library.entity.BookCopy;
 import com.university.library.entity.LoyaltyHistory;
 import com.university.library.entity.User;
 import com.university.library.repository.BookCopyRepository;
+import com.university.library.repository.BookRepository;
 import com.university.library.repository.LoyaltyHistoryRepository;
 import com.university.library.repository.UserRepository;
 import com.university.library.service.LoyaltyService;
@@ -15,8 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.UUID;
 @Slf4j
@@ -26,50 +28,64 @@ public class LoyaltyServiceImpl implements LoyaltyService {
     private final UserRepository userRepository;
     private final LoyaltyHistoryRepository loyaltyHistoryRepository;
     private final BookCopyRepository bookCopyRepository;
-
+   private final BookRepository bookRepository;
     @Override
     @Transactional
-    public LoyaltyHistoryResponse updateLoyaltyPoint(UUID bookCopyId, LoyaltyHistory.LoyaltyAction action, UUID userId) {
+    public LoyaltyHistoryResponse updateLoyaltyPoint(LoyaltyRequest request) {
         int points;
         String note;
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
 
-        BookCopy bookCopy = bookCopyRepository.findByBookCopyId(bookCopyId);
-        if (bookCopy == null) {
-            throw new RuntimeException("Book Copy not found with id: " + bookCopyId);
+        Book book = null;
+        if(request.getBookId() != null) {
+            book = bookRepository.findById(request.getBookId()).orElse(null);
         }
-        log.info("Updating loyalty for user: {} , action: {}", user.getUsername(), action);
-        switch (action) {
+        BookCopy bookCopy = bookCopyRepository.findByBookCopyId(request.getBookCopyId());
+        String title = null;
+        if (bookCopy != null && bookCopy.getBook() != null) {
+            title = bookCopy.getBook().getTitle();
+        } else if (book != null) {
+            title = book.getTitle();
+        } else if(bookCopy != null ){
+            title = bookCopy.getBook().getTitle();
+        }
+        else {
+            throw new RuntimeException("Book Copy or Book not found with id: "
+                    + request.getBookCopyId() + " , " + request.getBookId());
+        }
+        log.info("Updating loyalty for user: {} , action: {}", user.getUsername(), request.getLoyaltyAction());
+
+        switch (request.getLoyaltyAction()) {
             case BORROWED :
                 points = 5;
-                note = user.getFullName() + " borrowed a book: " + bookCopy.getBook().getTitle();
+                note = user.getFullName() + " borrowed a book: " + title;
                break;
             case RETURNED :
                 points = 10;
-                note =  user.getFullName() + " returned on time a book: " + bookCopy.getBook().getTitle();
+                note =  user.getFullName() + " returned on time a book: " + title;
                 break;
             case OVERDUE :
                 points = -5;
-                note =  user.getFullName() + " had an overdue book: " + bookCopy.getBook().getTitle();
+                note =  user.getFullName() + " had an overdue book: " + title;
                 break;
             case LOST  :
                 points = -10;
-                note =  user.getFullName() + " lost a book: " + bookCopy.getBook().getTitle();
+                note =  user.getFullName() + " lost a book: " +title;
                 break;
             case COMMENT_REVIEW  :
                 points = 2;
-                note =  user.getFullName() + " commented/reviewed a book: " + bookCopy.getBook().getTitle();
+                note =  user.getFullName() + " commented/reviewed a book: " +title;
                 break;
             case DONATE_BOOK:
                 points = 10;
-                note =  user.getFullName() + " donated a book: " + bookCopy.getBook().getTitle();
+                note =  user.getFullName() + " donated a book: " + title;
                 break;
             default:
-                throw new IllegalArgumentException("Invalid loyalty action: " + action);
+                throw new IllegalArgumentException("Invalid loyalty action: " + request.getLoyaltyAction());
         }
 
-        LoyaltyHistory history = createLoyaltyHistory(user, action, points, note);
+        LoyaltyHistory history = createLoyaltyHistory(user, request.getLoyaltyAction(), points, note);
         updateUserPoints(user, points);
 
         log.info("User {}  has {} points", user.getUsername(), user.getTotalLoyaltyPoints());
@@ -93,14 +109,15 @@ public class LoyaltyServiceImpl implements LoyaltyService {
         userRepository.save(user);
     }
 
-
-    @Override
-    @Transactional
-    public void deleteOldLoyaltyHistories() {
-        LocalDateTime sixMonths = LocalDateTime.now().minusMonths(6);
-        int deletedLoyaltyHistory= loyaltyHistoryRepository.deleteByCreatedAtBefore(sixMonths);
-        log.info("Deleted loyalty history for user with quantity: {}", deletedLoyaltyHistory);
-    }
+// service cho viết xóa log 6 tháng 1 lần xóa toàn bộ log về điểm
+//
+//    @Override
+//    @Transactional
+//    public void deleteOldLoyaltyHistories() {
+//        LocalDateTime sixMonths = LocalDateTime.now().minusMonths(6);
+//        int deletedLoyaltyHistory= loyaltyHistoryRepository.deleteByCreatedAtBefore(sixMonths);
+//        log.info("Deleted loyalty history for user with quantity: {}", deletedLoyaltyHistory);
+//    }
 
     @Override
     public List<LoyaltyTopResponse> getTop5LoyaltyUsersByMonth(int month, int year) {

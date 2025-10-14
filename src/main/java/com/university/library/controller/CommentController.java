@@ -4,14 +4,15 @@ import com.university.library.base.StandardResponse;
 import com.university.library.constants.CommentConstants;
 import com.university.library.dto.request.comment.CommentCreateRequest;
 import com.university.library.dto.request.comment.CommentUpdateRequest;
-import com.university.library.dto.response.borrowing.BorrowingStateResponse;
+
 import com.university.library.dto.response.comment.AvgRatingStarResponse;
-import com.university.library.entity.Comment;
+
 import com.university.library.entity.User;
-import com.university.library.repository.CommentRepository;
+
 import com.university.library.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/comments")
 @RequiredArgsConstructor
@@ -41,6 +43,7 @@ public class CommentController {
     public ResponseEntity<StandardResponse> createComment(
            @Valid @RequestBody CommentCreateRequest request,@AuthenticationPrincipal User user
     ){
+        log.info("Nhân sách {}",request.getBookId());
         return ResponseEntity.ok(
                 StandardResponse.
                         success(

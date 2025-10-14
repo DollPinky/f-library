@@ -12,4 +12,13 @@ export interface DonatedBook {
   campus: string;
   points: number;
 }
+
+export interface BookDonationFormData {
+  username: string;
+  title: string;
+  campusCode: string;
+  shelfLocation: string;
+  category: string;
+  description: string;
+}
 export type TitleModalBook = "Borrow" | "Return";

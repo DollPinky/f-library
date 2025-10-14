@@ -37,4 +37,7 @@ public class BookDonation{
     @Column(name = "donation_at")
     private LocalDateTime donationAt;
 
+    @Column(name="donation_point")
+    private  Integer donationPoint;
+
 }
