@@ -51,7 +51,7 @@ public class SecurityConfig {
     private final RefreshTokenRepository refreshTokenRepository;
     @Value("${app.cors.allowed-origins:*}")
     private String corsAllowedOrigins;
-    private final CookieJwtAuthFilter cookieJwtAuthFilter;
+//    private final CookieJwtAuthFilter cookieJwtAuthFilter;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomOAuth2UserDetailsService customOAuth2UserDetailsService;
@@ -148,6 +148,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET,  "/api/v1/accounts/get-info").hasAnyRole("READER","ADMIN")
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
+                        .requestMatchers("/favicon.ico", "/error").permitAll()
 
                         .anyRequest().authenticated()
                 )
@@ -175,7 +176,7 @@ public class SecurityConfig {
                         })
                 )
                 .authenticationProvider(authenticationProvider());
-        http.addFilterBefore(cookieJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+//        http.addFilterBefore(cookieJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

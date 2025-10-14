@@ -26,20 +26,58 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    // === NEW: bắt token từ OAuth fragment (#access_token=...) và lưu vào localStorage ===
+    try {
+      const hash = window.location.hash
+      if (hash && hash.startsWith('#')) {
+        const params = new URLSearchParams(hash.slice(1))
+        const at = params.get('access_token')
+        const rt = params.get('refresh_token')
+        const fullName = params.get('fullName')
+        const email = params.get('email')
+
+        if (at) {
+          localStorage.setItem('accessToken', at)
+          if (rt) localStorage.setItem('refreshToken', rt)
+
+          // (tuỳ chọn) dựng user tạm để UI có gì hiển thị
+          if (fullName || email) {
+            const stubUser = {
+              accountId: '',
+              fullName: fullName || '',
+              email: email || '',
+              phone: '',
+              department: '',
+              position: '',
+              companyAccount: '',
+              role: 'READER',
+              campus: null,
+              createdAt: '',
+              updatedAt: ''
+            } as User
+            localStorage.setItem('user', JSON.stringify(stubUser))
+          }
+
+          // Xoá fragment cho sạch
+          window.history.replaceState(null, '', window.location.pathname + window.location.search)
+        }
+      }
+    } catch (e) {
+      console.error('Parse OAuth fragment error:', e)
+    }
+
+    // === ORIGINAL: đọc localStorage để khởi tạo context ===
     const initializeAuth = () => {
       try {
         const storedAccessToken = localStorage.getItem('accessToken')
         const storedRefreshToken = localStorage.getItem('refreshToken')
         const storedUser = localStorage.getItem('user')
 
-        if (storedAccessToken && storedRefreshToken && storedUser) {
-          setAccessToken(storedAccessToken)
-          setRefreshToken(storedRefreshToken)
-          setUser(JSON.parse(storedUser))
-        }
+        if (storedAccessToken) setAccessToken(storedAccessToken)
+        if (storedRefreshToken) setRefreshToken(storedRefreshToken)
+        if (storedUser) setUser(JSON.parse(storedUser))
       } catch (error) {
         console.error('Error initializing auth:', error)
-        // Clear corrupted data
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
         localStorage.removeItem('user')
@@ -75,7 +113,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }, 100)
       } catch (error) {
         setIsLoading(false)
-        // Re-throw the error with original message to preserve detailed error info
         if (error instanceof Error) {
           throw error
         }
@@ -84,6 +121,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     },
     [navigate]
   )
+
   const logout = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -124,7 +162,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const newAccessToken = await authService.refreshAccessToken(refreshToken)
       localStorage.setItem('accessToken', newAccessToken)
       setAccessToken(newAccessToken)
-
       return newAccessToken
     } catch (error) {
       console.error('Refresh token error:', error)
