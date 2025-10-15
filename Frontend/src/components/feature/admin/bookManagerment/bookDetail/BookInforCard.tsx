@@ -2,19 +2,16 @@ import BookBorrowModal from "@/components/feature/user/borrowBooks/BookBorrowMod
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  borrowBookByBookCopyId,
-  returnedBookByBookCopyId,
-} from "@/services/borrowBookService";
+import { borrowBookByBookCopyId } from "@/services/borrowBookService";
 import type { Book } from "@/types";
-import type { TitleModalBook } from "@/types/Book";
-import { Plus, RotateCcw } from "lucide-react";
+
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 interface BookInfoCardProps {
   book: Book;
-  refreshBookAndHistory: () => void;
+  refreshBookAndHistory?: () => void;
 }
 
 export default function BookInforCard({
@@ -22,23 +19,38 @@ export default function BookInforCard({
   refreshBookAndHistory,
 }: BookInfoCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState<TitleModalBook>("Borrow");
   const [currentBook, setCurrentBook] = useState<Book>(book);
+  const [selectedBookCopyId, setSelectedBookCopyId] = useState<string | null>(
+    null
+  );
 
   const hasCopies =
     Array.isArray(currentBook.bookCopies) && currentBook.bookCopies.length > 0;
-  const totalCopies = hasCopies ? currentBook.bookCopies?.length : 0;
+  const totalCopies = hasCopies ? currentBook.bookCopies?.length ?? 0 : 0;
   const availableCopies = hasCopies
-    ? currentBook.bookCopies?.filter((copy) => copy.status === "AVAILABLE")
-        .length
+    ? (
+        currentBook.bookCopies?.filter((copy) => copy.status === "AVAILABLE") ??
+        []
+      ).length
     : 0;
   const borrowedCopies = hasCopies
-    ? currentBook.bookCopies?.filter((copy) => copy.status === "BORROWED")
-        .length
+    ? (
+        currentBook.bookCopies?.filter((copy) => copy.status === "BORROWED") ??
+        []
+      ).length
     : 0;
 
-  const status = hasCopies ? currentBook.bookCopies[0].status : "Unknown";
+  const firstCopyStatus: string =
+    currentBook.bookCopies?.[0]?.status ?? "Unknown";
 
+  const status: string =
+    availableCopies > 0
+      ? "AVAILABLE"
+      : borrowedCopies > 0
+      ? "BORROWED"
+      : hasCopies
+      ? firstCopyStatus
+      : "Unknown";
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "AVAILABLE":
@@ -57,61 +69,66 @@ export default function BookInforCard({
   };
 
   const handleBorrow = () => {
-    setModalTitle("Borrow");
-    setIsModalOpen(true);
-  };
+    const availableCopy = currentBook.bookCopies?.find(
+      (copy) => copy.status === "AVAILABLE"
+    );
 
-  const handleReturn = () => {
-    setModalTitle("Return");
-    setIsModalOpen(true);
+    if (availableCopy) {
+      setSelectedBookCopyId(availableCopy.bookCopyId);
+      console.log(availableCopy.bookCopyId);
+
+      setIsModalOpen(true);
+    } else {
+      toast.error("No available copies to borrow");
+    }
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setSelectedBookCopyId(null);
   };
 
-  const handleConfirm = async ({
-    bookCopyId,
-  }: {
+  const handleConfirm = async (payload: {
     username: string;
     bookCopyId: string;
-  }) => {
+  }): Promise<boolean> => {
+    const { bookCopyId } = payload;
     try {
-      if (modalTitle === "Borrow") {
-        await borrowBookByBookCopyId(bookCopyId);
-        toast.success("Borrowed successfully!");
+      const copyToUpdate = currentBook.bookCopies?.find(
+        (copy) => copy.bookCopyId === bookCopyId && copy.status === "AVAILABLE"
+      );
 
-        setCurrentBook((prev) => ({
-          ...prev,
-          bookCopies: prev.bookCopies?.map((copy) =>
-            copy.bookCopyId === bookCopyId
-              ? { ...copy, status: "BORROWED" }
-              : copy
-          ),
-        }));
-      } else {
-        await returnedBookByBookCopyId(bookCopyId);
-        // toast.success("Returned successfully!");
-
-        setCurrentBook((prev) => ({
-          ...prev,
-          bookCopies: prev.bookCopies?.map((copy) =>
-            copy.bookCopyId === bookCopyId
-              ? { ...copy, status: "AVAILABLE" }
-              : copy
-          ),
-        }));
+      if (!copyToUpdate) {
+        toast.error("This copy is no longer available");
+        setIsModalOpen(false);
+        return false;
       }
+
+      await borrowBookByBookCopyId(bookCopyId);
+      toast.success("Borrowed successfully!");
+
+      setCurrentBook((prev) => ({
+        ...prev,
+        bookCopies: prev.bookCopies?.map((copy) =>
+          copy.bookCopyId === bookCopyId
+            ? { ...copy, status: "BORROWED" }
+            : copy
+        ),
+      }));
+
       setIsModalOpen(false);
-      refreshBookAndHistory();
+
+      if (refreshBookAndHistory) {
+        refreshBookAndHistory();
+      }
+      return true;
     } catch (error: any) {
       console.error("Error:", error);
       toast.error(
         error.response?.data?.message ||
-          `Failed to ${
-            modalTitle === "Borrow" ? "borrow" : "return"
-          } the book. Please try again.`
+          `Failed to borrow the book. Please try again.`
       );
+      return false;
     }
   };
 
@@ -130,15 +147,6 @@ export default function BookInforCard({
             >
               <Plus className="h-4 w-4" />
               Borrow Book
-            </Button>
-            <Button
-              onClick={handleReturn}
-              className="flex items-center gap-2"
-              variant="secondary"
-              disabled={borrowedCopies === 0}
-            >
-              <RotateCcw className="h-4 w-4" />
-              Return Book
             </Button>
           </div>
         </div>
@@ -195,11 +203,11 @@ export default function BookInforCard({
         </div>
       </CardContent>
       <BookBorrowModal
-        title={modalTitle}
         book={currentBook}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onConfirm={handleConfirm}
+        bookCopyId={selectedBookCopyId}
       />
     </Card>
   );

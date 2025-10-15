@@ -19,7 +19,7 @@ import Forbidden from "@/pages/Forbidden";
 // User pages
 import UserDashboard from "@/pages/user/Dashboard";
 import BorrowBookManagement from "@/pages/user/BorrowBookManagement/BorrowBookManagement";
-import ReturnBookManagement from "@/pages/user/ReturnBookManagement/ReturnBookManagement";
+// import ReturnBookManagement from "@/pages/user/ReturnBookManagement/ReturnBookManagement";
 
 // Admin pages
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -57,7 +57,7 @@ const router = createBrowserRouter([
               { index: true, element: <UserDashboard /> },
               { path: "dashboard", element: <UserDashboard /> },
               { path: "borrow-books", element: <BorrowBookManagement /> },
-              { path: "return-books", element: <ReturnBookManagement /> },
+              // { path: "return-books", element: <ReturnBookManagement /> },
               { path: "profile", element: <Profile /> },
               { path: "donate-book", element: <BookDonation /> },
             ],
