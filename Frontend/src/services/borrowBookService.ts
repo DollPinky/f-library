@@ -7,13 +7,9 @@ import type {
 import axiosClient from "./axiosClient";
 
 export const getBorrowHistoryByBookCopyId = async (
-  bookCopyId: string,
-  page: number = 1,
-  size: number = 10
+  bookCopyId: string
 ): Promise<StandardResponse<BrorrowHistory>> => {
-  const res = await axiosClient.get(`borrowings/${bookCopyId}/history`, {
-    params: { page, size },
-  });
+  const res = await axiosClient.get(`borrowings/${bookCopyId}/history`);
   return res.data;
 };
 

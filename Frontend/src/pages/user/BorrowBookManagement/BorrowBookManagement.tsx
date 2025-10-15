@@ -1,7 +1,6 @@
 import { SearchAndFilter } from "@/components/common/SearchAndFilter";
 import BookBorrowModal from "@/components/feature/user/borrowBooks/BookBorrowModal";
 import BookGrid from "@/components/feature/user/borrowBooks/BookGrid";
-import BookReturnModal from "@/components/feature/user/borrowBooks/BookReturnModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAllBooks } from "@/services/bookManagementService";
 import {
@@ -9,28 +8,20 @@ import {
   returnedBookByBookCopyId,
 } from "@/services/borrowBookService";
 import type { Book } from "@/types";
+import type { TitleModalBook } from "@/types/Book";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 
 export default function BorrowBookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [titleModal, setTitleModal] = useState<TitleModalBook>("Borrow");
   const itemsPerPage = 10;
-  console.log(error);
-
-  // Trạng thái cho modal mượn sách
-  const [borrowModalOpen, setBorrowModalOpen] = useState(false);
-  const [bookToBorrow, setBookToBorrow] = useState<Book | null>(null);
-  const [borrowBookCopyId, setBorrowBookCopyId] = useState<string | null>(null);
-
-  // Trạng thái cho modal trả sách
-  const [returnModalOpen, setReturnModalOpen] = useState(false);
-  const [bookToReturn, setBookToReturn] = useState<Book | null>(null);
-  const [returnBookCopyId, setReturnBookCopyId] = useState<string | null>(null);
 
   const handleClearFilters = () => {
     setSearchTerm("");
@@ -59,7 +50,6 @@ export default function BorrowBookManagement() {
     };
     fetchAllBooks();
   }, []);
-
   const filteredBooks = useMemo(() => {
     return books.filter((book) => {
       const matchesSearch =
@@ -73,6 +63,7 @@ export default function BorrowBookManagement() {
     });
   }, [books, searchTerm, categoryFilter]);
 
+  // const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedBooks = filteredBooks.slice(
     startIndex,
@@ -93,143 +84,40 @@ export default function BorrowBookManagement() {
   }, [books]);
 
   const handleBorrowBook = async (book: Book): Promise<void> => {
-    const availableCopy = book.bookCopies?.find(
-      (copy) => copy.status === "AVAILABLE"
-    );
-
-    if (availableCopy) {
-      setBookToBorrow(book);
-      setBorrowBookCopyId(availableCopy.bookCopyId);
-      setBorrowModalOpen(true);
-    } else {
-      toast.error("No available copies to borrow");
-    }
+    setSelectedBook(book);
+    setIsModalOpen(true);
+    setTitleModal("Borrow");
     return Promise.resolve();
   };
-
   const handleReturnBook = async (book: Book): Promise<void> => {
-    const borrowedCopy = book.bookCopies?.find(
-      (copy) => copy.status === "BORROWED"
-    );
-
-    if (borrowedCopy) {
-      setBookToReturn(book);
-      setReturnBookCopyId(borrowedCopy.bookCopyId);
-      setReturnModalOpen(true);
-    } else {
-      toast.error("You don't have any borrowed copies to return");
-    }
+    setSelectedBook(book);
+    setIsModalOpen(true);
+    setTitleModal("Return");
     return Promise.resolve();
   };
-
-  const handleConfirmBorrow = async ({
-    username,
-    bookCopyId,
-  }: {
-    username: string;
-    bookCopyId: string;
-  }) => {
-    try {
-      await borrowBookByBookCopyId(bookCopyId);
-      console.log(username);
-
-      toast.success("Book borrowed successfully!");
-      setBooks((prevBooks) => {
-        if (!bookToBorrow || !bookCopyId) {
-          return prevBooks;
-        }
-
-        return prevBooks.map((book) => {
-          if (book.bookId === bookToBorrow.bookId) {
-            if (!book.bookCopies || !Array.isArray(book.bookCopies)) {
-              return book;
-            }
-
-            const foundCopy = book.bookCopies.find(
-              (copy) => copy.bookCopyId === bookCopyId
-            );
-
-            if (!foundCopy) {
-              return book;
-            }
-
-            return {
-              ...book,
-              bookCopies: book.bookCopies.map((copy) =>
-                copy.bookCopyId === bookCopyId
-                  ? { ...copy, status: "BORROWED" }
-                  : copy
-              ),
-            };
-          }
-          return book;
-        });
-      });
-
-      setBorrowModalOpen(false);
-      setBookToBorrow(null);
-      setBorrowBookCopyId(null);
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to borrow book");
-      console.error("Error:", error);
-    }
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedBook(null);
   };
 
-  const handleConfirmReturn = async ({
-    username,
+  const handleBorrowOrReturnBook = async ({
     bookCopyId,
   }: {
-    username: string;
     bookCopyId: string;
   }) => {
+    console.log(selectedBook);
+
+    if (!selectedBook) return;
     try {
-      await returnedBookByBookCopyId(bookCopyId);
-      console.log(username);
-
-      setBooks((prevBooks) => {
-        if (!bookToReturn || !bookCopyId) {
-          return prevBooks;
-        }
-
-        return prevBooks.map((book) => {
-          if (book.bookId === bookToReturn.bookId) {
-            if (!book.bookCopies || !Array.isArray(book.bookCopies)) {
-              return book;
-            }
-
-            const foundCopy = book.bookCopies.find(
-              (copy) => copy.bookCopyId === bookCopyId
-            );
-
-            if (!foundCopy) {
-              return book;
-            }
-
-            return {
-              ...book,
-              bookCopies: book.bookCopies.map((copy) =>
-                copy.bookCopyId === bookCopyId
-                  ? { ...copy, status: "AVAILABLE" }
-                  : copy
-              ),
-            };
-          }
-          return book;
-        });
-      });
-
-      return true;
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to return book");
+      if (titleModal === "Borrow") {
+        await borrowBookByBookCopyId(bookCopyId);
+      } else {
+        await returnedBookByBookCopyId(bookCopyId);
+      }
+      closeModal();
+    } catch (error) {
       console.error("Error:", error);
-      return false;
     }
-  };
-
-  const handleCloseReturnProcess = () => {
-    setReturnModalOpen(false);
-    setBookToReturn(null);
-    setReturnBookCopyId(null);
   };
 
   return (
@@ -244,7 +132,7 @@ export default function BorrowBookManagement() {
             onSearchChange={setSearchTerm}
             filterValue={categoryFilter}
             onFilterChange={setCategoryFilter}
-            filterOptions={categoryOptions as any}
+            filterOptions={categoryOptions}
             filterPlaceholder="Filter by category"
             searchPlaceholder="Search books by title, author, or publisher..."
             onClearFilters={handleClearFilters}
@@ -265,26 +153,13 @@ export default function BorrowBookManagement() {
             />
           )}
 
-          {bookToBorrow && (
+          {selectedBook && (
             <BookBorrowModal
-              book={bookToBorrow}
-              isOpen={borrowModalOpen}
-              onClose={() => {
-                setBorrowModalOpen(false);
-                setBookToBorrow(null);
-              }}
-              onConfirm={handleConfirmBorrow}
-              bookCopyId={borrowBookCopyId}
-            />
-          )}
-
-          {bookToReturn && (
-            <BookReturnModal
-              book={bookToReturn}
-              isOpen={returnModalOpen}
-              onClose={handleCloseReturnProcess}
-              onConfirm={handleConfirmReturn}
-              bookCopyId={returnBookCopyId}
+              title={titleModal}
+              book={selectedBook}
+              isOpen={isModalOpen}
+              onClose={closeModal}
+              onConfirm={handleBorrowOrReturnBook}
             />
           )}
         </CardContent>

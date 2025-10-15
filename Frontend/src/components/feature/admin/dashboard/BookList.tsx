@@ -21,100 +21,47 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Filter, ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useMemo, useState, type JSX } from "react";
-import { bookCategories } from "@/data/mockData";
+import { useMemo, useState } from "react";
+import { bookCategories, mockBooks } from "@/data/mockData";
 import { ImageWithFallback } from "@/components/layout/ImageWithFallback";
-import type { Book } from "@/types";
-import { getAllBooks } from "@/services/bookManagementService";
-import { toast } from "react-hot-toast";
 
-export default function BookList(): JSX.Element {
+interface BookListProps {
+  isMobile?: boolean;
+}
+
+export default function BookList({ isMobile }: BookListProps) {
   const [selectedCategory, setSelectedCategory] =
     useState<string>("All Categories");
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const fetchBooks = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const res: any = await getAllBooks();
-      const data = res?.data ?? res;
-
-      let list: any[] = [];
-      if (Array.isArray(data)) list = data;
-      else if (data?.content && Array.isArray(data.content))
-        list = data.content;
-      else list = Array.isArray(res) ? res : [];
-
-      const normalized: Book[] = list.map((b: any) => ({
-        ...b,
-        bookId: b.bookId ?? b.id ?? String(b._id ?? b.title ?? b.name ?? ""),
-        title: b.title ?? b.name ?? "Untitled",
-        author: b.author ?? "Unknown",
-        bookCoverUrl: b.bookCoverUrl ?? b.coverImage ?? "",
-        // keep rest of fields as-is (bookCopies, category, etc.)
-        category: b.category ?? "Uncategorized",
-        bookCopies: b.bookCopies ?? undefined,
-      }));
-
-      setBooks(normalized);
-    } catch (err: any) {
-      console.error("Failed to load books", err);
-      toast.error(err?.response?.data?.message || "Failed to load books");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchBooks();
-  }, []);
 
   const availableCategories = useMemo(() => {
-    const categories = new Set(
-      books.map((book) => book.category ?? "Uncategorized")
-    );
+    const categories = new Set(mockBooks.map((book) => book.category));
     return bookCategories.filter(
-      (category) =>
-        category === "All Categories" || categories.has(category as any)
+      (category) => category === "All Categories" || categories.has(category)
     );
-  }, [books]);
+  }, [mockBooks]);
 
   const filteredBooks = useMemo(() => {
-    if (selectedCategory === "All Categories") return books;
-    return books.filter(
-      (book) => (book.category ?? "Uncategorized") === selectedCategory
-    );
-  }, [books, selectedCategory]);
+    if (selectedCategory === "All Categories") {
+      return mockBooks;
+    }
+    return mockBooks.filter((book) => book.category === selectedCategory);
+  }, [mockBooks, selectedCategory]);
 
   const hotBooks = useMemo(() => {
-    const getTotalCopies = (b: Book) => b.bookCopies?.length ?? 0;
-    const isAvailable = (b: Book) =>
-      b.bookCopies?.some(
-        (c: any) => (c?.status ?? "").toString().toUpperCase() === "AVAILABLE"
-      ) ?? false;
-
     return filteredBooks
-      .filter((book) => isAvailable(book))
-      .sort((a, b) => getTotalCopies(b) - getTotalCopies(a))
+      .filter((book) => book.status === "Available")
+      .sort((a, b) => b.totalCopies - a.totalCopies)
       .slice(0, 8);
   }, [filteredBooks]);
 
-  const categoryCounts = useMemo(() => {
-    return filteredBooks.reduce((acc, book) => {
-      const key = (book.category as any) ?? "Uncategorized";
-      acc[key] = (acc[key] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-  }, [filteredBooks]);
+  const categoryCounts = filteredBooks.reduce((acc, book) => {
+    acc[book.category] = (acc[book.category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-  const sortedCategories = useMemo(
-    () =>
-      Object.entries(categoryCounts)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 6),
-    [categoryCounts]
-  );
+  const sortedCategories = Object.entries(categoryCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 6);
 
   return (
     <Card>
@@ -128,6 +75,7 @@ export default function BookList(): JSX.Element {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Category Filter Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
@@ -154,13 +102,13 @@ export default function BookList(): JSX.Element {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* View All Button */}
             <Button
               variant="ghost"
               size="sm"
               className="text-pink-500 hover:text-pink-600 hover:bg-pink-50"
-              onClick={() => fetchBooks()}
             >
-              {loading ? "Loading..." : "Refresh"}
+              View All
             </Button>
           </div>
         </div>
@@ -171,15 +119,16 @@ export default function BookList(): JSX.Element {
             <CarouselContent className="-ml-2 md:-ml-4">
               {hotBooks.map((book) => (
                 <CarouselItem
-                  key={book.bookId}
+                  key={book.id}
                   className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6"
                 >
                   <div className="flex flex-col space-y-3">
+                    {/* Book Cover */}
                     <div className="relative aspect-[3/4] w-full bg-muted rounded-lg overflow-hidden">
-                      {book.bookCoverUrl ? (
+                      {book.coverImage ? (
                         <ImageWithFallback
-                          src={book.bookCoverUrl}
-                          alt={`Cover of ${book.title}`}
+                          src={book.coverImage}
+                          alt={`Cover of ${book.name}`}
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
@@ -189,9 +138,10 @@ export default function BookList(): JSX.Element {
                       )}
                     </div>
 
+                    {/* Book Info */}
                     <div className="space-y-1">
                       <h4 className="text-sm font-medium line-clamp-2 leading-tight">
-                        {book.title}
+                        {book.name}
                       </h4>
                       <p className="text-xs text-muted-foreground line-clamp-1">
                         {book.author}
@@ -206,15 +156,12 @@ export default function BookList(): JSX.Element {
           </Carousel>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            <div className="mb-2">
-              {loading ? "Loading books..." : "No books found"}
-            </div>
-            <div className="text-sm">
-              Try refreshing or selecting a different category
-            </div>
+            <div className="mb-2">No books found</div>
+            <div className="text-sm">Try selecting a different category</div>
           </div>
         )}
 
+        {/* Category Summary - Moved to bottom */}
         {sortedCategories.length > 0 && (
           <div className="mt-6 pt-4 border-t">
             <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">

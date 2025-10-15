@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Book, BookOpen } from "lucide-react";
+import React from "react";
 
 export default function WelcomeCard() {
   const isMobile = useIsMobile();
