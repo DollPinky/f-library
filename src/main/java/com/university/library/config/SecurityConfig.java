@@ -139,7 +139,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/{categoryId}").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/borrowings/borrow").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/return").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/return").hasAnyRole("ADMIN","READER")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/lost").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()
@@ -147,6 +147,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,"/api/v1/book-copies/import-donation-book").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET,  "/api/v1/accounts/get-info").hasAnyRole("READER","ADMIN")
+                        .requestMatchers(HttpMethod.GET,  "/api/v1/book-donation-history/{accountId}").hasAnyRole("READER","ADMIN")
+
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
                         .requestMatchers("/favicon.ico", "/error").permitAll()
 

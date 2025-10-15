@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -20,7 +20,7 @@ public class StandardResponse<T> {
     private boolean success = true;
 
     @Builder.Default
-    private String message = "Thành công";
+    private  Object message = "Thành công";
 
     private T data;
 
@@ -55,7 +55,7 @@ public class StandardResponse<T> {
                 .build();
     }
 
-    public static <T> StandardResponse<T> error(String message) {
+    public static <T> StandardResponse<T> error(Object message) {
         return StandardResponse.<T>builder()
                 .success(false)
                 .message(message)

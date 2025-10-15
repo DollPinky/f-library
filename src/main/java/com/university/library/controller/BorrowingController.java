@@ -9,6 +9,7 @@ import com.university.library.dto.response.borrowing.BorrowingStateResponse;
 import com.university.library.entity.User;
 import com.university.library.entity.Borrowing;
 import com.university.library.repository.BorrowingRepository;
+import com.university.library.repository.UserRepository;
 import com.university.library.service.BorrowingService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -65,6 +67,7 @@ public class BorrowingController {
     /**
      * Tạo yêu cầu mượn sách hoặc đặt sách
      */
+    private final UserRepository userRepository;
     @PostMapping("/borrow")
     public ResponseEntity<StandardResponse<BorrowingResponse>> scanAndBorrow(
             @RequestBody BorrowRequest borrowRequest,
@@ -74,7 +77,7 @@ public class BorrowingController {
 
             // Lấy ID người dùng từ authentication
             UUID borrowerId = userPrincipal.getUserId();
-
+           log.info("User mượn sách: {}", userPrincipal.getEmail());
             BorrowingResponse borrowing = borrowingService.Borrow(
                     borrowRequest.getBookCopyId(),
                     borrowerId
