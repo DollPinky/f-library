@@ -26,8 +26,25 @@ export interface AdminUser {
 export type BrorrowHistory = {
   username: string;
   borrowDate: string;
-  returnedDate: string;
+  returnedDate: string | null;
+  bookCopyId: string;
+  status: string;
+  campus: string;
+  shelfLocation: string;
 };
+
+export interface BorrowHistoryPage {
+  content: BrorrowHistory[];
+  number: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  empty: boolean;
+}
 
 export type BookStatus = "Available" | "Borrowed" | "Maintenance" | "Reserved";
 
@@ -221,4 +238,36 @@ export interface BorrowedBookResponse {
 export interface ReturnedBookResponse {
   success: boolean;
   message: string;
+}
+
+export interface CreateCommentRequest {
+  bookId: string;
+  content: string;
+  star: number;
+}
+export interface CommentResponse {
+  commentId: string;
+  content: string;
+  star: number;
+  bookResponse?: {
+    bookId: string;
+    title: string;
+    author: string;
+  };
+  categoryResponse?: {
+    categoryId: string;
+    name: string;
+    description: string;
+  };
+  userResponse?: {
+    userId: string;
+    fullName: string;
+    department: string;
+  };
+  campusResponse?: {
+    campusId: string;
+    name: string;
+    code: string;
+    address: string;
+  };
 }
