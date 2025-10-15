@@ -8,7 +8,6 @@ import type { Book, BrorrowHistory } from "@/types";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
 
 export default function BookDetail() {
   const { bookId } = useParams<{ bookId: string }>();
@@ -17,6 +16,7 @@ export default function BookDetail() {
   const [history, setHistory] = useState<BrorrowHistory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  console.log(history);
 
   const fetchBookAndHistory = async () => {
     if (!bookId) {
@@ -51,6 +51,8 @@ export default function BookDetail() {
         setHistory([]);
       }
     } catch (error) {
+      console.log(error);
+
       setError("Failed to load book details or borrow history.");
     } finally {
       setLoading(false);
@@ -118,10 +120,12 @@ export default function BookDetail() {
         </Button>
       </div>
 
-      {/* Truyền hàm refresh xuống BookInforCard */}
       <BookInforCard book={book} refreshBookAndHistory={fetchBookAndHistory} />
 
-      <BorrowHistoryTable history={history} />
+      <BorrowHistoryTable
+        bookCopyId={book.bookCopies?.[0]?.bookCopyId || ""}
+        refreshBookAndHistory={fetchBookAndHistory}
+      />
     </div>
   );
 }

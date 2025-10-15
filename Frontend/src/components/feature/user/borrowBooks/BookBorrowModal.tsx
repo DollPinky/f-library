@@ -10,31 +10,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import type { Book } from "@/types";
 
 interface BookBorrowModalProps {
-  title: string;
   book: Book;
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (payload: { username: string; bookCopyId: string }) => void;
+  bookCopyId: string | null;
 }
+
 export default function BookBorrowModal({
-  title,
   book,
   isOpen,
   onClose,
   onConfirm,
+  bookCopyId,
 }: BookBorrowModalProps) {
   const [username, setUsername] = useState("");
-  const bookCopyId =
-    title === "Borrow"
-      ? book?.bookCopies?.find((copy) => copy.status === "AVAILABLE")
-          ?.bookCopyId
-      : book?.bookCopies?.find((copy) => copy.status === "BORROWED")
-          ?.bookCopyId;
-  console.log(bookCopyId);
 
   const handleConfirm = () => {
     if (!username.trim() || !bookCopyId) return;
@@ -49,9 +42,7 @@ export default function BookBorrowModal({
         aria-describedby="borrow-modal-desc"
       >
         <DialogHeader>
-          <DialogTitle>
-            {title} {book.title}
-          </DialogTitle>
+          <DialogTitle>Borrow {book.title}</DialogTitle>
         </DialogHeader>
         <DialogDescription>
           Enter your FPT account to borrow this book.
@@ -71,8 +62,11 @@ export default function BookBorrowModal({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={!username.trim()}>
-            Confirm
+          <Button
+            onClick={handleConfirm}
+            disabled={!username.trim() || !bookCopyId}
+          >
+            Borrow Book
           </Button>
         </DialogFooter>
       </DialogContent>

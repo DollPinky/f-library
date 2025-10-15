@@ -58,7 +58,7 @@ export default function BookGrid({
           (copy) => copy.status === "AVAILABLE"
         ).length;
         const totalCopies = book.bookCopies?.length;
-        const isAvailable = availableCopies > 0;
+        const isAvailable = (availableCopies as any) > 0;
         const isLoading = loadingBooks[book.bookId] || false;
 
         return (

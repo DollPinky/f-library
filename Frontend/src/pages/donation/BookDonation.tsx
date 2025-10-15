@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 const BookDonation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  console.log(isLoading);
 
   useEffect(() => {
     return () => {
@@ -27,6 +28,8 @@ const BookDonation = () => {
             setCategories(response.data);
           }
         } catch (err) {
+          console.log(err);
+
           toast.error("Something when wrong!");
         } finally {
           setIsLoading(false);
