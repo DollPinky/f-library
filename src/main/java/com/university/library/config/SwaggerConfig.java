@@ -20,7 +20,7 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI libraryManagementOpenAPI() {
         Server localServer = new Server();
-        String appPublicBaseUrl = "http://localhost:8080";
+        String appPublicBaseUrl = "http://localhost:8082";
         localServer.setUrl(appPublicBaseUrl);
         localServer.setDescription("Local Development Server");
 
