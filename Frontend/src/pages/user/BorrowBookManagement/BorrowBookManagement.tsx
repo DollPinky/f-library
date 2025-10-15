@@ -20,6 +20,7 @@ export default function BorrowBookManagement() {
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 10;
+  console.log(error);
 
   // Trạng thái cho modal mượn sách
   const [borrowModalOpen, setBorrowModalOpen] = useState(false);
@@ -30,11 +31,6 @@ export default function BorrowBookManagement() {
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [bookToReturn, setBookToReturn] = useState<Book | null>(null);
   const [returnBookCopyId, setReturnBookCopyId] = useState<string | null>(null);
-
-  // Kiểm tra user role
-  const userString = localStorage.getItem("user");
-  const user = userString ? JSON.parse(userString) : null;
-  const isReader = user?.role === "READER";
 
   const handleClearFilters = () => {
     setSearchTerm("");
@@ -135,6 +131,7 @@ export default function BorrowBookManagement() {
   }) => {
     try {
       await borrowBookByBookCopyId(bookCopyId);
+      console.log(username);
 
       toast.success("Book borrowed successfully!");
       setBooks((prevBooks) => {
@@ -187,6 +184,7 @@ export default function BorrowBookManagement() {
   }) => {
     try {
       await returnedBookByBookCopyId(bookCopyId);
+      console.log(username);
 
       setBooks((prevBooks) => {
         if (!bookToReturn || !bookCopyId) {
@@ -246,7 +244,7 @@ export default function BorrowBookManagement() {
             onSearchChange={setSearchTerm}
             filterValue={categoryFilter}
             onFilterChange={setCategoryFilter}
-            filterOptions={categoryOptions}
+            filterOptions={categoryOptions as any}
             filterPlaceholder="Filter by category"
             searchPlaceholder="Search books by title, author, or publisher..."
             onClearFilters={handleClearFilters}

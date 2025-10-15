@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import BookReturnModal from "@/components/feature/user/borrowBooks/BookReturnModal"; // Import modal có sẵn
+import BookReturnModal from "@/components/feature/user/borrowBooks/BookReturnModal";
 import type { BorrowHistoryPage, BrorrowHistory } from "@/types";
 import { formatDate } from "@/utils/formatDate";
 import {
@@ -54,8 +54,33 @@ export default function BorrowHistoryTable({
     }
     try {
       const res = await getBorrowHistoryByBookCopyId(bookCopyId, page, size);
-      const pageData = res?.data;
-      setHistoryPage(pageData);
+
+      const data = res?.data;
+      if (!data) {
+        setHistoryPage(null);
+        return;
+      }
+
+      if (typeof data === "object" && Array.isArray((data as any).content)) {
+        setHistoryPage(data as any);
+        return;
+      }
+
+      if (Array.isArray(data)) {
+        const pageData: any | BorrowHistoryPage = {
+          content: data as BrorrowHistory[],
+          number: page - 1,
+          size,
+          totalElements: (data as any).length,
+          totalPages: 1,
+          first: true,
+          last: true,
+        };
+        setHistoryPage(pageData);
+        return;
+      }
+
+      setHistoryPage(data as unknown as BorrowHistoryPage);
     } catch (error) {
       console.log(error, "Lỗi");
       toast.error("Failed to load borrow history");
@@ -86,17 +111,20 @@ export default function BorrowHistoryTable({
   }: {
     username: string;
     bookCopyId: string;
-  }) => {
+  }): Promise<boolean> => {
     try {
       await returnedBookByBookCopyId(bookCopyId);
       console.log(bookCopyId);
+      console.log(username);
 
       toast.success("Returned successfully!");
       setIsReturnModalOpen(false);
       refreshBookAndHistory();
       fetchHistory(currentPage, rowsPerPage);
+      return true;
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Return failed!");
+      return false;
     }
   };
 
@@ -160,7 +188,6 @@ export default function BorrowHistoryTable({
             </Table>
           </div>
 
-          {/* Phân trang giữ nguyên */}
           {historyPage && (historyPage.totalPages ?? 0) > 1 && (
             <Pagination>
               <PaginationContent>
@@ -211,7 +238,6 @@ export default function BorrowHistoryTable({
         </CardContent>
       </Card>
 
-      {/* Sử dụng BookReturnModal có sẵn */}
       {selectedRecord && (
         <BookReturnModal
           isOpen={isReturnModalOpen}

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { borrowBookByBookCopyId } from "@/services/borrowBookService";
 import type { Book } from "@/types";
-import type { TitleModalBook } from "@/types/Book";
+
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -19,7 +19,6 @@ export default function BookInforCard({
   refreshBookAndHistory,
 }: BookInfoCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState<TitleModalBook>("Borrow");
   const [currentBook, setCurrentBook] = useState<Book>(book);
   const [selectedBookCopyId, setSelectedBookCopyId] = useState<string | null>(
     null
@@ -27,21 +26,31 @@ export default function BookInforCard({
 
   const hasCopies =
     Array.isArray(currentBook.bookCopies) && currentBook.bookCopies.length > 0;
-  const totalCopies = hasCopies ? currentBook.bookCopies?.length : 0;
+  const totalCopies = hasCopies ? currentBook.bookCopies?.length ?? 0 : 0;
   const availableCopies = hasCopies
-    ? currentBook.bookCopies?.filter((copy) => copy.status === "AVAILABLE")
-        .length
+    ? (
+        currentBook.bookCopies?.filter((copy) => copy.status === "AVAILABLE") ??
+        []
+      ).length
     : 0;
   const borrowedCopies = hasCopies
-    ? currentBook.bookCopies?.filter((copy) => copy.status === "BORROWED")
-        .length
+    ? (
+        currentBook.bookCopies?.filter((copy) => copy.status === "BORROWED") ??
+        []
+      ).length
     : 0;
 
-  let status = "Unknown";
-  if (availableCopies > 0) status = "AVAILABLE";
-  else if (borrowedCopies > 0) status = "BORROWED";
-  else if (hasCopies) status = currentBook?.bookCopies[0].status;
+  const firstCopyStatus: string =
+    currentBook.bookCopies?.[0]?.status ?? "Unknown";
 
+  const status: string =
+    availableCopies > 0
+      ? "AVAILABLE"
+      : borrowedCopies > 0
+      ? "BORROWED"
+      : hasCopies
+      ? firstCopyStatus
+      : "Unknown";
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "AVAILABLE":
@@ -68,7 +77,6 @@ export default function BookInforCard({
       setSelectedBookCopyId(availableCopy.bookCopyId);
       console.log(availableCopy.bookCopyId);
 
-      setModalTitle("Borrow");
       setIsModalOpen(true);
     } else {
       toast.error("No available copies to borrow");
@@ -80,13 +88,11 @@ export default function BookInforCard({
     setSelectedBookCopyId(null);
   };
 
-  const handleConfirm = async ({
-    username,
-    bookCopyId,
-  }: {
+  const handleConfirm = async (payload: {
     username: string;
     bookCopyId: string;
-  }) => {
+  }): Promise<boolean> => {
+    const { bookCopyId } = payload;
     try {
       const copyToUpdate = currentBook.bookCopies?.find(
         (copy) => copy.bookCopyId === bookCopyId && copy.status === "AVAILABLE"
@@ -95,7 +101,7 @@ export default function BookInforCard({
       if (!copyToUpdate) {
         toast.error("This copy is no longer available");
         setIsModalOpen(false);
-        return;
+        return false;
       }
 
       await borrowBookByBookCopyId(bookCopyId);
@@ -115,12 +121,14 @@ export default function BookInforCard({
       if (refreshBookAndHistory) {
         refreshBookAndHistory();
       }
+      return true;
     } catch (error: any) {
       console.error("Error:", error);
       toast.error(
         error.response?.data?.message ||
           `Failed to borrow the book. Please try again.`
       );
+      return false;
     }
   };
 
@@ -195,12 +203,11 @@ export default function BookInforCard({
         </div>
       </CardContent>
       <BookBorrowModal
-        title={modalTitle}
         book={currentBook}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onConfirm={handleConfirm}
-        bookCopyId={selectedBookCopyId} // Truyền bookCopyId được chọn vào modal
+        bookCopyId={selectedBookCopyId}
       />
     </Card>
   );

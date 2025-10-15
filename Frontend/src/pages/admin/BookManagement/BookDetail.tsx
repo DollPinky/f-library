@@ -16,6 +16,7 @@ export default function BookDetail() {
   const [history, setHistory] = useState<BrorrowHistory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  console.log(history);
 
   const fetchBookAndHistory = async () => {
     if (!bookId) {
@@ -50,6 +51,8 @@ export default function BookDetail() {
         setHistory([]);
       }
     } catch (error) {
+      console.log(error);
+
       setError("Failed to load book details or borrow history.");
     } finally {
       setLoading(false);
