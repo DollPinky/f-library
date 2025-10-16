@@ -105,7 +105,8 @@ services:
     ports:
       #- "0.0.0.0:8082:8080"
       - "${BACKEND_PORT_EXTERNAL}:${BACKEND_PORT_INTERNAL}"
-    networks: [library-network]
+    networks:
+      - library-network
 #    healthcheck:
 #      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
 #      interval: 30s
@@ -120,19 +121,22 @@ services:
     container_name: library-frontend
     depends_on:
       - library-app
-    environment:
-#      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8082/api/v1
-      - NEXT_PUBLIC_API_BASE_URL=https://libraryfsoft.ddns.net/api/v1
-      - NODE_ENV=development
-    #expose: ["3000"]
-    expose: ["${FRONTEND_PORT_INTERNAL}"]
+#    environment:
+##      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8082/api/v1
+#      - NEXT_PUBLIC_API_BASE_URL=https://libraryfsoft.ddns.net/api/v1
+#      - NODE_ENV=development
+#    #expose: ["3000"]
+#    expose: ["${FRONTEND_PORT_INTERNAL}"]
+#    ports:
+#      #- "0.0.0.0:8081:3000"
+#      - "${FRONTEND_PORT_EXTERNAL}:${FRONTEND_PORT_INTERNAL}"
+#    volumes:
+#      - ./frontend:/app
+#      - /app/node_modules
     ports:
-      #- "0.0.0.0:8081:3000"
-      - "${FRONTEND_PORT_EXTERNAL}:${FRONTEND_PORT_INTERNAL}"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    networks: [library-network]
+      - "80:80"
+    networks:
+      - library-network
 
 volumes:
   postgres_data:

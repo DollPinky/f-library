@@ -1,21 +1,25 @@
-# Stage 1: Use an official Node.js image. Alpine is small and efficient.
-FROM node:20-alpine
+# ----- Stage 1: Build React App -----
+FROM node:18-alpine AS build
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json first to leverage Docker cache
+# Copy dependency files and install
 COPY package*.json ./
-
-# Install project dependencies
 RUN npm install
 
-# Copy the rest of your application code into the container
+# Copy source code and build
 COPY . .
+RUN npm run build
 
-# Tell Docker that the container will listen on port 3000
-EXPOSE 3000
+# ----- Stage 2: Serve with NGINX -----
+FROM nginx:stable-alpine
 
-# The command to run when the container starts.
-# This will execute "npm run dev" which we configured earlier.
-CMD ["npm", "run", "dev"]
+# Copy build files from previous stage
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy custom NGINX config (optional)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
