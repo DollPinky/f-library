@@ -121,20 +121,15 @@ services:
     container_name: library-frontend
     depends_on:
       - library-app
-#    environment:
-##      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8082/api/v1
-#      - NEXT_PUBLIC_API_BASE_URL=https://libraryfsoft.ddns.net/api/v1
-#      - NODE_ENV=development
-#    #expose: ["3000"]
-#    expose: ["${FRONTEND_PORT_INTERNAL}"]
-#    ports:
-#      #- "0.0.0.0:8081:3000"
-#      - "${FRONTEND_PORT_EXTERNAL}:${FRONTEND_PORT_INTERNAL}"
-#    volumes:
-#      - ./frontend:/app
-#      - /app/node_modules
+    environment:
+#      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8082/api/v1
+      - NODE_ENV=development
+    expose: ["${FRONTEND_PORT_INTERNAL}"]
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT_EXTERNAL}:${FRONTEND_PORT_INTERNAL}"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     networks:
       - library-network
 
