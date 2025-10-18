@@ -234,6 +234,7 @@ private void createBookCopy() {
                         .publisher("NXB Văn học")
                         .year(1820)
                         .description("Tác phẩm văn học kinh điển của Việt Nam")
+                        .bookCover("https://cdn1.fahasa.com/media/catalog/product/8/9/8935236425216.jpg")
                         .build(),
                 Book.builder()
                         .category(categoryMap.get("Khoa học"))
@@ -242,6 +243,7 @@ private void createBookCopy() {
                         .publisher("NXB Khoa học")
                         .year(2017)
                         .description("Khám phá vũ trụ qua góc nhìn khoa học")
+                        .bookCover("https://cdn1.fahasa.com/media/wysiwyg/HONG_KD/Frame_ncc_2025/Frame_AlphaBooks.png")
                         .build(),
                 Book.builder()
                         .category(categoryMap.get("Công nghệ"))
@@ -250,6 +252,7 @@ private void createBookCopy() {
                         .publisher("Prentice Hall")
                         .year(2008)
                         .description("Hướng dẫn viết code sạch và dễ bảo trì")
+                        .bookCover("https://cdn1.fahasa.com/media/catalog/product/8/9/8936107813361.jpg")
                         .build(),
                 Book.builder()
                         .category(categoryMap.get("Kinh tế"))
@@ -258,6 +261,7 @@ private void createBookCopy() {
                         .publisher("NXB Tổng hợp")
                         .year(1937)
                         .description("Sách về tư duy làm giàu")
+                        .bookCover("https://cdn1.fahasa.com/media/catalog/product/n/g/nghigiaulamgiau_110k-01_bia-1.jpg")
                         .build(),
                 Book.builder()
                         .category(categoryMap.get("Lịch sử"))
@@ -266,6 +270,7 @@ private void createBookCopy() {
                         .publisher("NXB Văn hóa")
                         .year(1920)
                         .description("Lịch sử Việt Nam từ thời cổ đại")
+                        .bookCover("https://ebookshay.com/wp-content/uploads/2020/11/viet-nam-su-luoc-tran-trong-kim-1.jpg")
                         .build()
         };
 
