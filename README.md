@@ -189,10 +189,10 @@ npm test
 ### 4. Access the System
 
 #### Development Environment
-- **Frontend Application**: http://localhost:5173
-- **Backend API**: http://localhost:8080
-- **API Documentation**: http://localhost:8080/api-docs
-- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **Frontend Application**: http://localhost:8081
+- **Backend API**: http://localhost:8082
+- **API Documentation**: http://localhost:8082/api-docs
+- **Swagger UI**: http://localhost:8082/swagger-ui.html
 
 #### Admin Credentials
 - **Username**: admin@company.com
