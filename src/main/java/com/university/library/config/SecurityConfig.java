@@ -163,7 +163,7 @@ public class SecurityConfig {
                         .successHandler(oAuth2LoginSuccessHandler)
                         .failureHandler((req, res, ex) -> {
                             String msg = URLEncoder.encode(ex.getMessage(), StandardCharsets.UTF_8);
-                            res.sendRedirect("http://localhost:5173/login?oauth_error=" + msg);
+                            res.sendRedirect("http://localhost:8081/login?oauth_error=" + msg);
                         })
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserDetailsService) // Use OAuth2UserService instead of OidcUserService
