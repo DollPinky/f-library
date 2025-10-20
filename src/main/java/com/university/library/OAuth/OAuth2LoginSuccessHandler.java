@@ -48,7 +48,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String accessToken  = jwtService.generateToken(account);
         String refreshToken = refreshTokenService.createRefreshToken(account).getToken();
 
-        String target = "http://localhost:80/user"
+        String target = "http://localhost:8081/user"
                 + "#access_token=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8)
                 + "&refresh_token=" + URLEncoder.encode(refreshToken, StandardCharsets.UTF_8)
                 + "&fullName=" + URLEncoder.encode(account.getFullName(), StandardCharsets.UTF_8)

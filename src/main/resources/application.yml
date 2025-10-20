@@ -37,7 +37,7 @@ spring:
             scope:
               - profile
               - email
-            redirect-uri: "http://localhost:8082/login/oauth2/code/google"   # -> http://localhost:8080/login/oauth2/code/google
+            redirect-uri: "http://localhost:8082/login/oauth2/code/google"   # -> http://localhost:8082/login/oauth2/code/google
         provider:
           google:
             issuer-uri: https://accounts.google.com
@@ -72,7 +72,7 @@ spring:
 
 # Server Configuration
 server:
-  port: ${APP_PORT:8080}
+  port: ${APP_PORT:8082}
 
 # Actuator Configuration
 management:
@@ -110,7 +110,7 @@ springdoc:
     oauth:
       client-id: YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com
       scopes: openid, email, profile
-    oauth2-redirect-url: http://localhost:8080/swagger-ui/oauth2-redirect.html
+    oauth2-redirect-url: http://localhost:8082/swagger-ui/oauth2-redirect.html
 
 
 gemini:
@@ -129,8 +129,8 @@ cohere:
 
 # Application Configuration
 app:
-  public-base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
-  api-base-url: ${APP_API_BASE_URL:http://localhost:8080/api/v1}
+  public-base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8082}
+  api-base-url: ${APP_API_BASE_URL:http://localhost:8082/api/v1}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
 
