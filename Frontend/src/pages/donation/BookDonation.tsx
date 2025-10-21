@@ -7,36 +7,73 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+// Mock data for UI display only (not API data)
 import { donationGuidelines, donationStats } from "@/data/mockData";
 import { getAllCategories } from "@/services/categoryService";
-import type { Category } from "@/types";
+import { getAllCampuses } from "@/services/campusService";
+import { getConfiguration } from "@/services/configurationService";
+import type { Campus, Category } from "@/types";
 import { CheckCircle, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const BookDonation = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingCampuses, setIsLoadingCampuses] = useState(true);
+  const [isLoadingShelfLocations, setIsLoadingShelfLocations] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
-  console.log(isLoading);
+  const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [shelfLocations, setShelfLocations] = useState<string[]>([]);
 
   useEffect(() => {
-    return () => {
-      const getCategories = async () => {
-        try {
-          const response = await getAllCategories();
-          if (response.success && response.data) {
-            setCategories(response.data);
-          }
-        } catch (err) {
-          console.log(err);
-
-          toast.error("Something when wrong!");
-        } finally {
-          setIsLoading(false);
+    const getCategories = async () => {
+      try {
+        setIsLoadingCategories(true);
+        const response = await getAllCategories();
+        if (response.success && response.data) {
+          setCategories(response.data);
         }
-      };
-      getCategories();
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        toast.error("Failed to load categories. Please try again.");
+      } finally {
+        setIsLoadingCategories(false);
+      }
     };
+
+    const getCampuses = async () => {
+      try {
+        setIsLoadingCampuses(true);
+        const response = await getAllCampuses();
+        if (response.success && response.data) {
+          setCampuses(response.data);
+        }
+      } catch (err) {
+        console.error("Error fetching campuses:", err);
+        toast.error("Failed to load campuses. Please try again.");
+      } finally {
+        setIsLoadingCampuses(false);
+      }
+    };
+
+    const getShelfLocations = async () => {
+      try {
+        setIsLoadingShelfLocations(true);
+        const response = await getConfiguration();
+        if (response.success && response.data) {
+          setShelfLocations(response.data.shelfLocations || []);
+        }
+      } catch (err) {
+        console.error("Error fetching shelf locations:", err);
+        toast.error("Failed to load shelf locations. Please try again.");
+      } finally {
+        setIsLoadingShelfLocations(false);
+      }
+    };
+
+    getCategories();
+    getCampuses();
+    getShelfLocations();
   }, []);
 
   return (
@@ -84,7 +121,14 @@ const BookDonation = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <BookDonationForm categories={categories} />
+          <BookDonationForm
+            categories={categories}
+            campuses={campuses}
+            shelfLocations={shelfLocations}
+            isLoadingCategories={isLoadingCategories}
+            isLoadingCampuses={isLoadingCampuses}
+            isLoadingShelfLocations={isLoadingShelfLocations}
+          />
         </div>
 
         <div className="space-y-6">

@@ -52,8 +52,8 @@ export interface Category {
   categoryId: string;
   name: string;
   description: string;
-  color?: string;
-  parentCategory?: Category;
+  color?: string | null;
+  parentCategory?: Category | null;
   subCategories?: Category[];
   bookCount: number;
   createdAt: string;

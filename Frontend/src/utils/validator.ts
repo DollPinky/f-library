@@ -1,4 +1,4 @@
-import { campusCodes } from "@/data/mockData";
+// import { campusCodes } from "@/data/mockData";
 import * as Yup from "yup";
 
 // Field validation messages
@@ -57,13 +57,11 @@ export const validationSchema = Yup.object({
     .max(200, "Book title must not exceed 200 characters"),
   campusCode: Yup.string()
     .required("Campus selection is required")
-    .oneOf(
-      campusCodes.map((campus) => campus.code),
-      "Please select a valid campus"
-    ),
+    .min(1, "Please select a valid campus"),
+
   shelfLocation: Yup.string()
     .required("Shelf location is required")
-    .max(10, "Shelf location must not exceed 10 characters"),
+    .max(20, "Shelf location must not exceed 20 characters"),
   category: Yup.string().required("Category selection is required"),
   description: Yup.string().max(
     500,
