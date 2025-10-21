@@ -1,6 +1,6 @@
 import type {
   BorrowedBookResponse,
-  BrorrowHistory,
+  BorrowHistoryPage,
   ReturnedBookResponse,
   StandardResponse,
 } from "@/types";
@@ -10,7 +10,7 @@ export const getBorrowHistoryByBookCopyId = async (
   bookCopyId: string,
   page: number = 1,
   size: number = 10
-): Promise<StandardResponse<BrorrowHistory>> => {
+): Promise<{ data: BorrowHistoryPage }> => {
   const res = await axiosClient.get(`borrowings/${bookCopyId}/history`, {
     params: { page, size },
   });

@@ -21,4 +21,15 @@ export interface BookDonationFormData {
   category: string;
   description: string;
 }
-export type TitleModalBook = "Borrow" | "Return";
+
+export interface ImportBookFromExcelResponse {
+  totalRecords: number;
+  successCount: number;
+  errorCount: number;
+  errors: Errors[];
+}
+export interface Errors {
+  rowNumber: number;
+  isbn: string;
+  errorMessage: string;
+}

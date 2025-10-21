@@ -17,27 +17,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import BookReturnModal from "@/components/feature/user/borrowBooks/BookReturnModal";
-import type { BorrowHistoryPage, BrorrowHistory } from "@/types";
+import type { BrorrowHistory } from "@/types";
 import { formatDate } from "@/utils/formatDate";
-import {
-  returnedBookByBookCopyId,
-  getBorrowHistoryByBookCopyId,
-} from "@/services/borrowBookService";
+import { returnedBookByBookCopyId } from "@/services/borrowBookService";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface BorrowHistoryTableProps {
-  bookCopyId: string;
+  history: BrorrowHistory[];
   refreshBookAndHistory: () => void;
 }
 
 export default function BorrowHistoryTable({
-  bookCopyId,
+  history,
   refreshBookAndHistory,
 }: BorrowHistoryTableProps) {
-  const [historyPage, setHistoryPage] = useState<BorrowHistoryPage | null>(
-    null
-  );
   const [currentPage, setCurrentPage] = useState<number>(1);
   const rowsPerPage = 10;
 
@@ -47,53 +41,16 @@ export default function BorrowHistoryTable({
     null
   );
 
-  const fetchHistory = async (page = 1, size = rowsPerPage) => {
-    if (!bookCopyId) {
-      setHistoryPage(null);
-      return;
-    }
-    try {
-      const res = await getBorrowHistoryByBookCopyId(bookCopyId, page, size);
+  const sortedHistory = [...history].sort(
+    (a, b) =>
+      new Date(b.borrowDate).getTime() - new Date(a.borrowDate).getTime()
+  );
 
-      const data = res?.data;
-      if (!data) {
-        setHistoryPage(null);
-        return;
-      }
-
-      if (typeof data === "object" && Array.isArray((data as any).content)) {
-        setHistoryPage(data as any);
-        return;
-      }
-
-      if (Array.isArray(data)) {
-        const pageData: any | BorrowHistoryPage = {
-          content: data as BrorrowHistory[],
-          number: page - 1,
-          size,
-          totalElements: (data as any).length,
-          totalPages: 1,
-          first: true,
-          last: true,
-        };
-        setHistoryPage(pageData);
-        return;
-      }
-
-      setHistoryPage(data as unknown as BorrowHistoryPage);
-    } catch (error) {
-      console.log(error, "Lỗi");
-      toast.error("Failed to load borrow history");
-    }
-  };
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [bookCopyId]);
-
-  useEffect(() => {
-    fetchHistory(currentPage, rowsPerPage);
-  }, [bookCopyId, currentPage]);
+  const totalPages = Math.ceil(sortedHistory.length / rowsPerPage);
+  const paginatedHistory = sortedHistory.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
 
   const handleChangePage = (page: number) => {
     setCurrentPage(page);
@@ -101,7 +58,6 @@ export default function BorrowHistoryTable({
 
   const handleReturnBook = (record: BrorrowHistory) => {
     setSelectedRecord(record);
-
     setIsReturnModalOpen(true);
   };
 
@@ -120,15 +76,12 @@ export default function BorrowHistoryTable({
       toast.success("Returned successfully!");
       setIsReturnModalOpen(false);
       refreshBookAndHistory();
-      fetchHistory(currentPage, rowsPerPage);
       return true;
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Return failed!");
       return false;
     }
   };
-
-  const historyData = historyPage?.content ?? [];
 
   return (
     <>
@@ -148,8 +101,8 @@ export default function BorrowHistoryTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {historyData.length > 0 ? (
-                  historyData.map((record, index) => (
+                {paginatedHistory.length > 0 ? (
+                  paginatedHistory.map((record, index) => (
                     <TableRow
                       key={record.bookCopyId + "-" + index}
                       className="hover:bg-muted/50"
@@ -188,7 +141,7 @@ export default function BorrowHistoryTable({
             </Table>
           </div>
 
-          {historyPage && (historyPage.totalPages ?? 0) > 1 && (
+          {totalPages > 1 && (
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
@@ -205,29 +158,28 @@ export default function BorrowHistoryTable({
                 </PaginationItem>
 
                 <PaginationItem>
-                  {Array.from(
-                    { length: historyPage.totalPages },
-                    (_, i) => i + 1
-                  ).map((page) => (
-                    <PaginationLink
-                      isActive={currentPage === page}
-                      key={page}
-                      onClick={() => handleChangePage(page)}
-                    >
-                      {page}
-                    </PaginationLink>
-                  ))}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <PaginationLink
+                        isActive={currentPage === page}
+                        key={page}
+                        onClick={() => handleChangePage(page)}
+                      >
+                        {page}
+                      </PaginationLink>
+                    )
+                  )}
                 </PaginationItem>
 
                 <PaginationItem>
                   <PaginationNext
                     className={
-                      currentPage >= historyPage.totalPages
+                      currentPage >= totalPages
                         ? "pointer-events-none opacity-50"
                         : "cursor-pointer"
                     }
                     onClick={() =>
-                      currentPage < historyPage.totalPages &&
+                      currentPage < totalPages &&
                       setCurrentPage(currentPage + 1)
                     }
                   />

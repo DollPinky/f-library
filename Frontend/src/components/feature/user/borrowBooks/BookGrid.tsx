@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import type { Book } from "@/types";
-import { ImageIcon } from "lucide-react";
+import { BookOpen, ImageIcon } from "lucide-react";
 import { useState } from "react";
 
 interface BookGridProps {
@@ -45,14 +45,15 @@ export default function BookGrid({
 
   if (books.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Không tìm thấy sách phù hợp</p>
+      <div className="text-center py-16 flex flex-col items-center">
+        <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+        <p className="text-muted-foreground text-lg">No matching books found</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-5">
+    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
       {books.map((book) => {
         const availableCopies = book.bookCopies?.filter(
           (copy) => copy.status === "AVAILABLE"
@@ -60,27 +61,30 @@ export default function BookGrid({
         const totalCopies = book.bookCopies?.length;
         const isAvailable = (availableCopies as any) > 0;
         const isLoading = loadingBooks[book.bookId] || false;
-
+        const hasBorrowed =
+          book.bookCopies?.some((copy) => copy.status === "BORROWED") ?? false;
         return (
           <Card
             key={book.bookId}
-            className="h-full flex flex-col overflow-hidden max-w-full sm:max-w-xs relative"
+            className="h-full flex flex-col overflow-hidden max-w-full shadow-sm hover:shadow-md transition-shadow duration-200 border-opacity-60"
           >
-            <Badge
-              variant={isAvailable ? "default" : "secondary"}
-              className={
-                "absolute top-2 right-2 z-10 px-2 py-0.5 text-xs " +
-                (isAvailable
-                  ? "bg-green-100 text-green-800"
-                  : "bg-yellow-100 text-yellow-800")
-              }
-            >
-              {isAvailable
-                ? `Còn ${availableCopies}/${totalCopies}`
-                : `Đang mượn ${totalCopies}/${totalCopies}`}
-            </Badge>
-            <CardContent className="py-3 flex-grow flex flex-row gap-2">
-              <div className="flex-shrink-0 w-14 h-20 rounded bg-muted flex items-center justify-center overflow-hidden">
+            <div className="relative">
+              <Badge
+                variant={isAvailable ? "default" : "secondary"}
+                className={
+                  "absolute top-2 right-2 z-10 px-2 py-0.5 text-xs font-medium " +
+                  (isAvailable
+                    ? "bg-green-100 text-green-800 border border-green-200"
+                    : "bg-yellow-100 text-yellow-800 border border-yellow-200")
+                }
+              >
+                {isAvailable
+                  ? `Available ${availableCopies}/${totalCopies}`
+                  : `All borrowed ${totalCopies}/${totalCopies}`}
+              </Badge>
+            </div>
+            <CardContent className="py-4 flex-grow flex flex-row gap-3">
+              <div className="flex-shrink-0 w-16 h-24 rounded-sm bg-muted flex items-center justify-center overflow-hidden shadow-sm border border-muted">
                 {book.bookCoverUrl ? (
                   <img
                     src={book.bookCoverUrl}
@@ -88,45 +92,54 @@ export default function BookGrid({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <ImageIcon className="h-7 w-7 text-muted-foreground" />
+                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
                 )}
               </div>
               <div className="flex flex-col h-full flex-1">
-                <h3 className="font-bold text-sm line-clamp-2 flex-1">
+                <h3 className="font-semibold text-sm line-clamp-2 flex-1 text-primary">
                   {book.title}
                 </h3>
-                <p className="text-xs text-muted-foreground mb-1">
-                  {book.author}
+                <p className="text-xs text-muted-foreground mb-1.5 mt-0.5 italic">
+                  by {book.author || "Unknown"}
                 </p>
-                <div className="flex flex-wrap gap-1 mb-1 mt-1">
-                  <Badge variant="outline" className="text-[10px]">
-                    {book.category?.name}
-                  </Badge>
-                  <Badge variant="outline" className="text-[10px]">
-                    {book.year}
-                  </Badge>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {book.category?.name && (
+                    <Badge variant="outline" className="text-[10px] px-2 py-0">
+                      {book.category?.name}
+                    </Badge>
+                  )}
+                  {book.year && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] bg-slate-50 px-2 py-0"
+                    >
+                      {book.year}
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-xs line-clamp-2 text-muted-foreground mt-auto">
-                  {book.description || "Không có mô tả"}
+                  {book.description || "No description available"}
                 </p>
               </div>
             </CardContent>
-            <CardFooter className="pt-2 pb-3 flex gap-2 justify-between">
+            <CardFooter className="pt-1 pb-4 flex gap-3 justify-between">
               <Button
-                variant="default"
+                variant={isAvailable ? "default" : "outline"}
                 onClick={() => handleBorrow(book)}
                 disabled={!isAvailable || isLoading}
-                className="w-1/2 text-xs py-2"
+                className="w-1/2 text-xs py-2 h-8 font-medium"
+                size="sm"
               >
-                {isLoading ? "Đang xử lý..." : "Mượn"}
+                {isLoading ? "Processing..." : "Borrow"}
               </Button>
               <Button
-                variant="secondary"
+                variant={hasBorrowed ? "secondary" : "outline"}
                 onClick={() => handleReturn && handleReturn(book)}
-                disabled={isLoading}
-                className="w-1/2 text-xs py-2"
+                disabled={isLoading || !hasBorrowed}
+                className="w-1/2 text-xs py-2 h-8 font-medium"
+                size="sm"
               >
-                {isLoading ? "Đang xử lý..." : "Trả"}
+                {isLoading ? "Processing..." : "Return"}
               </Button>
             </CardFooter>
           </Card>
