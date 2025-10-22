@@ -41,7 +41,8 @@ build-job:       # This job runs in the build stage, which runs first.
     - library
   script:
     - echo "Compiling the code..."
-    - echo "Compile complete."
+    - gradlew build
+    - docker compose down -v
 
 # unit-test-job:   # This job runs in the test stage.
 #   stage: test    # It only starts when the job in the build stage completes successfully.
@@ -61,9 +62,9 @@ build-job:       # This job runs in the build stage, which runs first.
 #     - sleep 10
 #     - echo "No lint issues found."
 
-# deploy-job:      # This job runs in the deploy stage.
-#   stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
-#   environment: production
-#   script:
-#     - echo "Deploying application..."
-#     - echo "Application successfully deployed."
+deploy-job:      # This job runs in the deploy stage.
+   stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
+   environment: production
+   script:
+     - echo "Deploying application..."
+     - docker compose up -d --build
