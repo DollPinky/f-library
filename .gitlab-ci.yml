@@ -40,6 +40,7 @@ build-job:       # This job runs in the build stage, which runs first.
     - library
   script:
     - echo "Compiling the code..."
+    - chmod +x gradlew
     - ./gradlew build
     - docker compose down -v
 
