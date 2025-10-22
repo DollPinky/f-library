@@ -99,16 +99,15 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SERVER_PORT: 8080
-    #expose: ["8080"]
+      SERVER_PORT: 8082
+    #expose: ["8082"]
     expose: ["${BACKEND_PORT_INTERNAL}"]
     ports:
-      #- "0.0.0.0:8082:8080"
+      #- "0.0.0.0:8082:8082"
       - "${BACKEND_PORT_EXTERNAL}:${BACKEND_PORT_INTERNAL}"
-    networks:
-      - library-network
+    networks: [library-network]
 #    healthcheck:
-#      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+#      test: ["CMD", "curl", "-f", "http://localhost:8082/api/health"]
 #      interval: 30s
 #      timeout: 10s
 #      retries: 3
@@ -121,22 +120,19 @@ services:
     container_name: library-frontend
     depends_on:
       - library-app
-#    environment:
-##      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8082/api/v1
-#      - NEXT_PUBLIC_API_BASE_URL=https://libraryfsoft.ddns.net/api/v1
-#      - NODE_ENV=development
-#    #expose: ["3000"]
-#    expose: ["${FRONTEND_PORT_INTERNAL}"]
-#    ports:
-#      #- "0.0.0.0:8081:3000"
-#      - "${FRONTEND_PORT_EXTERNAL}:${FRONTEND_PORT_INTERNAL}"
-#    volumes:
-#      - ./frontend:/app
-#      - /app/node_modules
+    environment:
+#      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8082/api/v1
+      - NEXT_PUBLIC_API_BASE_URL=https://libraryfsoft.ddns.net/api/v1
+      - NODE_ENV=development
+    #expose: ["8081"]
+    expose: ["${FRONTEND_PORT_INTERNAL}"]
     ports:
-      - "80:80"
-    networks:
-      - library-network
+      #- "0.0.0.0:8081:8081"
+      - "${FRONTEND_PORT_EXTERNAL}:${FRONTEND_PORT_INTERNAL}"
+    volumes:
+      - /frontend:/app
+      - /app/node_modules
+    networks: [library-network]
 
 volumes:
   postgres_data:
