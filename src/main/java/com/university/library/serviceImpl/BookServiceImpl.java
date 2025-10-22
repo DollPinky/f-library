@@ -17,6 +17,8 @@ import com.university.library.repository.CampusRepository;
 import com.university.library.repository.CategoryRepository;
 import com.university.library.service.BookService;
 import com.university.library.specification.BookSpecification;
+import jakarta.persistence.Column;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,11 +33,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -47,10 +51,12 @@ public class BookServiceImpl implements BookService {
     private final CategoryRepository categoryRepository;
     private final CampusRepository campusRepository;
     private final BookCopyRepository bookCopyRepository;
+    private final BookCopyRepository copyRepository;
+
     /**
-     QueryBook
+     * QueryBook
      */
-     public List<BookResponse> getAllBook(){
+    public List<BookResponse> getAllBook() {
         List<Book> book = bookRepository.findAll();
         List<BookResponse> responses = book.stream()
                 .map(BookResponse::fromEntity)
@@ -58,6 +64,7 @@ public class BookServiceImpl implements BookService {
 
         return responses;
     }
+
     public BookResponse getBookById(UUID bookId) {
         log.info(BookConstants.LOG_GETTING_BOOK, bookId);
 
@@ -117,7 +124,6 @@ public class BookServiceImpl implements BookService {
         log.info(BookConstants.LOG_CREATING_BOOK, command.getTitle());
 
 
-
         Category category = categoryRepository.findById(command.getCategoryId())
                 .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_CATEGORY_NOT_FOUND + command.getCategoryId()));
 
@@ -141,8 +147,6 @@ public class BookServiceImpl implements BookService {
     }
 
 
-
-
     /**
      * Cập nhật sách với UpdateBookCommand
      */
@@ -152,7 +156,6 @@ public class BookServiceImpl implements BookService {
 
         Book existingBook = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException(BookConstants.ERROR_BOOK_NOT_FOUND + bookId));
-
 
 
         Category category = categoryRepository.findById(command.getCategoryId())
@@ -193,47 +196,49 @@ public class BookServiceImpl implements BookService {
     }
 
 
-
     private boolean hasActiveBorrowings(UUID bookId) {
         return false;
     }
 
     @Transactional
     public BookImportResponse importBooksFromExcel(MultipartFile file) {
-        log.info("Importing books from Excel file: {}", file.getOriginalFilename());
+        log.info("Importing books from CSV file: {}", file.getOriginalFilename());
 
         BookImportResponse response = new BookImportResponse();
         List<BookImportResponse.ImportError> errors = new ArrayList<>();
 
-        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
-            Sheet sheet = workbook.getSheetAt(0);
-            Iterator<Row> rowIterator = sheet.iterator();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
 
-            // Bỏ qua dòng tiêu đề
-            if (rowIterator.hasNext()) rowIterator.next();
-
-            int rowNum = 1;
+            String line;
+            boolean isHeader = true;
+            int rowNum = 0;
             int successCount = 0;
             int processedCount = 0;
 
-            while (rowIterator.hasNext()) {
-                Row row = rowIterator.next();
+            while ((line = reader.readLine()) != null) {
                 rowNum++;
 
-                // Bỏ qua các dòng trống
-                if (isRowEmpty(row)) {
+                // Bỏ qua dòng tiêu đề
+                if (isHeader) {
+                    isHeader = false;
                     continue;
                 }
-
+                // Bỏ qua dòng trống
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
                 processedCount++;
 
                 try {
-                    importBookFromRow(row);
+                    //  Tách theo dấu phẩy (CSV chuẩn)
+                    String[] parts = line.split(",", -1);// -1 để giữ cột trống
+                    importBookFromRow(parts);
                     successCount++;
+
                 } catch (Exception e) {
                     log.error("Error importing book at row {}: {}", rowNum, e.getMessage());
-                    String isbn = getCellValueAsString(row.getCell(0));
-                    errors.add(new BookImportResponse.ImportError(rowNum, isbn, e.getMessage()));
+                    errors.add(new BookImportResponse.ImportError(rowNum, e.getMessage()));
                 }
             }
 
@@ -243,15 +248,80 @@ public class BookServiceImpl implements BookService {
             response.setErrors(errors);
 
         } catch (Exception e) {
-            log.error("Error processing Excel file: {}", e.getMessage());
-            throw new RuntimeException("Failed to process Excel file: " + e.getMessage());
+            log.error("Error processing CSV file: {}", e.getMessage());
+            throw new RuntimeException("Failed to process CSV file: " + e.getMessage());
         }
 
         return response;
     }
 
+
+    private boolean isNumeric(String str) {
+        if (str == null || str.isEmpty()) return false;
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
     @Override
-    public BookResponse updateBookCoverUrl(UUID bookId, String bookCoverUrl){
+    public byte[] exportExcel(List<String[]> data) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Books");
+        for (int i = 0; i < data.size(); i++) {
+            Row row = sheet.createRow(i);
+            String[] dataRow = data.get(i);
+            for (int j = 0; j < dataRow.length; j++) {
+                Cell cell = row.createCell(j);
+                String value = dataRow[j];
+                if (isNumeric(value)) {
+                    if(value.equals("0"))
+                    {
+                        cell.setCellValue("");
+                    }
+                    else {
+                        cell.setCellValue(Double.parseDouble(value));
+                    }
+                } else {
+                    cell.setCellValue(value);
+                }
+            }
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+        workbook.close();
+        return out.toByteArray();
+    }
+
+    @Override
+    public List<String[]> getDataBookToExport() {
+      List<String[]> data = new ArrayList<>();
+      data.add(new String[]{"Title", "Author", "Quantity","FT1: Learning Hub","FT2: Library","FT2: CanTeen"
+      ,"FT3: FHM","FT3: EBS","FT3: SanhBang","FT3: Lounge"
+      });
+        List<Book> books = bookRepository.findAll();
+
+      for (Book book : books) {
+          data.add(
+                  new String[]{
+                          book.getTitle(), book.getAuthor(), String.valueOf(book.getBookCopies().size()),
+                          bookCopyRepository.countByBookAndShelfLocation(book,BookCopy.ShelfLocation.FT1_LEARNING_HUB.name()),
+                          bookCopyRepository.countByBookAndShelfLocation(book,BookCopy.ShelfLocation.FT1_LIBRARY.name()),
+                          bookCopyRepository.countByBookAndShelfLocation(book,BookCopy.ShelfLocation.FT2_CANTEEN.name()),
+                          bookCopyRepository.countByBookAndShelfLocation(book,BookCopy.ShelfLocation.FT3_FHM.name()),
+                          bookCopyRepository.countByBookAndShelfLocation(book,BookCopy.ShelfLocation.FT3_EBS.name()),
+                          bookCopyRepository.countByBookAndShelfLocation(book,BookCopy.ShelfLocation.FT3_SANH_BANG.name()),
+                          bookCopyRepository.countByBookAndShelfLocation(book,BookCopy.ShelfLocation.FT3_LOUNGE.name()),
+                  }
+          );
+      }
+        return data;
+    }
+
+    @Override
+    public BookResponse updateBookCoverUrl(UUID bookId, String bookCoverUrl) {
 
         log.info(BookConstants.LOG_UPDATING_BOOK, bookId);
 
@@ -269,121 +339,23 @@ public class BookServiceImpl implements BookService {
         return bookResponse;
     }
 
-    private boolean isRowEmpty(Row row) {
-        if (row == null) {
-            return true;
-        }
-        if (row.getLastCellNum() <= 0) {
-            return true;
-        }
-        for (int cellNum = row.getFirstCellNum(); cellNum < row.getLastCellNum(); cellNum++) {
-            Cell cell = row.getCell(cellNum);
-            if (cell != null && cell.getCellType() != CellType.BLANK && !isCellEmpty(cell)) {
-                return false;
-            }
-        }
-        return true;
-    }
 
-    private boolean isCellEmpty(Cell cell) {
-        if (cell.getCellType() == CellType.BLANK) {
-            return true;
-        }
-        if (cell.getCellType() == CellType.STRING && cell.getStringCellValue().trim().isEmpty()) {
-            return true;
-        }
-        return false;
-    }
-
-    private String getCellValueAsString(Cell cell) {
-        if (cell == null) return null;
-
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue().trim();
-            case NUMERIC:
-                if (DateUtil.isCellDateFormatted(cell)) {
-                    return cell.getDateCellValue().toString();
-                } else {
-                    double numericValue = cell.getNumericCellValue();
-                    // Kiểm tra xem giá trị số có phải là số nguyên không
-                    if (numericValue == Math.floor(numericValue)) {
-                        // Sử dụng BigDecimal để giữ nguyên độ chính xác của số lớn
-                        BigDecimal bigDecimal = BigDecimal.valueOf(numericValue);
-                        return bigDecimal.toPlainString();
-                    } else {
-                        return String.valueOf(numericValue);
-                    }
-                }
-            case BOOLEAN:
-                return String.valueOf(cell.getBooleanCellValue());
-            case FORMULA:
-                // Xử lý ô công thức
-                FormulaEvaluator evaluator = new XSSFWorkbook().getCreationHelper().createFormulaEvaluator();
-                CellValue cellValue = evaluator.evaluate(cell);
-                switch (cellValue.getCellType()) {
-                    case STRING:
-                        return cellValue.getStringValue();
-                    case NUMERIC:
-                        return String.valueOf(cellValue.getNumberValue());
-                    case BOOLEAN:
-                        return String.valueOf(cellValue.getBooleanValue());
-                    default:
-                        return "";
-                }
-            default:
-                return "";
-        }
-    }
-
-    private Integer getCellValueAsInteger(Cell cell) {
-        if (cell == null) return null;
-
-        switch (cell.getCellType()) {
-            case NUMERIC:
-                return (int) cell.getNumericCellValue();
-            case STRING:
-                try {
-                    return Integer.parseInt(cell.getStringCellValue().trim());
-                } catch (NumberFormatException e) {
-                    return null;
-                }
-            default:
-                return null;
-        }
-    }
-
-    private boolean isBlank(String str) {
-        return str == null || str.trim().isEmpty();
-    }
-
-    private void importBookFromRow(Row row) {
+    private void importBookFromRow(String values[]) {
+        log.info("Parse data from file: {}", values);
         // Parse dữ liệu từ dòng Excel
-        String isbn = getCellValueAsString(row.getCell(0)); // BookCopyId (ISBN)
-
-        if (isBlank(isbn)) {
-            throw new RuntimeException("ISBN is required");
+        String titleRaw = values[1];
+        String title = titleRaw.contains("-") ? titleRaw.split("-")[1].trim() : titleRaw.trim();
+        String author = values[2].trim();
+        String categoryName = values[3].trim();
+        String publisher = values[4].trim();
+        Integer quantity;
+        try {
+            quantity = Integer.parseInt(values[5].trim());
+        } catch (Exception e) {
+            throw new RuntimeException("Fail to cast number: " + e.getMessage());
         }
-
-        if (isbn.length() != 10 && isbn.length() != 13) {
-            throw new RuntimeException("ISBN must be 10 or 13 digits");
-        }
-
-        String title = getCellValueAsString(row.getCell(1));
-        String author = getCellValueAsString(row.getCell(2));
-        String publisher = getCellValueAsString(row.getCell(3));
-        Integer year = getCellValueAsInteger(row.getCell(4));
-        String description = getCellValueAsString(row.getCell(5));
-        String categoryName = getCellValueAsString(row.getCell(6));
-        String language = getCellValueAsString(row.getCell(7));
-        String campusCode = getCellValueAsString(row.getCell(8));
-        String shelfLocation = getCellValueAsString(row.getCell(9));
-
-        // Kiểm tra nếu book copy đã tồn tại theo ISBN
-        if (bookCopyRepository.existsById(UUID.fromString(isbn))) {
-            throw new RuntimeException("Book copy with ISBN " + isbn + " already exists");
-        }
-
+        String campusCode =  "HCM";
+        //!values[6].isEmpty() ? values[6].trim() :
         // Tìm hoặc tạo category
         Category category = categoryRepository.findByName(categoryName)
                 .orElseGet(() -> {
@@ -400,31 +372,88 @@ public class BookServiceImpl implements BookService {
         }
 
         // Tìm sách đã tồn tại hoặc tạo mới
-        Book book = bookRepository.findByTitleAndAuthorAndPublisherAndYear(title, author, publisher, year)
+        Book book = bookRepository.findByTitleAndAuthorAndPublisher(title, author, publisher)
                 .orElseGet(() -> {
                     Book newBook = Book.builder()
                             .title(title)
                             .author(author)
                             .publisher(publisher)
-                            .year(year)
-                            .description(description)
-                            .language(language != null ? language : "Vietnamese")
                             .category(category)
                             .build();
                     return bookRepository.save(newBook);
                 });
+          List<String> shefl = getShelfLocation(quantity);
+        // Tạo book copy
+        List<BookCopy> bookCopyList = new ArrayList<>();
+        while (quantity > 0) {
+            BookCopy bookCopy = BookCopy.builder()
+                    .book(book)
+                    .campus(campus)
+                    .shelfLocation(shefl.get(shefl.size() - quantity))
+                    .status(BookCopy.BookStatus.AVAILABLE)
+                    .build();
+            bookCopyList.add(bookCopy);
+            quantity--;
+        }
+        bookCopyRepository.saveAll(bookCopyList);
+        log.info("Save data to database");
 
-        // Tạo book copy với ISBN làm ID
-        BookCopy bookCopy = BookCopy.builder()
-                .bookCopyId(UUID.nameUUIDFromBytes(isbn.getBytes()))
-                .book(book)
-                .campus(campus)
-                .shelfLocation(shelfLocation)
-                .status(BookCopy.BookStatus.AVAILABLE)
-                .build();
-
-        bookCopyRepository.save(bookCopy);
     }
+    public List<String> getShelfLocation(int quantiy)
+    {
+        List<String> shelfLocation = new ArrayList<>();
+        Random random = new Random();
+            if(quantiy == 1) {
+                shelfLocation.add(BookCopy.ShelfLocation.FT1_LEARNING_HUB.name());
+            }else if (quantiy == 2) {
+                shelfLocation.add(BookCopy.ShelfLocation.FT1_LEARNING_HUB.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT1_LIBRARY.name());
+            }else if (quantiy == 3 ) {
+                shelfLocation.add(BookCopy.ShelfLocation.FT1_LEARNING_HUB.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT1_LIBRARY.name());
+                if(random.nextInt(2) == 1 )
+                {
+                    shelfLocation.add(BookCopy.ShelfLocation.FT1_LEARNING_HUB.name());
+
+                }else {
+                    shelfLocation.add( BookCopy.ShelfLocation.FT1_LIBRARY.name());
+
+                }
+            }else if (quantiy == 4) {
+                shelfLocation.add(BookCopy.ShelfLocation.FT1_LEARNING_HUB.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT1_LIBRARY.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT3_FHM.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT3_EBS.name());
+            }
+            else if(quantiy == 5) {
+                shelfLocation.add(BookCopy.ShelfLocation.FT1_LEARNING_HUB.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT1_LIBRARY.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT2_CANTEEN.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT3_FHM.name());
+                if(random.nextInt(2) == 1 )
+                {
+                    shelfLocation.add(BookCopy.ShelfLocation.FT1_LEARNING_HUB.name());
+                }else {
+                    shelfLocation.add( BookCopy.ShelfLocation.FT1_LIBRARY.name());
+                }
+            }else if(quantiy > 5) {
+                shelfLocation.add( BookCopy.ShelfLocation.FT2_CANTEEN.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT3_FHM.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT3_EBS.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT3_SANH_BANG.name());
+                shelfLocation.add( BookCopy.ShelfLocation.FT3_LOUNGE.name());
+                int du = quantiy - 5;
+                if(du > 0) {
+                    int chia =  (int) Math.ceil(du / 2.0);
+                    shelfLocation.addAll(Collections.nCopies(chia, BookCopy.ShelfLocation.FT1_LEARNING_HUB.name()));
+                    shelfLocation.addAll(Collections.nCopies(du -chia, BookCopy.ShelfLocation.FT1_LIBRARY.name()));
+                }
+            }
+
+        return  shelfLocation;
+    }
+
+
 
 
 
