@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -221,6 +222,18 @@ public class BorrowingServiceImpl implements BorrowingService {
         if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.BORROWED)) {
             throw new RuntimeException("Sách không trong trạng thái đang mượn");
         }
+
+        var context = SecurityContextHolder.getContext();
+        String email = context.getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("UserEmail Not Found At getCurrentUserProfile()" + email));
+
+        if(!user.getRole().equals(User.AccountRole.ADMIN)){
+            if(!user.getUserId().equals(borrowing.getBorrower().getUserId())){
+                throw new RuntimeException("Account not permission to return this book, because not exactly borrower");
+            }
+        }
+
 
         LocalDateTime returnDate = LocalDateTime.now();
         double fine = borrowing.calculateFine();
