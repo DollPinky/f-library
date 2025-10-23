@@ -229,7 +229,8 @@ function LoginForm() {
             onClick={handleGoogleLogin}
           >
             <a
-              href="http://localhost:8082/oauth2/authorization/google"
+//               href="http://localhost:8082/oauth2/authorization/google"
+              href="https://v2.thuvienfpt.com/api/oauth2/authorization/google"
               className="inline-flex items-center rounded-md px-4 py-2"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
