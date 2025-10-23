@@ -116,6 +116,17 @@ export default function BookGrid({
                       {book.year}
                     </Badge>
                   )}
+                  {book.bookCopies?.map((copy, idx) =>
+                    copy.shelfLocation ? (
+                      <Badge
+                        key={idx}
+                        variant="outline"
+                        className="text-[10px] bg-blue-50 px-2 py-0"
+                      >
+                        {copy.shelfLocation}
+                      </Badge>
+                    ) : null
+                  )}
                 </div>
                 <p className="text-xs line-clamp-2 text-muted-foreground mt-auto">
                   {book.description || "No description available"}
