@@ -10,6 +10,14 @@ import java.util.Map;
 @Data
 @Builder
 public class ConfigurationResponse {
-    private Map<String, List<String>> campus;
+    private List<CampusResponse> campus;
     private List<String> shelfLocations;
+
+    @Builder
+    @Data
+    public static class  CampusResponse{
+        private String campusCode;
+        private String campusName;
+    }
+
 }

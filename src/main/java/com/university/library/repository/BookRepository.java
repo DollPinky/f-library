@@ -22,5 +22,7 @@ public interface BookRepository extends JpaRepository<Book, UUID>, JpaSpecificat
   SELECT b FROM Book b WHERE lower(b.title)  = lower( :title)
 """)
     Book findByTitleEqualsIgnoreCase(String title);
+
+    Optional<Book> findByTitleAndAuthorAndPublisher(String title, String author, String publisher);
 }
 

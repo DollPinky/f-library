@@ -1,5 +1,7 @@
 package com.university.library.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.university.library.base.BaseEntity;
 import jakarta.persistence.*;
 import java.time.Instant;
@@ -47,5 +49,16 @@ public class BookCopy extends BaseEntity {
     public enum BookStatus {
         AVAILABLE, BORROWED, RESERVED, PENDING, LOST, DAMAGED
     }
+    public enum ShelfLocation {
+        FT1_LEARNING_HUB,
+        FT1_LIBRARY,
+        FT2_CANTEEN,
+        FT3_FHM,
+        FT3_EBS,
+        FT3_SANH_BANG,
+        FT3_LOUNGE
+
+    }
+
 } 
 

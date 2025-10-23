@@ -81,14 +81,14 @@ private void createBookCopy() {
                         .book(book1)
                         .campus(campus)
                         .status(BookCopy.BookStatus.AVAILABLE)
-                        .shelfLocation("Shelf A1")
+                        .shelfLocation(BookCopy.ShelfLocation.FT1_LIBRARY.name())
                         .build(),
                 BookCopy.builder()
                         .bookCopyId(UUID.randomUUID())
                         .book(book1)
                         .campus(campus)
                         .status(BookCopy.BookStatus.AVAILABLE)
-                        .shelfLocation("Shelf A2")
+                        .shelfLocation(BookCopy.ShelfLocation.FT1_LEARNING_HUB.name())
                         .build(),
                 // 2 copy cho book2
                 BookCopy.builder()
@@ -96,15 +96,15 @@ private void createBookCopy() {
                         .book(book2)
                         .campus(campus)
                         .status(BookCopy.BookStatus.AVAILABLE)
-                        .shelfLocation("Shelf B1")
+                        .shelfLocation(BookCopy.ShelfLocation.FT2_CANTEEN.name())
                         .build(),
                 BookCopy.builder()
                         .bookCopyId(UUID.randomUUID())
                         .book(book2)
                         .campus(campus)
                         .status(BookCopy.BookStatus.AVAILABLE)
-                        .shelfLocation("Shelf B2")
-                        .build()
+                        .shelfLocation(BookCopy.ShelfLocation.FT3_SANH_BANG.name())
+                        .build(),
         };
 
         // Lưu vào DB
@@ -159,24 +159,30 @@ private void createBookCopy() {
         Campus[] campuses = {
                 Campus.builder()
                         .name("Chi nhánh TP.HCM")
-                        .code("HCM-F-Town-1")
-                        .address("456 Đường Nguyễn Huệ, Quận 1, TP.HCM")
-                        .build(),
-                Campus.builder()
-                        .name("Chi nhánh TP.HCM")
-                        .code("HCM-F-Town-2")
+                        .code("HCM")
                         .address("456 Đường Nguyễn Huệ, Quận 1, TP.HCM")
                         .build(),
                 Campus.builder()
                         .name("Chi nhánh Hà Nội")
-                        .code("HN-F-Town-3")
+                        .code("HN")
                         .address("123 Đường Lê Lợi, Quận Hoàn Kiếm, Hà Nội")
                         .build(),
                 Campus.builder()
-                        .name("Chi nhánh Hà Nội")
-                        .code("HN-F-Town-4")
+                        .name("Chi nhánh Cần Thơ")
+                        .code("CT")
                         .address("124 Đường Lê Lợi, Quận Hoàn Kiếm, Hà Nội")
                         .build(),
+                Campus.builder()
+                        .name("Chi nhánh Đà Nẵng")
+                        .code("DN")
+                        .address("124 Đường Lê Lợi, Quận Hoàn Kiếm, Hà Nội")
+                        .build(),
+                Campus.builder()
+                        .name("Chi nhánh Quy nhơn")
+                        .code("QN")
+                        .address("124 Đường Lê Lợi, Quận Hoàn Kiếm, Hà Nội")
+                        .build(),
+
 
         };
 
@@ -292,7 +298,7 @@ private void createBookCopy() {
                         .position("System Administrator")
                         .companyAccount("EMP001")
                         .isActive(true)
-                        .campus(campusMap.get("HCM-F-Town-1"))
+                        .campus(campusMap.get("FT3FHM"))
                         .roles(Set.of(adminRole))
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
@@ -308,7 +314,7 @@ private void createBookCopy() {
                         .position("Nhân viên Marketing")
                         .companyAccount("EMP005")
                         .isActive(true)
-                        .campus(campusMap.get("HCM-F-Town-1"))
+                        .campus(campusMap.get("FT3FHM"))
                         .roles(Set.of(readerRole))
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
@@ -323,7 +329,7 @@ private void createBookCopy() {
                         .position("Nhân viên Sales")
                         .companyAccount("EMP006")
                         .isActive(true)
-                        .campus(campusMap.get("HCM-F-Town-1"))
+                        .campus(campusMap.get("HN"))
                         .roles(Set.of(readerRole))
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
@@ -338,7 +344,7 @@ private void createBookCopy() {
                         .position("Lập trình viên")
                         .companyAccount("EMP007")
                         .isActive(true)
-                        .campus(campusMap.get("HCM-F-Town-1"))
+                        .campus(campusMap.get("HCM"))
                         .roles(Set.of(readerRole))
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
@@ -353,7 +359,7 @@ private void createBookCopy() {
                         .position("Nhân viên HR")
                         .companyAccount("EMP008")
                         .isActive(true)
-                        .campus(campusMap.get("HCM-F-Town-1"))
+                        .campus(campusMap.get("HCM"))
                         .roles(Set.of(readerRole))
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
@@ -368,7 +374,7 @@ private void createBookCopy() {
                         .position("Kế toán")
                         .companyAccount("EMP009")
                         .isActive(true)
-                        .campus(campusMap.get("HCM-F-Town-1"))
+                        .campus(campusMap.get("DN"))
                         .roles(Set.of(readerRole))
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
@@ -383,7 +389,7 @@ private void createBookCopy() {
                         .position("Kế toán")
                         .companyAccount("EMP010")
                         .isActive(true)
-                        .campus(campusMap.get("HCM-F-Town-1"))
+                        .campus(campusMap.get("DN"))
                         .roles(Set.of(readerRole))
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())

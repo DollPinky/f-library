@@ -63,7 +63,7 @@ repositories {
 dependencies {
 
     implementation ("me.paulschwarz:spring-dotenv:4.0.0")
-
+    implementation("org.apache.poi:poi-ooxml:5.3.0")
 
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
