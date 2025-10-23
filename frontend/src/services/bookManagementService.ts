@@ -8,6 +8,7 @@ import type {
   DeleteBookResponse,
   StandardResponse,
 } from "@/types";
+import type { ImportBookFromExcelResponse } from "@/types/Book";
 
 // Create new book
 export const createBooks = async (
@@ -54,6 +55,35 @@ export const getBookByBookId = async (
   return res.data;
 };
 
+export const importBookFromExcel = async (
+  file: File
+): Promise<StandardResponse<ImportBookFromExcelResponse>> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await axiosClient.post("/books/import", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+  return res.data;
+};
+
+export const exportBookFromExcel = async (): Promise<void> => {
+  const res = await axiosClient.get("/book-copies/generate-all-qr-codes", {
+    responseType: "blob",
+    headers: { Accept: "application/pdf" },
+  });
+
+  const url = window.URL.createObjectURL(
+    new Blob([res.data], { type: "application/pdf" })
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "book-qr-codes.pdf");
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
 export const bookManagementService = {
   createBooks,
   searchBooks,
@@ -61,6 +91,7 @@ export const bookManagementService = {
   deleteBook,
   getAllBooks,
   getBookByBookId,
+  importBookFromExcel,
 };
 
 export default bookManagementService;

@@ -6,7 +6,7 @@ import type {
 } from "axios";
 import type { StandardResponse } from "@/types";
 
-const BASE_URL = "/api/v1";
+const BASE_URL = "http://localhost:8082/api/v1";
 
 const axiosClient = axios.create({
   baseURL: BASE_URL,

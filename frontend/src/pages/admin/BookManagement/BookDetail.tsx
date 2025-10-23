@@ -3,7 +3,7 @@ import BorrowHistoryTable from "@/components/feature/admin/bookManagerment/bookD
 import { Button } from "@/components/ui/button";
 import { getBookByBookId } from "@/services/bookManagementService";
 import { getBorrowHistoryByBookCopyId } from "@/services/borrowBookService";
-import type { Book, BrorrowHistory } from "@/types";
+import type { Book, BorrowHistoryPage, BrorrowHistory } from "@/types";
 
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -32,15 +32,13 @@ export default function BookDetail() {
 
       if (bookRes.data?.bookCopies && bookRes.data.bookCopies.length > 0) {
         const allHistory: BrorrowHistory[] = [];
-        for (const his of bookRes.data.bookCopies) {
+        for (const copy of bookRes.data.bookCopies) {
           try {
-            const historyRes = await getBorrowHistoryByBookCopyId(
-              his.bookCopyId
-            );
-            if (Array.isArray(historyRes.data)) {
-              allHistory.push(...historyRes.data);
-            } else if (historyRes.data) {
-              allHistory.push(historyRes.data);
+            const historyRes: { data: BorrowHistoryPage } =
+              await getBorrowHistoryByBookCopyId(copy.bookCopyId);
+            const content = historyRes.data.content;
+            if (Array.isArray(content)) {
+              allHistory.push(...content);
             }
           } catch (error) {
             console.log(error, "Error");
@@ -52,7 +50,6 @@ export default function BookDetail() {
       }
     } catch (error) {
       console.log(error);
-
       setError("Failed to load book details or borrow history.");
     } finally {
       setLoading(false);
@@ -123,7 +120,7 @@ export default function BookDetail() {
       <BookInforCard book={book} refreshBookAndHistory={fetchBookAndHistory} />
 
       <BorrowHistoryTable
-        bookCopyId={book.bookCopies?.[0]?.bookCopyId || ""}
+        history={history}
         refreshBookAndHistory={fetchBookAndHistory}
       />
     </div>

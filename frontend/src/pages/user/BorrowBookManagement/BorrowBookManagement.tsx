@@ -22,12 +22,10 @@ export default function BorrowBookManagement() {
   const itemsPerPage = 10;
   console.log(error);
 
-  // Trạng thái cho modal mượn sách
   const [borrowModalOpen, setBorrowModalOpen] = useState(false);
   const [bookToBorrow, setBookToBorrow] = useState<Book | null>(null);
   const [borrowBookCopyId, setBorrowBookCopyId] = useState<string | null>(null);
 
-  // Trạng thái cho modal trả sách
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [bookToReturn, setBookToReturn] = useState<Book | null>(null);
   const [returnBookCopyId, setReturnBookCopyId] = useState<string | null>(null);
@@ -102,7 +100,7 @@ export default function BorrowBookManagement() {
       setBorrowBookCopyId(availableCopy.bookCopyId);
       setBorrowModalOpen(true);
     } else {
-      toast.error("No available copies to borrow");
+      toast.error("No copies of this book are currently available to borrow.");
     }
     return Promise.resolve();
   };
@@ -117,7 +115,7 @@ export default function BorrowBookManagement() {
       setReturnBookCopyId(borrowedCopy.bookCopyId);
       setReturnModalOpen(true);
     } else {
-      toast.error("You don't have any borrowed copies to return");
+      toast.error("You have no borrowed copies of this book to return.");
     }
     return Promise.resolve();
   };

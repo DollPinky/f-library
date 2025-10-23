@@ -7,12 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
 
 import type { Book } from "@/types";
-import { Plus } from "lucide-react";
+import { Download, Plus, Share } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { deleteBook, getAllBooks } from "@/services/bookManagementService";
+import {
+  deleteBook,
+  exportBookFromExcel,
+  getAllBooks,
+} from "@/services/bookManagementService";
+import ImportBookModal from "@/components/feature/admin/bookManagerment/ImportBookModal";
 
 export function BookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -24,6 +29,7 @@ export function BookManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [bookToDelete, setBookToDelete] = useState<Book | undefined>();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const navigate = useNavigate();
   const itemsPerPage = 10;
 
@@ -31,9 +37,8 @@ export function BookManagement() {
     const fetchBooks = async () => {
       try {
         const res = await getAllBooks();
-        console.log("API Response:", res); // Debug log
+        console.log("API Response:", res);
 
-        // Handle different response structures
         const booksArray = Array.isArray(res)
           ? res
           : res?.data && Array.isArray(res.data)
@@ -150,6 +155,38 @@ export function BookManagement() {
     setCurrentPage(1);
   };
 
+  const handleImportFile = () => {
+    setIsImportModalOpen(true);
+  };
+
+  const handleImported = async (res?: any) => {
+    setIsImportModalOpen(false);
+    console.log(res);
+
+    try {
+      const fetched = await getAllBooks();
+      const booksArray = Array.isArray(fetched)
+        ? fetched
+        : fetched?.data && Array.isArray(fetched.data)
+        ? fetched.data
+        : [];
+      setBooks(booksArray);
+      toast.success("Import completed and list refreshed.");
+    } catch (err) {
+      console.error("Failed to refresh books after import:", err);
+      toast.success("Import completed.");
+    }
+  };
+
+  const handleExportFile = async () => {
+    try {
+      await exportBookFromExcel();
+      toast.success("Exported QR codes PDF successfully!");
+    } catch (error) {
+      toast.error("Failed to export QR codes PDF.");
+      console.error(error);
+    }
+  };
   const categoryOptions = useMemo(() => {
     // Ensure books is an array before processing
     if (!Array.isArray(books)) {
@@ -184,10 +221,29 @@ export function BookManagement() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <CardTitle>Book Management</CardTitle>
-            <Button onClick={handleAddBook} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add New Book
-            </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <Button
+                onClick={handleAddBook}
+                className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                Add New Book
+              </Button>
+              <Button
+                onClick={handleImportFile}
+                className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start cursor-pointer"
+              >
+                <Share className="w-4 h-4" />
+                Import Excel file
+              </Button>
+              <Button
+                onClick={handleExportFile}
+                className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start cursor-pointer"
+              >
+                <Download className="h-4 w-4" />
+                Export Excel file
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -241,6 +297,11 @@ export function BookManagement() {
         description={`Are you sure you want to delete "${bookToDelete?.title}"? This action cannot be undone.`}
         confirmText={isDeleting ? "Deleting..." : "Delete"}
         isDestructive={true}
+      />
+      <ImportBookModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImported={handleImported}
       />
     </div>
   );
