@@ -31,6 +31,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final TokenServiceImpl jwtService;
     private final RefreshTokenService refreshTokenService;
 //    private final ObjectMapper objectMapper;
+    private final String DOMAIN = "https://v2.thuvienfpt.com";
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -48,7 +49,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String accessToken  = jwtService.generateToken(account);
         String refreshToken = refreshTokenService.createRefreshToken(account).getToken();
 
-        String target = "http://localhost:8081/user"
+//        String target = "http://localhost:8081/user"
+        String target = DOMAIN + "/user"
                 + "#access_token=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8)
                 + "&refresh_token=" + URLEncoder.encode(refreshToken, StandardCharsets.UTF_8)
                 + "&fullName=" + URLEncoder.encode(account.getFullName(), StandardCharsets.UTF_8)

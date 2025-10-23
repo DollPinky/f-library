@@ -32,8 +32,7 @@
 
 stages:          # List of stages for jobs, and their order of execution
   - build
-  # - test
-  # - deploy
+#  - deploy
 
 build-job:       # This job runs in the build stage, which runs first.
   stage: build
@@ -41,7 +40,11 @@ build-job:       # This job runs in the build stage, which runs first.
     - library
   script:
     - echo "Compiling the code..."
-    - echo "Compile complete."
+    - chmod +x gradlew
+    - ./gradlew build
+    - docker compose down -v
+    - echo "Deploying application..."
+    - docker compose up -d --build
 
 # unit-test-job:   # This job runs in the test stage.
 #   stage: test    # It only starts when the job in the build stage completes successfully.
@@ -61,9 +64,9 @@ build-job:       # This job runs in the build stage, which runs first.
 #     - sleep 10
 #     - echo "No lint issues found."
 
-# deploy-job:      # This job runs in the deploy stage.
+#deploy-job:      # This job runs in the deploy stage.
 #   stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
 #   environment: production
 #   script:
 #     - echo "Deploying application..."
-#     - echo "Application successfully deployed."
+#     - docker compose up -d --build

@@ -57,6 +57,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomOAuth2UserDetailsService customOAuth2UserDetailsService;
     private final PasswordEncoder passwordEncoder;
+    private final String DOMAIN = "https://v2.thuvienfpt.com";
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -163,7 +164,8 @@ public class SecurityConfig {
                         .successHandler(oAuth2LoginSuccessHandler)
                         .failureHandler((req, res, ex) -> {
                             String msg = URLEncoder.encode(ex.getMessage(), StandardCharsets.UTF_8);
-                            res.sendRedirect("http://localhost:8081/login?oauth_error=" + msg);
+//                            res.sendRedirect("http://localhost:8081/login?oauth_error=" + msg);
+                            res.sendRedirect(  DOMAIN + "/login?oauth_error=" + msg);
                         })
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserDetailsService) // Use OAuth2UserService instead of OidcUserService
