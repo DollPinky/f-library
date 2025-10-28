@@ -49,8 +49,7 @@ build-job:       # This job runs in the build stage, which runs first.
     - ./gradlew build
     - docker compose down -v
     - echo "Deploying application..."
-    - sleep 10
-    - docker compose up -d
+    - docker compose up -d --wait --wait-timeout 600
 
 # unit-test-job:   # This job runs in the test stage.
 #   stage: test    # It only starts when the job in the build stage completes successfully.
