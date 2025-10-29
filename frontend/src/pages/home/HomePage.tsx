@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useIsMobile } from '@/hooks/use-mobile'
 import {
   BookOpen,
-  Book,
+  Book as BookIcon,
   Users,
   TrendingUp,
   Search,
@@ -29,14 +29,47 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { getHomePageStats } from '@/services/dashboardService'
+import { getAllBooks } from '@/services/bookManagementService'
+import type { Book } from '@/types'
+import { toast } from 'react-hot-toast'
 
 export default function HomePage(): React.ReactElement {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [isSearchVisible, setIsSearchVisible] = useState(false)
+  const [stats, setStats] = useState({ totalBook: 0, totalUsers: 0, totalBorrow: 0 })
+  const [featuredBooks, setFeaturedBooks] = useState<Book[]>([])
+  const [loading, setLoading] = useState(true)
   const isMobile = useIsMobile()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const token = localStorage.getItem('accessToken')
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch dashboard stats
+        const statsRes = await getDashboardStats()
+        if (statsRes.success && statsRes.data) {
+          setStats(statsRes.data)
+        }
+
+        // Fetch featured books
+        const booksRes = await getAllBooks()
+        if (booksRes.success && booksRes.data) {
+          // Take first 4 books as featured
+          setFeaturedBooks(booksRes.data.slice(0, 4))
+        }
+      } catch (error) {
+        console.error('Failed to fetch homepage data:', error)
+        toast.error('Failed to load homepage data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -313,7 +346,7 @@ export default function HomePage(): React.ReactElement {
               <CardTitle className={isMobile ? 'text-sm' : 'text-base'}>
                 Total Books
               </CardTitle>
-              <Book className="h-4 w-4 text-muted-foreground" />
+              <BookIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div
@@ -321,7 +354,7 @@ export default function HomePage(): React.ReactElement {
                   isMobile ? 'text-2xl font-bold' : 'text-3xl font-bold'
                 }
               >
-                1,234
+                {loading ? '...' : stats.totalBook.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Available in library
@@ -341,7 +374,7 @@ export default function HomePage(): React.ReactElement {
                   isMobile ? 'text-2xl font-bold' : 'text-3xl font-bold'
                 }
               >
-                892
+                {loading ? '...' : stats.totalUsers.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Registered members
@@ -361,7 +394,7 @@ export default function HomePage(): React.ReactElement {
                   isMobile ? 'text-2xl font-bold' : 'text-3xl font-bold'
                 }
               >
-                1,456
+                {loading ? '...' : stats.totalBorrow.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground mt-1">This month</p>
             </CardContent>
@@ -387,34 +420,58 @@ export default function HomePage(): React.ReactElement {
                   : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6'
               }
             >
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="h-32 md:h-40 bg-gradient-to-b from-blue-400 to-blue-600 rounded flex items-center justify-center">
-                    <Book className="w-8 h-8 md:w-12 md:h-12 text-white" />
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="h-32 md:h-40 bg-gradient-to-b from-gray-200 to-gray-300 rounded flex items-center justify-center animate-pulse">
+                      <BookIcon className="w-8 h-8 md:w-12 md:h-12 text-gray-400" />
+                    </div>
+                    <div className="mt-3 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="mt-1 h-3 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-12"></div>
+                    </div>
                   </div>
-                  <h3 className="mt-3 font-semibold text-sm">
-                    Sample Book {i}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Author Name
-                  </p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-xs font-medium text-green-600">
-                      Available
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="link"
-                      className="text-xs p-0 h-auto"
-                    >
-                      Details
-                    </Button>
+                ))
+              ) : featuredBooks.length > 0 ? (
+                featuredBooks.map((book) => (
+                  <div
+                    key={book.bookId}
+                    className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="h-32 md:h-40 bg-gradient-to-b from-blue-400 to-blue-600 rounded flex items-center justify-center">
+                      <BookIcon className="w-8 h-8 md:w-12 md:h-12 text-white" />
+                    </div>
+                    <h3 className="mt-3 font-semibold text-sm line-clamp-2">
+                      {book.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {book.author}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-xs font-medium text-green-600">
+                        Available
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="link"
+                        className="text-xs p-0 h-auto"
+                        onClick={() => navigate(`/books/${book.bookId}`)}
+                      >
+                        Details
+                      </Button>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-muted-foreground">No featured books available</p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
