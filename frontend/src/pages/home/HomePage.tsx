@@ -29,7 +29,6 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { getHomePageStats } from '@/services/dashboardService'
 import { getAllBooks } from '@/services/bookManagementService'
 import type { Book } from '@/types'
 import { toast } from 'react-hot-toast'
@@ -44,32 +43,6 @@ export default function HomePage(): React.ReactElement {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const token = localStorage.getItem('accessToken')
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch dashboard stats
-        const statsRes = await getDashboardStats()
-        if (statsRes.success && statsRes.data) {
-          setStats(statsRes.data)
-        }
-
-        // Fetch featured books
-        const booksRes = await getAllBooks()
-        if (booksRes.success && booksRes.data) {
-          // Take first 4 books as featured
-          setFeaturedBooks(booksRes.data.slice(0, 4))
-        }
-      } catch (error) {
-        console.error('Failed to fetch homepage data:', error)
-        toast.error('Failed to load homepage data')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
 
   const handleLogout = async () => {
     try {

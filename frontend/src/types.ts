@@ -271,3 +271,16 @@ export interface CommentResponse {
     address: string;
   };
 }
+export interface DashboardResponse {
+  totalBook: number;
+  totalUsers: number;
+  totalBorrow: number;
+  statisticResponses: StatisticResponse[];
+}
+export interface StatisticResponse {
+  numberBorrows: number;
+  numberReturns: number;
+  date: string;
+  month: number;
+}
+

@@ -75,7 +75,6 @@ export default function BookList(): JSX.Element {
     fetchBooks();
   }, []);
 
-  console.log(books)
   const availableCategories = useMemo(() => {
     const uniqueCategories = Array.from(
       new Set(
@@ -119,7 +118,6 @@ export default function BookList(): JSX.Element {
       .slice(0, 8);
   }, [filteredBooks]);
 
-  console.log("hotBooks", hotBooks)
   const categoryCounts = useMemo(() => {
     return filteredBooks.reduce((acc, book) => {
       const key = (book.category as any) ?? "Uncategorized";

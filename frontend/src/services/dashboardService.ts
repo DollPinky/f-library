@@ -8,12 +8,12 @@ export interface DashboardStats {
 }
 
 export const getDashboardStats = async (): Promise<StandardResponse<DashboardStats>> => {
-    const res = await axiosClient.get("/api/v1/admin/dashboard");
+    const res = await axiosClient.get('/admin/dashboard');
     return res.data;
 };
 
 export const getHomePageStats = async (): Promise<StandardResponse<DashboardStats>> => {
-    const res = await axiosClient.get("/api/v1/public/homepage-stats");
+    const res = await axiosClient.get('public/homepage-stats');
     return res.data;
 };
 
