@@ -4,7 +4,6 @@ import { SearchAndFilter } from "@/components/common/SearchAndFilter";
 import BookTable from "@/components/feature/admin/dashboard/BookTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Pagination } from "@/components/ui/pagination";
 
 import type { Book } from "@/types";
 import { Download, Plus, Share } from "lucide-react";
@@ -23,7 +22,6 @@ export function BookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedBook, setSelectedBook] = useState<Book | undefined>();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -31,7 +29,6 @@ export function BookManagement() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const navigate = useNavigate();
-  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -42,8 +39,8 @@ export function BookManagement() {
         const booksArray = Array.isArray(res)
           ? res
           : res?.data && Array.isArray(res.data)
-          ? res.data
-          : [];
+            ? res.data
+            : [];
 
         setBooks(booksArray);
       } catch (error) {
@@ -79,13 +76,6 @@ export function BookManagement() {
       return matchesSearch && matchesCategory;
     });
   }, [books, searchTerm, categoryFilter]);
-
-  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedBooks = filteredBooks.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
 
   const handleAddBook = () => {
     setSelectedBook(undefined);
@@ -152,7 +142,6 @@ export function BookManagement() {
   const handleClearFilters = () => {
     setSearchTerm("");
     setCategoryFilter("All Categories");
-    setCurrentPage(1);
   };
 
   const handleImportFile = () => {
@@ -168,8 +157,8 @@ export function BookManagement() {
       const booksArray = Array.isArray(fetched)
         ? fetched
         : fetched?.data && Array.isArray(fetched.data)
-        ? fetched.data
-        : [];
+          ? fetched.data
+          : [];
       setBooks(booksArray);
       toast.success("Import completed and list refreshed.");
     } catch (err) {
@@ -260,25 +249,15 @@ export function BookManagement() {
           />
 
           <div className="text-sm text-muted-foreground">
-            Showing {paginatedBooks.length} of {filteredBooks.length} books
+            Showing {Math.min(filteredBooks.length)} of {filteredBooks.length} books
           </div>
 
           <BookTable
-            books={paginatedBooks}
+            books={filteredBooks}  // Pass full filtered list
             onView={handleViewBook}
             onEdit={handleEditBook}
             onDelete={handleDeleteBook}
           />
-
-          {totalPages > 1 && (
-            <div className="flex justify-center">
-              <Pagination
-              // currentPage={currentPage}
-              // totalPages={totalPages}
-              // onPageChange={setCurrentPage}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
 

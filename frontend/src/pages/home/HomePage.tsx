@@ -29,9 +29,7 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { getAllBooks } from '@/services/bookManagementService'
 import type { Book } from '@/types'
-import { toast } from 'react-hot-toast'
 
 export default function HomePage(): React.ReactElement {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)

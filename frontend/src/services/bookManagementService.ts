@@ -7,6 +7,7 @@ import type {
   UpdateBookRequest,
   DeleteBookResponse,
   StandardResponse,
+  BookPageablePage,
 } from "@/types";
 import type { ImportBookFromExcelResponse } from "@/types/Book";
 
@@ -46,6 +47,15 @@ export const deleteBook = async (
 
 export const getAllBooks = async (): Promise<StandardResponse<Book[]>> => {
   const res = await axiosClient.get("/books/all");
+  return res.data;
+};
+export const getAllBooksPageable = async (
+  page: number = 1,
+  size: number = 10
+): Promise<{ data: BookPageablePage }> => {
+  const res = await axiosClient.get("/books/all-pageable", {
+    params: { page, size },
+  });
   return res.data;
 };
 export const getBookByBookId = async (

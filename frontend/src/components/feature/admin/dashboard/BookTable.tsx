@@ -1,4 +1,5 @@
 import { Eye, Edit, Trash2, MoreHorizontal, ImageIcon } from 'lucide-react'
+import { useState } from 'react'
 import {
   Table,
   TableBody,
@@ -7,6 +8,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { PaginationEllipsis } from "@/components/ui/pagination";
 import { ImageWithFallback } from '@/components/layout/ImageWithFallback'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -16,6 +18,14 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 import type { Book, BookCopy } from '@/types'
 
 interface BookTableProps {
@@ -61,6 +71,16 @@ const getDisplayStatus = (bookCopies: BookCopy[]) => {
   }
 }
 const BookTable = ({ books, onView, onEdit, onDelete }: BookTableProps) => {
+  const [currentPage, setCurrentPage] = useState(1)
+  const rowsPerPage = 10
+  const totalPages = Math.ceil(books.length / rowsPerPage)
+  const paginatedBooks = books.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  )
+  const handleChangePage = (page: number) => {
+    setCurrentPage(page)
+  }
   if (books.length === 0) {
     return (
       <div className="text-center py-8">
@@ -73,105 +93,174 @@ const BookTable = ({ books, onView, onEdit, onDelete }: BookTableProps) => {
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Cover</TableHead>
-            <TableHead>Book Name</TableHead>
-            <TableHead>Author</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead className="text-center">Status</TableHead>
-            <TableHead className="text-center">Available/Total</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {books.map((book) => (
-            <TableRow key={book.bookId}>
-              <TableCell>
-                <div className="w-12 h-16 flex items-center justify-center bg-muted rounded-md overflow-hidden">
-                  {book.bookCoverUrl ? (
-                    <ImageWithFallback
-                      src={book.bookCoverUrl}
-                      alt={`Cover of ${book.title}`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div>
-                  <div className="font-medium">{book.title}</div>
-                  <div className="text-sm text-muted-foreground">
-                    Year: {book.year}
+    <div className="space-y-4">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Cover</TableHead>
+              <TableHead>Book Name</TableHead>
+              <TableHead>Author</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="text-center">Available/Total</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedBooks.map((book) => (
+              <TableRow key={book.bookId}>
+                <TableCell>
+                  <div className="w-12 h-16 flex items-center justify-center bg-muted rounded-md overflow-hidden">
+                    {book.bookCoverUrl ? (
+                      <ImageWithFallback
+                        src={book.bookCoverUrl}
+                        alt={`Cover of ${book.title}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                    )}
                   </div>
-                </div>
-              </TableCell>
-              <TableCell>{book.author}</TableCell>
-              <TableCell>{book.category?.name || 'No Category'}</TableCell>
-              <TableCell className="text-center">
-                <Badge
-                  variant="secondary"
-                  className={getStatusColor(book.bookCopies || [])}
-                >
-                  {getDisplayStatus(book.bookCopies || [])}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <span
-                  className={`flex items-center justify-center font-semibold ${
-                    !book.bookCopies ||
-                    book.bookCopies.filter(
-                      (copy) => copy.status === 'AVAILABLE'
-                    ).length === 0
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <div className="font-medium">{book.title}</div>
+                    <div className="text-sm text-muted-foreground">
+                      Year: {book.year}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>{book.author}</TableCell>
+                <TableCell>{book.category?.name || 'No Category'}</TableCell>
+                <TableCell className="text-center">
+                  <Badge
+                    variant="secondary"
+                    className={getStatusColor(book.bookCopies || [])}
+                  >
+                    {getDisplayStatus(book.bookCopies || [])}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`flex items-center justify-center font-semibold ${!book.bookCopies ||
+                      book.bookCopies.filter(
+                        (copy) => copy.status === 'AVAILABLE'
+                      ).length === 0
                       ? 'text-destructive'
                       : 'text-green-700'
-                  }`}
-                >
-                  {book.bookCopies
-                    ? book.bookCopies.filter(
+                      }`}
+                  >
+                    {book.bookCopies
+                      ? book.bookCopies.filter(
                         (copy) => copy.status === 'AVAILABLE'
                       ).length
-                    : 0}
-                  <span className="text-muted-foreground font-normal ml-1">
-                    /{book.bookCopies ? book.bookCopies.length : 0}
+                      : 0}
+                    <span className="text-muted-foreground font-normal ml-1">
+                      /{book.bookCopies ? book.bookCopies.length : 0}
+                    </span>
                   </span>
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onView(book)}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      View details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEdit(book)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onDelete(book)}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onView(book)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        View details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onEdit(book)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onDelete(book)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                onClick={() => currentPage > 1 && handleChangePage(currentPage - 1)}
+              />
+            </PaginationItem>
+
+            {/* Show first page if not in first 5 */}
+            {currentPage > 3 && (
+              <PaginationItem>
+                <PaginationLink onClick={() => handleChangePage(1)}>1</PaginationLink>
+              </PaginationItem>
+            )}
+
+            {/* Show ellipsis if needed */}
+            {currentPage > 4 && (
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+            )}
+
+            {/* Show 5 pages around current page */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let page = currentPage;
+              if (currentPage < 3) page = i + 1;
+              else if (currentPage > totalPages - 2) page = totalPages - 4 + i;
+              else page = currentPage - 2 + i;
+
+              return (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    isActive={currentPage === page}
+                    onClick={() => handleChangePage(page)}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
+
+            {/* Show ellipsis if needed */}
+            {currentPage < totalPages - 3 && (
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+            )}
+
+            {/* Show last page if not in last 5 */}
+            {currentPage < totalPages - 2 && (
+              <PaginationItem>
+                <PaginationLink onClick={() => handleChangePage(totalPages)}>
+                  {totalPages}
+                </PaginationLink>
+              </PaginationItem>
+            )}
+
+            <PaginationItem>
+              <PaginationNext
+                className={currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                onClick={() => currentPage < totalPages && handleChangePage(currentPage + 1)}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   )
 }

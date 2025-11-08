@@ -46,6 +46,19 @@ export interface BorrowHistoryPage {
   empty: boolean;
 }
 
+export interface BookPageablePage {
+  book: Book[];
+  number: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  empty: boolean;
+}
+
 export type BookStatus = "Available" | "Borrowed" | "Maintenance" | "Reserved";
 
 export interface Category {

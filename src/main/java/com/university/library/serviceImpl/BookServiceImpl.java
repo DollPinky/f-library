@@ -5,6 +5,7 @@ import com.university.library.constants.BookConstants;
 import com.university.library.dto.request.book.BookSearchParams;
 import com.university.library.dto.request.book.CreateBookCommand;
 import com.university.library.dto.request.book.UpdateBookCommand;
+import com.university.library.dto.response.PageResponse;
 import com.university.library.dto.response.book.BookImportResponse;
 import com.university.library.dto.response.book.BookResponse;
 import com.university.library.entity.Book;
@@ -22,6 +23,7 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.poi.openxml4j.exceptions.OLE2NotOfficeXmlFileException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
@@ -61,8 +63,28 @@ public class BookServiceImpl implements BookService {
         List<BookResponse> responses = book.stream()
                 .map(BookResponse::fromEntity)
                 .collect(Collectors.toList());
-
         return responses;
+    }
+
+    @Override
+    public PagedResponse<BookResponse> getAllBookPageable(int page, int size) {
+        Sort sort = Sort.by("title").descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Book> pageData = bookRepository.findAll(pageable);
+        List<BookResponse> content = pageData.getContent()
+                .stream()
+                .map(BookResponse::fromEntity).toList();
+
+        log.info("Found {} total books", content.size());
+
+        return PagedResponse.<BookResponse>builder()
+                .content(content)
+                .totalElements(pageData.getTotalElements())
+                .totalPages(pageData.getTotalPages())
+                .number(page)
+                .size(size)
+                .build();
     }
 
     public BookResponse getBookById(UUID bookId) {
@@ -200,56 +222,132 @@ public class BookServiceImpl implements BookService {
         return false;
     }
 
+    @Override
     @Transactional
     public BookImportResponse importBooksFromExcel(MultipartFile file) {
-        log.info("Importing books from CSV file: {}", file.getOriginalFilename());
+        log.info("Importing books from file: {}", file == null ? "null" : file.getOriginalFilename());
 
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Uploaded file is empty");
+        }
+
+        String filename = Optional.ofNullable(file.getOriginalFilename()).orElse("").toLowerCase();
         BookImportResponse response = new BookImportResponse();
         List<BookImportResponse.ImportError> errors = new ArrayList<>();
+        int rowNum = 0;
+        int successCount = 0;
+        int processedCount = 0;
 
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+        try {
+            if (filename.endsWith(".csv")) {
+                // CSV path
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    boolean isHeader = true;
+                    while ((line = reader.readLine()) != null) {
+                        rowNum++;
+                        if (isHeader) { isHeader = false; continue; }
+                        if (line.trim().isEmpty()) continue;
 
-            String line;
-            boolean isHeader = true;
-            int rowNum = 0;
-            int successCount = 0;
-            int processedCount = 0;
-
-            while ((line = reader.readLine()) != null) {
-                rowNum++;
-
-                // Bỏ qua dòng tiêu đề
-                if (isHeader) {
-                    isHeader = false;
-                    continue;
+                        processedCount++;
+                        try {
+                            String[] parts = line.split(",", -1); // keep empty columns
+                            importBookFromRow(parts);
+                            successCount++;
+                        } catch (Exception e) {
+                            log.error("Error importing book at CSV row {}: {}", rowNum, e.getMessage());
+                            errors.add(new BookImportResponse.ImportError(rowNum, e.getMessage()));
+                        }
+                    }
                 }
-                // Bỏ qua dòng trống
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-                processedCount++;
+            } else if (filename.endsWith(".xlsx") || filename.endsWith(".xls")) {
+                // Excel path (supports both .xls and .xlsx)
+                try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+                    Sheet sheet = workbook.getNumberOfSheets() > 0 ? workbook.getSheetAt(0) : null;
+                    if (sheet == null) {
+                        throw new RuntimeException("No sheets found in Excel file");
+                    }
 
-                try {
-                    //  Tách theo dấu phẩy (CSV chuẩn)
-                    String[] parts = line.split(",", -1);// -1 để giữ cột trống
-                    importBookFromRow(parts);
-                    successCount++;
+                    boolean isHeader = true;
+                    for (Row row : sheet) {
+                        rowNum++;
+                        // skip header row
+                        if (isHeader) { isHeader = false; continue; }
+                        // skip entirely blank rows
+                        boolean blank = true;
+                        int lastCell = Math.max(5, row.getLastCellNum() == -1 ? 5 : row.getLastCellNum() - 1);
+                        for (int c = 0; c <= lastCell; c++) {
+                            Cell cell = row.getCell(c);
+                            if (cell != null && cell.getCellType() != CellType.BLANK) { blank = false; break; }
+                        }
+                        if (blank) continue;
 
-                } catch (Exception e) {
-                    log.error("Error importing book at row {}: {}", rowNum, e.getMessage());
-                    errors.add(new BookImportResponse.ImportError(rowNum, e.getMessage()));
+                        processedCount++;
+                        try {
+                            // Build parts array so that parts[1] = first cell, parts[2] = second cell, ... (to match importBookFromRow)
+                            int maxCols = Math.max(6, lastCell + 2); // ensure >=6 elements (indices 0..5)
+                            String[] parts = new String[maxCols];
+                            // keep parts[0] empty by design (existing importBookFromRow expects title at index 1)
+                            parts[0] = "";
+                            for (int c = 0; c <= lastCell; c++) {
+                                Cell cell = row.getCell(c);
+                                String cellVal = "";
+                                if (cell != null) {
+                                    switch (cell.getCellType()) {
+                                        case STRING:
+                                            cellVal = cell.getStringCellValue();
+                                            break;
+                                        case NUMERIC:
+                                            if (DateUtil.isCellDateFormatted(cell)) {
+                                                cellVal = cell.getDateCellValue().toString();
+                                            } else {
+                                                cellVal = String.valueOf(cell.getNumericCellValue());
+                                            }
+                                            break;
+                                        case BOOLEAN:
+                                            cellVal = String.valueOf(cell.getBooleanCellValue());
+                                            break;
+                                        case FORMULA:
+                                            try {
+                                                cellVal = cell.getStringCellValue();
+                                            } catch (Exception ex) {
+                                                cellVal = String.valueOf(cell.getNumericCellValue());
+                                            }
+                                            break;
+                                        default:
+                                            cellVal = "";
+                                    }
+                                }
+                                // shift by +1 so first Excel column maps to parts[1]
+                                parts[c + 1] = cellVal == null ? "" : cellVal.trim();
+                            }
+                            // ensure no null entries
+                            for (int i = 0; i < parts.length; i++) if (parts[i] == null) parts[i] = "";
+
+                            importBookFromRow(parts);
+                            successCount++;
+                        } catch (Exception e) {
+                            log.error("Error importing book at Excel row {}: {}", rowNum, e.getMessage());
+                            errors.add(new BookImportResponse.ImportError(rowNum, e.getMessage()));
+                        }
+                    }
+                } catch (OLE2NotOfficeXmlFileException ioe) {
+                    // clear, explicit message when file content doesn't match extension
+                    String msg = "File content is not a valid Excel file: " + ioe.getMessage();
+                    log.error("Error processing Excel file: {}", msg);
+                    throw new RuntimeException("Failed to process Excel file: " + msg, ioe);
                 }
+            } else {
+                throw new IllegalArgumentException("Unsupported file type. Please upload a CSV or Excel (.xls/.xlsx) file.");
             }
 
             response.setTotalRecords(processedCount);
             response.setSuccessCount(successCount);
             response.setErrorCount(errors.size());
             response.setErrors(errors);
-
-        } catch (Exception e) {
-            log.error("Error processing CSV file: {}", e.getMessage());
-            throw new RuntimeException("Failed to process CSV file: " + e.getMessage());
+        } catch (IOException e) {
+            log.error("Error reading uploaded file: {}", e.getMessage());
+            throw new RuntimeException("Failed to read uploaded file: " + e.getMessage(), e);
         }
 
         return response;
@@ -354,8 +452,13 @@ public class BookServiceImpl implements BookService {
         } catch (Exception e) {
             throw new RuntimeException("Fail to cast number: " + e.getMessage());
         }
+        String bookCoverUrl;
+        if (values.length > 6 && values[6] != null && !values[6].trim().isEmpty()) {
+            bookCoverUrl = values[6].trim();
+        } else {
+            bookCoverUrl = "";
+        }
         String campusCode =  "HCM";
-        //!values[6].isEmpty() ? values[6].trim() :
         // Tìm hoặc tạo category
         Category category = categoryRepository.findByName(categoryName)
                 .orElseGet(() -> {
@@ -378,6 +481,7 @@ public class BookServiceImpl implements BookService {
                             .title(title)
                             .author(author)
                             .publisher(publisher)
+                            .bookCover(bookCoverUrl)
                             .category(category)
                             .build();
                     return bookRepository.save(newBook);

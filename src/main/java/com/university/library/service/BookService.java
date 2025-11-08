@@ -4,9 +4,11 @@ import com.university.library.base.PagedResponse;
 import com.university.library.dto.request.book.BookSearchParams;
 import com.university.library.dto.request.book.CreateBookCommand;
 import com.university.library.dto.request.book.UpdateBookCommand;
+import com.university.library.dto.response.PageResponse;
 import com.university.library.dto.response.book.BookImportResponse;
 import com.university.library.dto.response.book.BookResponse;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,6 +21,7 @@ public interface BookService {
     BookResponse getBookById(UUID bookId);
     PagedResponse<BookResponse> searchBooks(BookSearchParams params);
     List<BookResponse> getAllBook();
+    PagedResponse<BookResponse> getAllBookPageable (int page, int size);
     /**
      * BookCommand
      */
