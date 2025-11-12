@@ -42,7 +42,7 @@ stages:          # List of stages for jobs, and their order of execution
 build-job:       # This job runs in the build stage, which runs first.
   stage: build
   tags:
-    - library
+    - library2
   script:
     - echo "Compiling the code..."
     - chmod +x gradlew
