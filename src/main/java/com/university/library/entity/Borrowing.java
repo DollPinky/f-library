@@ -28,7 +28,7 @@ public class Borrowing extends BaseEntity {
     private BookCopy bookCopy;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "borrower_id", nullable = false)
+    @JoinColumn(name = "company_account")
     private User borrower;
 
     @Column(name = "borrowed_date", nullable = false)

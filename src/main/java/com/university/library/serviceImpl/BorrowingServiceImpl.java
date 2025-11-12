@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -148,33 +149,30 @@ public class BorrowingServiceImpl implements BorrowingService {
      */
 
     /**
-     * Tạo yêu cầu mượn sách hoặc đặt sách
+     * Create borrow book
      */
     @Transactional
-    public BorrowingResponse Borrow(UUID bookCopyId, UUID borrowerId) {
+    public BorrowingResponse borrowBook(UUID bookCopyId, String companyAccount) {
 
         BookCopy bookCopy = bookCopyRepository.findByBookCopyId(bookCopyId);
         if (bookCopy == null) {
-            throw new RuntimeException("Không tìm thấy sách với mã QR: " + bookCopyId);
+            throw new RuntimeException("Cannot find bookid: " + bookCopyId);
         }
 
-        // Kiểm tra trạng thái sách
+        // Check status of book copy
         if (!bookCopy.getStatus().equals(BookCopy.BookStatus.AVAILABLE)) {
-            throw new RuntimeException("Sách không có sẵn để mượn");
+            throw new RuntimeException("Book is not available for borrowing");
         }
 
-        User borrower = userRepository.findById(borrowerId)
-                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
-
-        long activeBorrowings = borrowingRepository.countActiveBorrowingsByBorrower(borrowerId);
-        if (activeBorrowings >= 5) {
-            throw new RuntimeException("User has reached maximum number of active borrowings (5)");
-        }
+//        long activeBorrowings = borrowingRepository.countActiveBorrowingsByBorrower(borrowerId);
+//        if (activeBorrowings >= 5) {
+//            throw new RuntimeException("User has reached maximum number of active borrowings (5)");
+//        }
 
         // Tạo giao dịch mượn sách
         Borrowing borrowing = Borrowing.builder()
                 .bookCopy(bookCopy)
-                .borrower(borrower)
+                .borrower(companyAccount)
                 .borrowedDate(LocalDateTime.now())
                 .dueDate(LocalDateTime.now().plusDays(30))
                 .status(BORROWED)

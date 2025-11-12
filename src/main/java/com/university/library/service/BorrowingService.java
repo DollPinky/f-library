@@ -20,7 +20,7 @@ public interface BorrowingService {
     /**
      BorrowingCommand
      */
-    BorrowingResponse Borrow(UUID bookCopyId, UUID borrowerId);
+    BorrowingResponse borrowBook(UUID bookCopyId, String companyAccount);
     BorrowingResponse returnBook(UUID bookCopyId);
     BorrowingResponse reportLost(UUID bookCopyId);
 

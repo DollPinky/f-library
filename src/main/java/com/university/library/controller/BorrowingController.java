@@ -78,7 +78,7 @@ public class BorrowingController {
             // Lấy ID người dùng từ authentication
             UUID borrowerId = userPrincipal.getUserId();
            log.info("User mượn sách: {}", userPrincipal.getEmail());
-            BorrowingResponse borrowing = borrowingService.Borrow(
+            BorrowingResponse borrowing = borrowingService.borrowBook(
                     borrowRequest.getBookCopyId(),
                     borrowerId
             );
