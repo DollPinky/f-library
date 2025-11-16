@@ -29,15 +29,25 @@ export default function BookInforCard({
   const totalCopies = hasCopies ? currentBook.bookCopies?.length ?? 0 : 0;
   const availableCopies = hasCopies
     ? (
-        currentBook.bookCopies?.filter((copy) => copy.status === "AVAILABLE") ??
-        []
-      ).length
+      currentBook.bookCopies?.filter((copy) => copy.status === "AVAILABLE") ??
+      []
+    ).length
     : 0;
+  const locationCounts = hasCopies
+    ? (currentBook.bookCopies?.reduce((acc: Record<string, number>, copy) => {
+      const loc = copy.shelfLocation || 'Unknown';
+      acc[loc] = (acc[loc] || 0) + 1;
+      return acc;
+    }, {}) ?? {})
+    : {};
+  const locationDisplay = Object.entries(locationCounts)
+    .map(([loc, count]) => `${loc} (Amount: ${count})`)
+    .join(', ');
   const borrowedCopies = hasCopies
     ? (
-        currentBook.bookCopies?.filter((copy) => copy.status === "BORROWED") ??
-        []
-      ).length
+      currentBook.bookCopies?.filter((copy) => copy.status === "BORROWED") ??
+      []
+    ).length
     : 0;
 
   const firstCopyStatus: string =
@@ -47,10 +57,10 @@ export default function BookInforCard({
     availableCopies > 0
       ? "AVAILABLE"
       : borrowedCopies > 0
-      ? "BORROWED"
-      : hasCopies
-      ? firstCopyStatus
-      : "Unknown";
+        ? "BORROWED"
+        : hasCopies
+          ? firstCopyStatus
+          : "Unknown";
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "AVAILABLE":
@@ -126,7 +136,7 @@ export default function BookInforCard({
       console.error("Error:", error);
       toast.error(
         error.response?.data?.message ||
-          `Failed to borrow the book. Please try again.`
+        `Failed to borrow the book. Please try again.`
       );
       return false;
     }
@@ -192,6 +202,12 @@ export default function BookInforCard({
                     : "No copies"}
                 </p>
               </div>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mb-2">Location</p>
+              <p className="text-base leading-relaxed">
+                {locationDisplay || "No description available."}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-500 mb-2">Description</p>

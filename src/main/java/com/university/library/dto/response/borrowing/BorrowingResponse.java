@@ -18,7 +18,7 @@ import java.util.UUID;
 public class BorrowingResponse {
     private UUID borrowingId;
     private BookCopyResponse bookCopy;
-    private AccountResponse borrower;
+    private String companyAccount;
     private LocalDateTime borrowedDate;
     private LocalDateTime dueDate;
     private LocalDateTime returnedDate;
@@ -39,7 +39,7 @@ public class BorrowingResponse {
         return BorrowingResponse.builder()
             .borrowingId(borrowing.getBorrowingId())
             .bookCopy(BookCopyResponse.fromEntity(borrowing.getBookCopy()))
-            .borrower(AccountResponse.fromEntity(borrowing.getBorrower()))
+            .companyAccount(borrowing.getCompanyAccount())
             .borrowedDate(borrowing.getBorrowedDate())
             .dueDate(borrowing.getDueDate())
             .returnedDate(borrowing.getReturnedDate())

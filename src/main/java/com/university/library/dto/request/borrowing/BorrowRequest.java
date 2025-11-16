@@ -8,4 +8,5 @@ import java.util.UUID;
 @Data
 public class BorrowRequest {
     private UUID bookCopyId;
+    private String companyAccount;
 }

@@ -14,7 +14,7 @@ public interface BorrowingService {
      * BorrowingQuery
      */
     PagedResponse<BorrowingResponse> getAllBorrowings(int page, int size, String status, String query);
-    PagedResponse<BorrowingResponse> getBorrowingsByUser(UUID userId, int page, int size);
+    PagedResponse<BorrowingResponse> getBorrowingsByUser(String companyAccount, int page, int size);
     List<BorrowingResponse> getOverdueBorrowings();
     BorrowingResponse getBorrowingById(UUID borrowingId);
     /**

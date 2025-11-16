@@ -38,16 +38,16 @@ public class BorrowingController {
     @GetMapping("/check-borrowed")
     public ResponseEntity<StandardResponse<Boolean>> checkIfUserBorrowedBookCopy(
             @RequestParam UUID bookCopyId,
-            @AuthenticationPrincipal User userPrincipal) {
+            @RequestParam String companyAccount) {
         try {
             log.info("Checking if user has borrowed book copy: {}", bookCopyId);
 
 
-            UUID userId = userPrincipal.getUserId();
+//            UUID userId = userPrincipal.getUserId();
 
-            // Kiểm tra xem user có đang mượn sách này không
-            boolean hasBorrowed = borrowingRepository.existsByBorrowerUserIdAndBookCopyBookCopyIdAndStatus(
-                    userId,
+            // Check if the user has an active borrowing for the specified book copy
+            boolean hasBorrowed = borrowingRepository.existsByCompanyAccountAndBookCopyBookCopyIdAndStatus(
+                    companyAccount,
                     bookCopyId,
                     Borrowing.BorrowingStatus.BORROWED
             );
@@ -65,22 +65,21 @@ public class BorrowingController {
     }
 
     /**
-     * Tạo yêu cầu mượn sách hoặc đặt sách
+     * Create borrowing
      */
     private final UserRepository userRepository;
     @PostMapping("/borrow")
     public ResponseEntity<StandardResponse<BorrowingResponse>> scanAndBorrow(
-            @RequestBody BorrowRequest borrowRequest,
-            @AuthenticationPrincipal User userPrincipal) {
+            @RequestBody BorrowRequest borrowRequest) {
 
         try {
 
             // Lấy ID người dùng từ authentication
-            UUID borrowerId = userPrincipal.getUserId();
-           log.info("User mượn sách: {}", userPrincipal.getEmail());
+//            UUID borrowerId = userPrincipal.getUserId();
+//           log.info("User mượn sách: {}", userPrincipal.getEmail());
             BorrowingResponse borrowing = borrowingService.borrowBook(
                     borrowRequest.getBookCopyId(),
-                    borrowerId
+                    borrowRequest.getCompanyAccount()
             );
 
             return ResponseEntity.ok(StandardResponse.success(
@@ -171,19 +170,19 @@ public class BorrowingController {
      */
     @GetMapping("/user/{userId}")
     public ResponseEntity<StandardResponse<List<BorrowingResponse>>> getBorrowingsByUser(
-            @PathVariable UUID userId,
+            @PathVariable String companyAccount,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
-            log.info("Getting borrowings for user: {} with pagination: page={}, size={}", userId, page, size);
+            log.info("Getting borrowings for user: {} with pagination: page={}, size={}", companyAccount, page, size);
 
-            var response = borrowingService.getBorrowingsByUser(userId, page, size);
+            var response = borrowingService.getBorrowingsByUser(companyAccount, page, size);
 
-            return ResponseEntity.ok(StandardResponse.success("Lấy danh sách mượn sách của người dùng thành công", response.getContent()));
+            return ResponseEntity.ok(StandardResponse.success("Get list of borrowing successfully", response.getContent()));
         } catch (Exception e) {
             log.error("Error getting borrowings by user: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
-                .body(StandardResponse.error("Không thể lấy danh sách mượn sách của người dùng: " + e.getMessage()));
+                .body(StandardResponse.error("Cannot get list of borrowing: " + e.getMessage()));
         }
     }
 
