@@ -99,10 +99,10 @@ export default function BookInforCard({
   };
 
   const handleConfirm = async (payload: {
-    username: string;
     bookCopyId: string;
+    companyAccount: string;
   }): Promise<boolean> => {
-    const { bookCopyId } = payload;
+    const { bookCopyId, companyAccount } = payload;
     try {
       const copyToUpdate = currentBook.bookCopies?.find(
         (copy) => copy.bookCopyId === bookCopyId && copy.status === "AVAILABLE"
@@ -114,7 +114,7 @@ export default function BookInforCard({
         return false;
       }
 
-      await borrowBookByBookCopyId(bookCopyId);
+      await borrowBookByBookCopyId(bookCopyId, companyAccount);
       toast.success("Borrowed successfully!");
 
       setCurrentBook((prev) => ({

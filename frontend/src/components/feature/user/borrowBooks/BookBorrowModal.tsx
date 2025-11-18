@@ -16,7 +16,7 @@ interface BookBorrowModalProps {
   book: Book;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (payload: { username: string; bookCopyId: string }) => void;
+  onConfirm: (payload: { bookCopyId: string; companyAccount: string }) => void;
   bookCopyId: string | null;
 }
 
@@ -27,12 +27,12 @@ export default function BookBorrowModal({
   onConfirm,
   bookCopyId,
 }: BookBorrowModalProps) {
-  const [username, setUsername] = useState("");
+  const [companyAccount, setCompanyAccount] = useState("");
 
   const handleConfirm = () => {
-    if (!username.trim() || !bookCopyId) return;
-    onConfirm({ username, bookCopyId });
-    setUsername("");
+    if (!companyAccount.trim() || !bookCopyId) return;
+    onConfirm({ bookCopyId, companyAccount });
+    setCompanyAccount("");
   };
 
   return (
@@ -53,8 +53,8 @@ export default function BookBorrowModal({
           <Input
             id="username"
             placeholder="Enter your FPT account..."
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={companyAccount}
+            onChange={(e) => setCompanyAccount(e.target.value)}
             autoFocus
           />
         </div>
@@ -64,7 +64,7 @@ export default function BookBorrowModal({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={!username.trim() || !bookCopyId}
+            disabled={!companyAccount.trim() || !bookCopyId}
           >
             Borrow Book
           </Button>

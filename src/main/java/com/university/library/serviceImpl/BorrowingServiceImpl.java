@@ -198,7 +198,7 @@ public class BorrowingServiceImpl implements BorrowingService {
      * Return book
      */
     @Transactional
-    public BorrowingResponse returnBook(UUID bookCopyId) {
+    public BorrowingResponse returnBook(UUID bookCopyId, String companyAccount) {
 
         // Find book copy by id
         BookCopy bookCopy = bookCopyRepository.findByBookCopyId(bookCopyId);
@@ -259,6 +259,7 @@ public class BorrowingServiceImpl implements BorrowingService {
 
         borrowing.setReturnedDate(returnDate);
         borrowing.setFineAmount(fine);
+        borrowing.setCompanyAccount(companyAccount);
 
         // Update book copy status to AVAILABLE
         bookCopy.setStatus(BookCopy.BookStatus.AVAILABLE);

@@ -18,16 +18,19 @@ export const getBorrowHistoryByBookCopyId = async (
 };
 
 export const borrowBookByBookCopyId = async (
-  bookCopyId: string
+  bookCopyId: string,
+  companyAccount: string
 ): Promise<StandardResponse<BorrowedBookResponse>> => {
   const res = await axiosClient.post("/borrowings/borrow", {
     bookCopyId,
+    companyAccount,
   });
   return res.data;
 };
 export const returnedBookByBookCopyId = async (
-  bookCopyId: string
+  bookCopyId: string,
+  companyAccount: string
 ): Promise<StandardResponse<ReturnedBookResponse>> => {
-  const res = await axiosClient.put("/borrowings/return", { bookCopyId });
+  const res = await axiosClient.put("/borrowings/return", { bookCopyId, companyAccount });
   return res.data;
 };

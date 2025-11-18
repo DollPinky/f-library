@@ -278,6 +278,7 @@ export default function HomePage(): React.ReactElement {
                       ? 'text-sm w-full sm:w-fit bg-white text-primary hover:bg-gray-100 shadow-md'
                       : 'w-fit bg-white text-primary hover:bg-gray-100 shadow-md'
                   }
+                  onClick={() => navigate("/guest/borrow-books")}
                 >
                   Browse Books
                 </Button>

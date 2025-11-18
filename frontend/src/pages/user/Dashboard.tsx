@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Book, BookOpen, Calendar, Clock, Star, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function UserDashboard() {
+  console.log('Dashboard rendered');
   const isMobile = useIsMobile();
-
+  const navigate = useNavigate();
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -47,6 +49,7 @@ export default function UserDashboard() {
                     ? "text-xs py-1 px-2 w-fit bg-white text-blue-600 hover:bg-gray-100 shadow-md"
                     : "w-fit bg-white text-blue-600 hover:bg-gray-100 shadow-md"
                 }
+                onClick={() => navigate("/borrow-management")}
               >
                 Browse Books
               </Button>

@@ -20,7 +20,7 @@ interface BookReturnModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (payload: {
-    username: string;
+    companyAccount: string;
     bookCopyId: string;
   }) => Promise<boolean>;
   bookCopyId: string | null;
@@ -33,7 +33,7 @@ export default function BookReturnModal({
   onConfirm,
   bookCopyId,
 }: BookReturnModalProps) {
-  const [username, setUsername] = useState("");
+  const [companyAccount, setCompanyAccount] = useState("");
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
 
   const userString = localStorage.getItem("user");
@@ -42,10 +42,10 @@ export default function BookReturnModal({
   const isReader = role === "READER";
 
   const handleConfirm = async () => {
-    if (!username.trim() || !bookCopyId) return;
+    if (!companyAccount.trim() || !bookCopyId) return;
 
     try {
-      const success = await onConfirm({ username, bookCopyId });
+      const success = await onConfirm({ companyAccount, bookCopyId });
 
       if (success && isReader && book) {
         toast.success("Book returned successfully!");
@@ -58,7 +58,7 @@ export default function BookReturnModal({
         onClose();
       }
 
-      setUsername("");
+      setCompanyAccount("");
     } catch (error) {
       console.error("Error returning book:", error);
       toast.error("Failed to return book");
@@ -93,7 +93,7 @@ export default function BookReturnModal({
 
   useEffect(() => {
     if (!isOpen) {
-      setUsername("");
+      setCompanyAccount("");
       setIsCommentModalOpen(false);
     }
   }, [isOpen]);
@@ -122,8 +122,8 @@ export default function BookReturnModal({
             <Input
               id="username"
               placeholder="Enter your FPT account..."
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={companyAccount}
+              onChange={(e) => setCompanyAccount(e.target.value)}
               autoFocus
             />
           </div>
@@ -133,7 +133,7 @@ export default function BookReturnModal({
             </Button>
             <Button
               onClick={handleConfirm}
-              disabled={!username.trim() || !bookCopyId}
+              disabled={!companyAccount.trim() || !bookCopyId}
               variant="default"
             >
               Return Book

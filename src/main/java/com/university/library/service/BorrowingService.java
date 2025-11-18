@@ -21,7 +21,7 @@ public interface BorrowingService {
      BorrowingCommand
      */
     BorrowingResponse borrowBook(UUID bookCopyId, String companyAccount);
-    BorrowingResponse returnBook(UUID bookCopyId);
+    BorrowingResponse returnBook(UUID bookCopyId, String companyAccount);
     BorrowingResponse reportLost(UUID bookCopyId);
 
     List<BorrowingStateResponse> getMostBorrowStats(int limit);

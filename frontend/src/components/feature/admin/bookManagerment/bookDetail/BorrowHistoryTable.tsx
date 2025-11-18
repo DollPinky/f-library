@@ -69,7 +69,7 @@ export default function BorrowHistoryTable({
     bookCopyId: string;
   }): Promise<boolean> => {
     try {
-      await returnedBookByBookCopyId(bookCopyId);
+      await returnedBookByBookCopyId(bookCopyId, username);
       console.log(bookCopyId);
       console.log(username);
 

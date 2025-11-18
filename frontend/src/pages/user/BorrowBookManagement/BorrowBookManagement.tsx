@@ -13,6 +13,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function BorrowBookManagement() {
+  console.log('BorrowBookManagement rendered');
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,8 +46,8 @@ export default function BorrowBookManagement() {
         const booksArray = Array.isArray(res)
           ? res
           : res?.data && Array.isArray(res.data)
-          ? res.data
-          : [];
+            ? res.data
+            : [];
         setBooks(booksArray);
       } catch (error: any) {
         setError("Failed to load book list. Please try again later.");
@@ -121,15 +122,15 @@ export default function BorrowBookManagement() {
   };
 
   const handleConfirmBorrow = async ({
-    username,
+    companyAccount,
     bookCopyId,
   }: {
-    username: string;
+    companyAccount: string;
     bookCopyId: string;
   }) => {
     try {
-      await borrowBookByBookCopyId(bookCopyId);
-      console.log(username);
+      await borrowBookByBookCopyId(bookCopyId, companyAccount);
+      console.log(companyAccount);
 
       toast.success("Book borrowed successfully!");
       setBooks((prevBooks) => {
@@ -174,15 +175,15 @@ export default function BorrowBookManagement() {
   };
 
   const handleConfirmReturn = async ({
-    username,
+    companyAccount,
     bookCopyId,
   }: {
-    username: string;
+    companyAccount: string;
     bookCopyId: string;
   }) => {
     try {
-      await returnedBookByBookCopyId(bookCopyId);
-      console.log(username);
+      await returnedBookByBookCopyId(bookCopyId, companyAccount);
+      console.log(companyAccount);
 
       setBooks((prevBooks) => {
         if (!bookToReturn || !bookCopyId) {

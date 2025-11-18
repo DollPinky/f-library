@@ -67,7 +67,6 @@ public class BorrowingController {
     /**
      * Create borrowing
      */
-    private final UserRepository userRepository;
     @PostMapping("/borrow")
     public ResponseEntity<StandardResponse<BorrowingResponse>> scanAndBorrow(
             @RequestBody BorrowRequest borrowRequest) {
@@ -88,7 +87,7 @@ public class BorrowingController {
         } catch (Exception e) {
             log.error("Error in scan and borrow: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
-                    .body(StandardResponse.error("Không thể xử lý yêu cầu: " + e.getMessage()));
+                    .body(StandardResponse.error("Cannot execute: " + e.getMessage()));
         }
     }
 
@@ -101,7 +100,7 @@ public class BorrowingController {
             @RequestBody BorrowRequest borrowRequest) {
         try {
 
-            BorrowingResponse borrowing = borrowingService.returnBook(borrowRequest.getBookCopyId());
+            BorrowingResponse borrowing = borrowingService.returnBook(borrowRequest.getBookCopyId(), borrowRequest.getCompanyAccount());
 
             String message;
             if (borrowing.getStatus() == Borrowing.BorrowingStatus.OVERDUE) {

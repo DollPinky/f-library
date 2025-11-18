@@ -28,17 +28,13 @@ export const getHistoryByBookCopyId = async (
 };
 export const borrowBookByBookCopyId = async (
   bookCopyId: string,
-  token: string
+  companyAccount: string
 ) => {
   const res = await axiosClient.post(
     "/borrowings/borrow",
     {
       bookCopyId,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      companyAccount
     }
   );
   return res;

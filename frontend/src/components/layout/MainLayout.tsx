@@ -2,16 +2,25 @@ import { useEffect, useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { adminNavItems, userNavItems } from "@/data/mockData";
+import { guestNavItems, adminNavItems, userNavItems } from "@/data/mockData";
 
 export default function MainLayout() {
+
   const [activateItemId, setActiveItemId] = useState<string>('user-dashboard')
   const location = useLocation()
   const navigate = useNavigate()
+  const isAdminSection = location.pathname.startsWith('/admin')
+  const isUserSection = location.pathname.startsWith('/user')
+  const isGuestSection = location.pathname.startsWith('/guest')
 
   // Determine if we're in admin or user section
-  const isAdminSection = location.pathname.startsWith('/admin')
-  const currentNavItems = isAdminSection ? adminNavItems : userNavItems
+  const currentNavItems = isAdminSection
+    ? adminNavItems
+    : isUserSection
+      ? userNavItems
+      : isGuestSection
+        ? guestNavItems
+        : [];
 
   useEffect(() => {
     const currPath = location.pathname;
@@ -36,6 +45,10 @@ export default function MainLayout() {
       ) {
         matchingItem = currentNavItems.find(
           (item) => item.id === "user-dashboard"
+        );
+      } else if (currPath === '/guest' || currPath === '/guest/dashboard') {
+        matchingItem = currentNavItems.find(
+          (item) => item.id === "guest-dashboard"
         );
       } else {
         // Try to match by path segments

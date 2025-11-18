@@ -9,7 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function AdminDashboard() {
   const isMobile = useIsMobile();
-
+  console.log('Dashboard rendered');
   return (
     <div className="flex flex-col space-y-6 md:p-8">
       <div className={isMobile ? "space-y-6" : "grid gap-6 grid-cols-3"}>

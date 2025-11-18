@@ -19,6 +19,7 @@ import Forbidden from "@/pages/Forbidden";
 // User pages
 import UserDashboard from "@/pages/user/Dashboard";
 import BorrowBookManagement from "@/pages/user/BorrowBookManagement/BorrowBookManagement";
+import Dashboard from "@/pages/user/Dashboard";
 // import ReturnBookManagement from "@/pages/user/ReturnBookManagement/ReturnBookManagement";
 
 // Admin pages
@@ -42,6 +43,18 @@ const router = createBrowserRouter([
             element: <PublicRoute />,
             children: [{ path: "/login", element: <Auth /> }],
           },
+        ],
+      },
+
+      // Guess routes
+      {
+        path: "guest",
+        element: <MainLayout />,
+        errorElement: <NotFound />,
+        children: [
+          { path: "dashboard", element: <Dashboard /> },
+          { path: "borrow-books", element: <BorrowBookManagement /> },
+          // { path: "return-books", element: <ReturnBookManagement /> },
         ],
       },
 

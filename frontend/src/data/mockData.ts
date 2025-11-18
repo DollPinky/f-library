@@ -11,6 +11,23 @@ import {
   User,
   Users,
 } from "lucide-react";
+// Guest navigation items
+export const guestNavItems: NavItem[] = [
+  {
+    id: "guest-dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    href: "/guest/dashboard",
+    current: true,
+  },
+  {
+    id: "guest-borrow-books",
+    label: "Borrow Books",
+    href: "/guest/borrow-books",
+    icon: BookIcon,
+    current: true,
+  },
+];
 
 // Admin navigation items
 export const adminNavItems: NavItem[] = [
