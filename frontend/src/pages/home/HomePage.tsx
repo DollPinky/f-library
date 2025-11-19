@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useIsMobile } from '@/hooks/use-mobile'
+import StatsList from "@/components/feature/admin/dashboard/StatsList";
 import {
   BookOpen,
   Book as BookIcon,
@@ -12,28 +13,13 @@ import {
   Calendar,
   RotateCcw,
   Star,
-  Menu,
   X,
-  LogIn,
-  Bell
 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import logoImage from '@/assets/logo.png'
 import { useAuth } from '@/hooks/useAuth'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator
-} from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { Book } from '@/types'
 
 export default function HomePage(): React.ReactElement {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [isSearchVisible, setIsSearchVisible] = useState(false)
   const [stats, setStats] = useState({ totalBook: 0, totalUsers: 0, totalBorrow: 0 })
   const [featuredBooks, setFeaturedBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,188 +43,6 @@ export default function HomePage(): React.ReactElement {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      {/* Header - Using same style as Header.tsx */}
-      <header className="bg-white border-b sticky top-0 z-50">
-        <div className="flex h-16 items-center px-4 container mx-auto">
-          {/* Mobile menu */}
-          {isMobile && (
-            <Button
-              variant={'ghost'}
-              size={'icon'}
-              className="mr-2"
-              onClick={() => setMobileNavOpen(!mobileNavOpen)}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          )}
-
-          <div className="flex items-center space-x-4">
-            <img
-              src={logoImage}
-              alt="Book Library Logo"
-              className="w-14 h-14"
-            />
-            <h2 className="lg:text-2xl font-bold tracking-tight sm:text-lg">
-              Book Library
-            </h2>
-          </div>
-
-          <div className="ml-auto flex items-center space-x-2 md:space-x-4">
-            {!isMobile && (
-              <Input
-                type="search"
-                placeholder="Search your book..."
-                className="md:w-[200px] lg:w-[300px]"
-              />
-            )}
-
-            {isMobile && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsSearchVisible(!isSearchVisible)}
-              >
-                {isSearchVisible ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Search className="h-5 w-5" />
-                )}
-              </Button>
-            )}
-
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-600"></span>
-            </Button>
-
-            {/* Hiển thị nút đăng nhập hoặc avatar tùy theo trạng thái */}
-            {token ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="relative h-8 w-8 rounded-full cursor-pointer"
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage
-                        src="https://github.com/shadcn.png"
-                        alt="@user"
-                      />
-                      <AvatarFallback>
-                        {user?.fullName?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {user?.fullName || 'User'}
-                      </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user?.role || 'User'}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/user/dashboard')}>
-                    Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout}>
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button
-                variant="default"
-                size={isMobile ? 'sm' : 'default'}
-                onClick={handleLoginClick}
-                className="gap-2"
-              >
-                <LogIn className="h-4 w-4" />
-                {!isMobile && 'Đăng nhập'}
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile search */}
-        {isMobile && isSearchVisible && (
-          <div className="px-4 pb-3">
-            <Input
-              type="search"
-              placeholder="Search book..."
-              className="w-full"
-              autoFocus
-            />
-          </div>
-        )}
-      </header>
-
-      {/* Mobile Navigation Menu */}
-      {isMobile && mobileNavOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50"
-          onClick={() => setMobileNavOpen(false)}
-        >
-          <div
-            className="fixed inset-y-0 left-0 w-3/4 max-w-xs bg-white p-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-xl">Menu</h2>
-                <Button
-                  variant="ghost"
-                  size={'icon'}
-                  onClick={() => setMobileNavOpen(false)}
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-
-              <div className="flex-1 overflow-auto">
-                <div className="space-y-2">
-                  <Button
-                    variant={'ghost'}
-                    className="w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal bg-primary/10 text-primary"
-                    onClick={() => setMobileNavOpen(false)}
-                  >
-                    Home
-                  </Button>
-                  <Button
-                    variant={'ghost'}
-                    className="w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal"
-                    onClick={() => setMobileNavOpen(false)}
-                  >
-                    About
-                  </Button>
-                  <Button
-                    variant={'ghost'}
-                    className="w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal"
-                    onClick={() => setMobileNavOpen(false)}
-                  >
-                    Books
-                  </Button>
-                  <Button
-                    variant={'ghost'}
-                    className="w-full justify-start gap-3 rounded-lg px-3 py-2 text-base font-normal"
-                    onClick={() => setMobileNavOpen(false)}
-                  >
-                    Contact
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Hero */}
       <main className="container mx-auto px-4 py-8 md:py-12">
         {/* Welcome Hero Card */}
@@ -308,69 +112,8 @@ export default function HomePage(): React.ReactElement {
         </Card>
 
         {/* Stats Cards */}
-        <div
-          className={
-            isMobile ? 'mt-6 space-y-4' : 'mt-8 grid gap-6 grid-cols-3'
-          }
-        >
-          <Card>
-            <CardHeader className="py-3 flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className={isMobile ? 'text-sm' : 'text-base'}>
-                Total Books
-              </CardTitle>
-              <BookIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div
-                className={
-                  isMobile ? 'text-2xl font-bold' : 'text-3xl font-bold'
-                }
-              >
-                {loading ? '...' : stats.totalBook.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Available in library
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="py-3 flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className={isMobile ? 'text-sm' : 'text-base'}>
-                Active Readers
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div
-                className={
-                  isMobile ? 'text-2xl font-bold' : 'text-3xl font-bold'
-                }
-              >
-                {loading ? '...' : stats.totalUsers.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Registered members
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="py-3 flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className={isMobile ? 'text-sm' : 'text-base'}>
-                Books Borrowed
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div
-                className={
-                  isMobile ? 'text-2xl font-bold' : 'text-3xl font-bold'
-                }
-              >
-                {loading ? '...' : stats.totalBorrow.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">This month</p>
-            </CardContent>
-          </Card>
+        <div className="mt-8">
+          <StatsList />
         </div>
 
         {/* Featured Books */}
@@ -444,46 +187,6 @@ export default function HomePage(): React.ReactElement {
                   <p className="text-muted-foreground">No featured books available</p>
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* How it works */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>How It Works</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div
-              className={isMobile ? 'space-y-6' : 'grid sm:grid-cols-3 gap-6'}
-            >
-              <div className="flex flex-col items-center text-center p-4 border rounded-lg hover:shadow-md transition-shadow">
-                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Search className="w-8 h-8 text-blue-600" />
-                </div>
-                <h4 className="mt-4 font-semibold">Search</h4>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Find books by title, author or category.
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center p-4 border rounded-lg hover:shadow-md transition-shadow">
-                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                  <Calendar className="w-8 h-8 text-green-600" />
-                </div>
-                <h4 className="mt-4 font-semibold">Borrow</h4>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Reserve a copy and pick it up from the library.
-                </p>
-              </div>
-              <div className="flex flex-col items-center text-center p-4 border rounded-lg hover:shadow-md transition-shadow">
-                <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
-                  <RotateCcw className="w-8 h-8 text-orange-600" />
-                </div>
-                <h4 className="mt-4 font-semibold">Return</h4>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Return on time or renew online.
-                </p>
-              </div>
             </div>
           </CardContent>
         </Card>

@@ -74,27 +74,6 @@ function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
 
           {/* Right actions */}
           <div className="ml-auto flex items-center space-x-2 md:space-x-4">
-            {!isMobile && (
-              <Input
-                type="search"
-                placeholder="Search your book..."
-                className="md:w-[200px] lg:w-[300px]"
-              />
-            )}
-
-            {isMobile && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsSearchVisible(!isSearchVisible)}
-              >
-                {isSearchVisible ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Search className="h-5 w-5" />
-                )}
-              </Button>
-            )}
 
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />

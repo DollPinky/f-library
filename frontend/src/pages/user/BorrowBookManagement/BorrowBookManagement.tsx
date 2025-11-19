@@ -38,45 +38,52 @@ export default function BorrowBookManagement() {
   };
 
   useEffect(() => {
-    const fetchAllBooks = async () => {
-      setLoading(true);
-      setError(null);
+    const fetchBooks = async () => {
       try {
         const res = await getAllBooks();
+        console.log("API Response:", res);
+
         const booksArray = Array.isArray(res)
           ? res
           : res?.data && Array.isArray(res.data)
             ? res.data
             : [];
+
         setBooks(booksArray);
-      } catch (error: any) {
-        setError("Failed to load book list. Please try again later.");
-        console.log(error, "Error fetching book list");
-      } finally {
         setLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch books:", error);
+        toast.error("Failed to load books");
+        setBooks([]);
       }
     };
-    fetchAllBooks();
+
+    fetchBooks();
   }, []);
 
   const filteredBooks = useMemo(() => {
+    if (!Array.isArray(books)) {
+      console.warn("Books is not an array:", books);
+      return [];
+    }
+
     return books.filter((book) => {
       const matchesSearch =
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.publisher?.toLowerCase().includes(searchTerm.toLowerCase());
+        book?.publisher?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Handle category being either a string or Category object
+      const categoryName =
+        typeof book?.category === "string"
+          ? book.category
+          : book?.category?.name || "";
+
       const matchesCategory =
-        categoryFilter === "All Categories" ||
-        book.category?.name === categoryFilter;
+        categoryFilter === "All Categories" || categoryName === categoryFilter;
       return matchesSearch && matchesCategory;
     });
   }, [books, searchTerm, categoryFilter]);
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedBooks = filteredBooks.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
 
   const categoryOptions = useMemo(() => {
     const uniqueCategories = Array.from(
@@ -130,7 +137,6 @@ export default function BorrowBookManagement() {
   }) => {
     try {
       await borrowBookByBookCopyId(bookCopyId, companyAccount);
-      console.log(companyAccount);
 
       toast.success("Book borrowed successfully!");
       setBooks((prevBooks) => {
@@ -233,11 +239,13 @@ export default function BorrowBookManagement() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="m-3 md:m-8">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Borrow Books</CardTitle>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <CardTitle className="text-2xl font-bold">Borrow Books</CardTitle>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <SearchAndFilter
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
@@ -251,18 +259,15 @@ export default function BorrowBookManagement() {
               searchTerm !== "" || categoryFilter !== "All Categories"
             }
           />
+          <div className="text-sm text-muted-foreground">
+            Showing {Math.min(filteredBooks.length)} of {filteredBooks.length} books
+          </div>
+          <BookGrid
+            books={filteredBooks}
+            onBorrow={handleBorrowBook}
+            onReturn={handleReturnBook}
+          />
 
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <BookGrid
-              books={paginatedBooks}
-              onBorrow={handleBorrowBook}
-              onReturn={handleReturnBook}
-            />
-          )}
 
           {bookToBorrow && (
             <BookBorrowModal

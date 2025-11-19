@@ -194,72 +194,63 @@ const BookTable = ({ books, onView, onEdit, onDelete }: BookTableProps) => {
         </Table>
       </div>
       {totalPages > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                onClick={() => currentPage > 1 && handleChangePage(currentPage - 1)}
-              />
-            </PaginationItem>
-
-            {/* Show first page if not in first 5 */}
-            {currentPage > 3 && (
+        <div className="flex justify-center mt-4">
+          <Pagination>
+            <PaginationContent className="flex justify-center mt-4">
               <PaginationItem>
-                <PaginationLink onClick={() => handleChangePage(1)}>1</PaginationLink>
+                <PaginationPrevious
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                  onClick={() =>
+                    currentPage > 1 && setCurrentPage(currentPage - 1)
+                  }
+                />
               </PaginationItem>
-            )}
+              {(() => {
+                const pages = [];
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, currentPage + 2);
 
-            {/* Show ellipsis if needed */}
-            {currentPage > 4 && (
+                if (endPage - startPage < 4) {
+                  if (startPage === 1) {
+                    endPage = Math.min(totalPages, startPage + 4);
+                  } else if (endPage === totalPages) {
+                    startPage = Math.max(1, endPage - 4);
+                  }
+                }
+
+                for (let page = startPage; page <= endPage; page++) {
+                  pages.push(
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        isActive={currentPage === page}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                }
+                return pages;
+              })()}
               <PaginationItem>
-                <PaginationEllipsis />
+                <PaginationNext
+                  className={
+                    currentPage >= totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                  onClick={() =>
+                    currentPage < totalPages && setCurrentPage(currentPage + 1)
+                  }
+                />
               </PaginationItem>
-            )}
-
-            {/* Show 5 pages around current page */}
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let page = currentPage;
-              if (currentPage < 3) page = i + 1;
-              else if (currentPage > totalPages - 2) page = totalPages - 4 + i;
-              else page = currentPage - 2 + i;
-
-              return (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    isActive={currentPage === page}
-                    onClick={() => handleChangePage(page)}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              );
-            })}
-
-            {/* Show ellipsis if needed */}
-            {currentPage < totalPages - 3 && (
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-            )}
-
-            {/* Show last page if not in last 5 */}
-            {currentPage < totalPages - 2 && (
-              <PaginationItem>
-                <PaginationLink onClick={() => handleChangePage(totalPages)}>
-                  {totalPages}
-                </PaginationLink>
-              </PaginationItem>
-            )}
-
-            <PaginationItem>
-              <PaginationNext
-                className={currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                onClick={() => currentPage < totalPages && handleChangePage(currentPage + 1)}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+            </PaginationContent>
+          </Pagination>
+        </div>
       )}
     </div>
   )

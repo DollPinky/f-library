@@ -27,13 +27,14 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import { BookManagement } from "@/pages/admin/BookManagement/BookManagement";
 import BookDetail from "@/pages/admin/BookManagement/BookDetail";
 import BookDonation from "@/pages/donation/BookDonation";
+import { Navigate } from "react-router-dom";
 
 const router = createBrowserRouter([
   {
     element: <RootRedirect />,
     children: [
       // Home
-      { index: true, element: <HomePage /> },
+      { index: true, element: <Navigate to="/guest/dashboard" replace /> },
 
       // Auth routes
       {
@@ -52,7 +53,7 @@ const router = createBrowserRouter([
         element: <MainLayout />,
         errorElement: <NotFound />,
         children: [
-          { path: "dashboard", element: <Dashboard /> },
+          { path: "dashboard", element: <HomePage /> },
           { path: "borrow-books", element: <BorrowBookManagement /> },
           // { path: "return-books", element: <ReturnBookManagement /> },
         ],
