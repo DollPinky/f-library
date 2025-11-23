@@ -122,8 +122,7 @@ public class SecurityConfig {
                                 "/api/v1/borrowings/{borrowingId}",
                                 "/api/v1/borrowings/user/{userId}",
                                 "/api/v1/borrowings/overdue",
-                                "/api/v1/borrowings/check-borrowed",
-                                "/api/v1/borrowings/return"
+                                "/api/v1/borrowings/check-borrowed"
                         ).permitAll()
 
                         //admin
@@ -143,6 +142,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/{categoryId}").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/borrowings/borrow").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/return").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/lost").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()

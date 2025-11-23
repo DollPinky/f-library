@@ -20,7 +20,6 @@ export default function BorrowBookManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [error, setError] = useState<string | null>(null);
-  const itemsPerPage = 10;
   console.log(error);
 
   const [borrowModalOpen, setBorrowModalOpen] = useState(false);
@@ -120,6 +119,7 @@ export default function BorrowBookManagement() {
 
     if (borrowedCopy) {
       setBookToReturn(book);
+      console.log({ book })
       setReturnBookCopyId(borrowedCopy.bookCopyId);
       setReturnModalOpen(true);
     } else {
@@ -188,6 +188,7 @@ export default function BorrowBookManagement() {
     bookCopyId: string;
   }) => {
     try {
+      debugger
       await returnedBookByBookCopyId(bookCopyId, companyAccount);
       console.log(companyAccount);
 
@@ -232,6 +233,7 @@ export default function BorrowBookManagement() {
   };
 
   const handleCloseReturnProcess = () => {
+    console.log("Closing return modal");
     setReturnModalOpen(false);
     setBookToReturn(null);
     setReturnBookCopyId(null);

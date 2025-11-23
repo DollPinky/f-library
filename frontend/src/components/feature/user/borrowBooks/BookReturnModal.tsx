@@ -57,8 +57,6 @@ export default function BookReturnModal({
         toast.success("Book returned successfully!");
         onClose();
       }
-
-      setCompanyAccount("");
     } catch (error) {
       console.error("Error returning book:", error);
       toast.error("Failed to return book");

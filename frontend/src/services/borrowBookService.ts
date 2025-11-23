@@ -31,6 +31,7 @@ export const returnedBookByBookCopyId = async (
   bookCopyId: string,
   companyAccount: string
 ): Promise<StandardResponse<ReturnedBookResponse>> => {
+  debugger
   const res = await axiosClient.put("/borrowings/return", { bookCopyId, companyAccount });
   return res.data;
 };
