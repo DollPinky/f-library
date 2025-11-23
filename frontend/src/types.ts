@@ -24,7 +24,7 @@ export interface AdminUser {
 }
 
 export type BrorrowHistory = {
-  username: string;
+  companyAccount: string;
   borrowDate: string;
   returnedDate: string | null;
   bookCopyId: string;

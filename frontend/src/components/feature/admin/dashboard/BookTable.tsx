@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import { PaginationEllipsis } from "@/components/ui/pagination";
 import { ImageWithFallback } from '@/components/layout/ImageWithFallback'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -78,9 +77,7 @@ const BookTable = ({ books, onView, onEdit, onDelete }: BookTableProps) => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   )
-  const handleChangePage = (page: number) => {
-    setCurrentPage(page)
-  }
+
   if (books.length === 0) {
     return (
       <div className="text-center py-8">

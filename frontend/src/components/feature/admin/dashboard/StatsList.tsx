@@ -5,7 +5,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { useEffect, useMemo, useState, type JSX } from "react";
+import { useEffect, useState, type JSX } from "react";
 import { getHomePageStats } from "@/services/dashboardService";
 import { toast } from "react-hot-toast";
 import type { DashboardResponse } from "@/types";
@@ -13,7 +13,7 @@ import type { DashboardResponse } from "@/types";
 export default function StatsList(): JSX.Element {
     const isMobile = useIsMobile();
     const [dashboardResponse, setDashboardResponse] = useState<DashboardResponse | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [, setLoading] = useState<boolean>(false);
     const fetchStats = async (): Promise<void> => {
         setLoading(true);
         try {

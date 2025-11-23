@@ -62,16 +62,16 @@ export default function BorrowHistoryTable({
   };
 
   const handleConfirmReturn = async ({
-    username,
+    companyAccount,
     bookCopyId,
   }: {
-    username: string;
+    companyAccount: string;
     bookCopyId: string;
   }): Promise<boolean> => {
     try {
-      await returnedBookByBookCopyId(bookCopyId, username);
+      await returnedBookByBookCopyId(bookCopyId, companyAccount);
       console.log(bookCopyId);
-      console.log(username);
+      console.log(companyAccount);
 
       toast.success("Returned successfully!");
       setIsReturnModalOpen(false);
@@ -108,7 +108,7 @@ export default function BorrowHistoryTable({
                       className="hover:bg-muted/50"
                     >
                       <TableCell className="font-medium">
-                        {record.username}
+                        {record.companyAccount}
                       </TableCell>
                       <TableCell className="text-center">
                         {formatDate(record.borrowDate)}

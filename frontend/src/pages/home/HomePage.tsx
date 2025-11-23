@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,35 +7,16 @@ import StatsList from "@/components/feature/admin/dashboard/StatsList";
 import {
   BookOpen,
   Book as BookIcon,
-  Users,
-  TrendingUp,
-  Search,
-  Calendar,
-  RotateCcw,
   Star,
-  X,
 } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
 import type { Book } from '@/types'
 
 export default function HomePage(): React.ReactElement {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [stats, setStats] = useState({ totalBook: 0, totalUsers: 0, totalBorrow: 0 })
-  const [featuredBooks, setFeaturedBooks] = useState<Book[]>([])
-  const [loading, setLoading] = useState(true)
+  const [featuredBooks] = useState<Book[]>([])
+  const [loading] = useState(true)
   const isMobile = useIsMobile()
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
   const token = localStorage.getItem('accessToken')
-
-  const handleLogout = async () => {
-    try {
-      await logout()
-    } catch (error) {
-      console.error('❌ Logout failed:', error)
-      navigate('/', { replace: true })
-    }
-  }
 
   const handleLoginClick = () => {
     navigate('/login')

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Menu, Search, X, LogIn } from 'lucide-react'
+import { Bell, Menu, X, LogIn } from 'lucide-react'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
@@ -27,7 +27,7 @@ interface HeaderProps {
 
 function Header({ activateItemId, onNavigate, navItems }: HeaderProps) {
   const isMobile = useIsMobile()
-  const [isSearchVisible, setIsSearchVisible] = useState(false)
+  const [isSearchVisible] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { user, logout } = useAuth()
   const token = localStorage.getItem('accessToken')

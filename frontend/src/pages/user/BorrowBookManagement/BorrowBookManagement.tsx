@@ -15,11 +15,11 @@ import { toast } from "sonner";
 export default function BorrowBookManagement() {
   console.log('BorrowBookManagement rendered');
   const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [, setCurrentPage] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
   console.log(error);
 
   const [borrowModalOpen, setBorrowModalOpen] = useState(false);

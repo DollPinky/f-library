@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Filter, ImageIcon } from "lucide-react";
+import { Filter, ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useMemo, useState, type JSX } from "react";
 import { ImageWithFallback } from "@/components/layout/ImageWithFallback";
