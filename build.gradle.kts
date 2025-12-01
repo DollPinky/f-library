@@ -61,6 +61,10 @@ repositories {
 }
 
 dependencies {
+
+    implementation ("me.paulschwarz:spring-dotenv:4.0.0")
+    implementation("org.apache.poi:poi-ooxml:5.3.0")
+
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -77,7 +81,7 @@ dependencies {
     implementation ("com.google.zxing:core:3.5.3")
     implementation ("com.google.zxing:javase:3.5.3")
     implementation("org.apache.pdfbox:pdfbox:2.0.27")
-    implementation("io.github.cdimascio:java-dotenv:5.2.2")
+//    implementation("io.github.cdimascio:java-dotenv:5.2.2")
     implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")

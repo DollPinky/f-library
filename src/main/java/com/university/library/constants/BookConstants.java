@@ -15,13 +15,14 @@ public final class BookConstants {
     public static final String ERROR_SEARCH_FAILED = "Error occurred while searching books";
     public static final String ERROR_DELETE_FAILED = "Error occurred while deleting book";
     public static final String ERROR_BOOKID_INVALID = "Bookid must be not null";
+    public static final String ERROR_GET_BOOKS_FAIL = "Cannot get books";
 
     // Success Messages
     public static final String SUCCESS_BOOK_CREATED = "Book created successfully";
     public static final String SUCCESS_BOOK_UPDATED = "Book updated successfully";
     public static final String SUCCESS_BOOK_DELETED = "Book deleted successfully";
     public static final String SUCCESS_BOOK_RETRIEVED = "Book retrieved successfully";
-    public static final String SUCCESS_BOOKS_RETRIEVED = "Books retrieved successfully";
+    public static final String SUCCESS_BOOKS_RETRIEVED = "All Books retrieved successfully";
 
     // Log Messages
     public static final String LOG_BOOK_CREATED = "Book created with ID: {}";

@@ -21,6 +21,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByCompanyAccount( String employeeCode);
     Optional<User> findByEmail(String username);
+    Optional<User> findByCompanyAccount(String companyAccount);
 
 
     long countByIsActive(Boolean isActive);

@@ -6,6 +6,7 @@ import com.university.library.constants.BookConstants;
 import com.university.library.dto.request.book.BookSearchParams;
 import com.university.library.dto.request.book.CreateBookCommand;
 import com.university.library.dto.request.book.UpdateBookCommand;
+import com.university.library.dto.response.PageResponse;
 import com.university.library.dto.response.book.BookImportResponse;
 import com.university.library.dto.response.book.BookResponse;
 import com.university.library.service.BookService;
@@ -15,12 +16,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -62,10 +68,24 @@ public class BookController {
 
         try {
            List<BookResponse>  book = bookService.getAllBook();
-            return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOK_RETRIEVED, book));
+            return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOKS_RETRIEVED, book));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(StandardResponse.error(BookConstants.ERROR_BOOK_NOT_FOUND));
+                    .body(StandardResponse.error(BookConstants.ERROR_GET_BOOKS_FAIL));
+        }
+    }
+
+    @GetMapping("/all-pageable")
+    @Operation(summary = "Get book by ID", description = "Get all books with pagination")
+    public ResponseEntity<StandardResponse<List<BookResponse>>> getAllBookPageable(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            var response = bookService.getAllBookPageable(page, size);
+            return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOKS_RETRIEVED, response.getContent()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(StandardResponse.error(BookConstants.ERROR_GET_BOOKS_FAIL + e.getMessage()));
         }
     }
 
@@ -193,6 +213,13 @@ public class BookController {
 
          return ResponseEntity.ok(StandardResponse.success(BookConstants.SUCCESS_BOOK_UPDATED, bookCoverResponse));
      }
+    @PostMapping(value = "/export")
+    public ResponseEntity<byte[]> exportBookSheflt() throws IOException {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Books.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(bookService.exportExcel(bookService.getDataBookToExport()));
+    }
 
 
 }

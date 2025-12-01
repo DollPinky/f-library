@@ -21,48 +21,44 @@ import java.util.UUID;
 public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, JpaSpecificationExecutor<Borrowing> {
 
     /**
-     * Tìm borrowings theo trạng thái với pagination
+     * Find borrowings by status with pagination
      */
     Page<Borrowing> findByStatus(Borrowing.BorrowingStatus status, Pageable pageable);
     
     /**
-     * Tìm borrowings theo query với pagination
+     * Find borrowings by query with pagination
      */
     @Query("SELECT b FROM Borrowing b WHERE " +
            "LOWER(b.bookCopy.book.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(b.bookCopy.book.author) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(b.borrower.fullName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(b.borrower.email) LIKE LOWER(CONCAT('%', :query, '%'))")
+           "LOWER(b.bookCopy.book.author) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<Borrowing> findByQuery(@Param("query") String query, Pageable pageable);
     
     /**
-     * Tìm borrowings theo trạng thái và query với pagination
+     * Find borrowings by status and query with pagination
      */
     @Query("SELECT b FROM Borrowing b WHERE b.status = :status AND (" +
            "LOWER(b.bookCopy.book.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(b.bookCopy.book.author) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(b.borrower.fullName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(b.borrower.email) LIKE LOWER(CONCAT('%', :query, '%')) )")
+           "LOWER(b.bookCopy.book.author) LIKE LOWER(CONCAT('%', :query, '%')) )")
     Page<Borrowing> findByStatusAndQuery(@Param("status") Borrowing.BorrowingStatus status, 
                                         @Param("query") String query, Pageable pageable);
     
     /**
-     * Tìm borrowings quá hạn
+     * Find overdue borrowings
      */
     @Query("SELECT b FROM Borrowing b WHERE b.status = 'BORROWED' AND b.dueDate < :now")
     List<Borrowing> findOverdueBorrowings(@Param("now") Instant now);
     
 
     /**
-     * Đếm số sách đang mượn của một người dùng (bao gồm cả chờ xác nhận)
+     * Count active borrowings by borrower
      */
-    @Query("SELECT COUNT(b) FROM Borrowing b WHERE b.borrower.userId = :borrowerId AND b.status IN ('BORROWED')")
-    long countActiveBorrowingsByBorrower(@Param("borrowerId") UUID borrowerId);
+//    @Query("SELECT COUNT(b) FROM Borrowing b WHERE b.borrower.company_account = :companyAccount AND b.status IN ('BORROWED')")
+//    long countActiveBorrowingsByBorrower(@Param("companyAccount") String companyAccount);
     
     /**
-     * Tìm borrowings với pagination
+     * Find borrowings by borrower with pagination
      */
-    Page<Borrowing> findByBorrowerUserId(UUID borrowerId, Pageable pageable);
+    Page<Borrowing> findByCompanyAccount(String companyAccount, Pageable pageable);
     
 
     
@@ -79,8 +75,8 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, UUID>, Jpa
             Borrowing.BorrowingStatus status
     );
 
-    boolean existsByBorrowerUserIdAndBookCopyBookCopyIdAndStatus(
-            UUID borrowerId,
+    boolean existsByCompanyAccountAndBookCopyBookCopyIdAndStatus(
+            String companyAccount,
             UUID bookCopyId,
             Borrowing.BorrowingStatus status
     );

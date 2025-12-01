@@ -37,4 +37,6 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, UUID>, JpaSp
     List<BookCopy> findByBook_(Book book);
 
     List<BookCopy> findByBook_Category_CategoryIdAndStatus(UUID bookCategoryCategoryId, BookCopy.BookStatus status);
+
+    String countByBookAndShelfLocation(Book book, String shelfLocation);
 }

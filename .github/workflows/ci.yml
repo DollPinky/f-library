@@ -87,10 +87,10 @@ jobs:
         sleep 45
 
         echo "Testing health endpoint..."
-        curl -f http://localhost:8080/api/health || echo "Health check failed"
+        curl -f http://localhost:8082/api/health || echo "Health check failed"
 
         echo "Testing Swagger endpoint..."
-        curl -f http://localhost:8080/swagger-ui.html || echo "Swagger check failed"
+        curl -f http://localhost:8082/swagger-ui.html || echo "Swagger check failed"
 
         echo "Stopping application..."
         kill $APP_PID || true

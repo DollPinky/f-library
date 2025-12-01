@@ -20,7 +20,6 @@ public class BookImportResponse {
     @AllArgsConstructor
     public static class ImportError {
         private int rowNumber;
-        private String isbn;
         private String errorMessage;
     }
 }

@@ -20,6 +20,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -51,11 +52,12 @@ public class SecurityConfig {
     private final RefreshTokenRepository refreshTokenRepository;
     @Value("${app.cors.allowed-origins:*}")
     private String corsAllowedOrigins;
-    private final CookieJwtAuthFilter cookieJwtAuthFilter;
+//    private final CookieJwtAuthFilter cookieJwtAuthFilter;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomOAuth2UserDetailsService customOAuth2UserDetailsService;
     private final PasswordEncoder passwordEncoder;
+    private final String DOMAIN = "https://v2.thuvienfpt.com";
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -75,7 +77,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "api/v1/public/**"
                         ).permitAll()
 
                         .requestMatchers(
@@ -139,7 +142,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/{categoryId}").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/borrowings/borrow").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/return").hasAnyRole("ADMIN","READER")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/return").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/borrowings/lost").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/api/v1/loyalty-point/update").permitAll()
@@ -150,6 +153,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,  "/api/v1/book-donation-history/{accountId}").hasAnyRole("READER","ADMIN")
 
                         .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN")
+                        .requestMatchers("/favicon.ico", "/error").permitAll()
 
                         .anyRequest().authenticated()
                 )
@@ -161,7 +165,8 @@ public class SecurityConfig {
                         .successHandler(oAuth2LoginSuccessHandler)
                         .failureHandler((req, res, ex) -> {
                             String msg = URLEncoder.encode(ex.getMessage(), StandardCharsets.UTF_8);
-                            res.sendRedirect("http://localhost:5173/login?oauth_error=" + msg);
+//                            res.sendRedirect("http://localhost:8081/login?oauth_error=" + msg);
+                            res.sendRedirect(  DOMAIN + "/login?oauth_error=" + msg);
                         })
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserDetailsService) // Use OAuth2UserService instead of OidcUserService
@@ -177,9 +182,9 @@ public class SecurityConfig {
                         })
                 )
                 .authenticationProvider(authenticationProvider());
-        http.addFilterBefore(cookieJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+//        http.addFilterBefore(cookieJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
+        http.csrf(AbstractHttpConfigurer::disable);
         return http.build();
     }
 

@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            SecurityContextHolder.clearContext();
+//            SecurityContextHolder.clearContext();
             filterChain.doFilter(request, response);
             return;
         }
@@ -67,6 +67,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String p = request.getServletPath();
+        return p.startsWith("/oauth2/")
+                || p.startsWith("/login/oauth2/")
+                || p.equals("/favicon.ico")
+                || p.startsWith("/swagger")    // tuỳ bạn
+                || p.startsWith("/v3/api-docs")
+                || p.startsWith("/webjars")
+                || p.equals("/error")
+                || p.startsWith("/api-docs");  // tuỳ bạn
     }
 
 }

@@ -20,12 +20,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -95,11 +97,11 @@ public class BorrowingServiceImpl implements BorrowingService {
     /**
      * Lấy borrowings của một người dùng
      */
-    public PagedResponse<BorrowingResponse> getBorrowingsByUser(UUID userId, int page, int size) {
-        log.info("Getting borrowings for user: {} with pagination: page={}, size={}", userId, page, size);
+    public PagedResponse<BorrowingResponse> getBorrowingsByUser(String companyAccount, int page, int size) {
+        log.info("Getting borrowings for user: {} with pagination: page={}, size={}", companyAccount, page, size);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Borrowing> borrowingPage = borrowingRepository.findByBorrowerUserId(userId, pageable);
+        Page<Borrowing> borrowingPage = borrowingRepository.findByCompanyAccount(companyAccount, pageable);
 
         List<BorrowingResponse> borrowings = borrowingPage.getContent().stream()
                 .map(BorrowingResponse::fromEntity)
@@ -143,37 +145,30 @@ public class BorrowingServiceImpl implements BorrowingService {
     }
 
     /**
-     * Borrowing Command
-     */
-
-    /**
-     * Tạo yêu cầu mượn sách hoặc đặt sách
+     * Create borrow book, caculate loyalty point
      */
     @Transactional
-    public BorrowingResponse Borrow(UUID bookCopyId, UUID borrowerId) {
+    public BorrowingResponse borrowBook(UUID bookCopyId, String companyAccount) {
 
         BookCopy bookCopy = bookCopyRepository.findByBookCopyId(bookCopyId);
         if (bookCopy == null) {
-            throw new RuntimeException("Không tìm thấy sách với mã QR: " + bookCopyId);
+            throw new RuntimeException("Cannot find bookid: " + bookCopyId);
         }
 
-        // Kiểm tra trạng thái sách
+        // Check status of book copy
         if (!bookCopy.getStatus().equals(BookCopy.BookStatus.AVAILABLE)) {
-            throw new RuntimeException("Sách không có sẵn để mượn");
+            throw new RuntimeException("Book is not available for borrowing");
         }
 
-        User borrower = userRepository.findById(borrowerId)
-                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+//        long activeBorrowings = borrowingRepository.countActiveBorrowingsByBorrower(borrowerId);
+//        if (activeBorrowings >= 5) {
+//            throw new RuntimeException("User has reached maximum number of active borrowings (5)");
+//        }
 
-        long activeBorrowings = borrowingRepository.countActiveBorrowingsByBorrower(borrowerId);
-        if (activeBorrowings >= 5) {
-            throw new RuntimeException("User has reached maximum number of active borrowings (5)");
-        }
-
-        // Tạo giao dịch mượn sách
+        // Create new borrowing record
         Borrowing borrowing = Borrowing.builder()
                 .bookCopy(bookCopy)
-                .borrower(borrower)
+                .companyAccount(companyAccount)
                 .borrowedDate(LocalDateTime.now())
                 .dueDate(LocalDateTime.now().plusDays(30))
                 .status(BORROWED)
@@ -181,74 +176,92 @@ public class BorrowingServiceImpl implements BorrowingService {
 
         Borrowing savedBorrowing = borrowingRepository.save(borrowing);
 
-        // Cập nhật trạng thái sách thành BORROWED
+        // Update book status to BORROWED
         bookCopy.setStatus(BookCopy.BookStatus.BORROWED);
         bookCopyRepository.save(bookCopy);
-        LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
-                .bookCopyId(bookCopy.getBookCopyId())
-                .loyaltyAction(LoyaltyHistory.LoyaltyAction.BORROWED)
-                .userId(borrower.getUserId())
-                .build();
-        log.info("Info{} ",loyaltyRequest);
-        loyaltyService.updateLoyaltyPoint(loyaltyRequest);
 
-
-
+        //Find existing user to caculate loyalty point
+        Optional<User> borrowerOpt = userRepository.findByCompanyAccount(companyAccount);
+        if (borrowerOpt.isPresent()) {
+            LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
+                    .bookCopyId(bookCopy.getBookCopyId())
+                    .loyaltyAction(LoyaltyHistory.LoyaltyAction.BORROWED)
+                    .userId(borrowerOpt.get().getUserId())
+                    .build();
+            log.info("Info{} ",loyaltyRequest);
+            loyaltyService.updateLoyaltyPoint(loyaltyRequest);
+        }
         return BorrowingResponse.fromEntity(savedBorrowing);
     }
 
-
     /**
-     * Trả sách
+     * Return book
      */
     @Transactional
-    public BorrowingResponse returnBook(UUID bookCopyId) {
+    public BorrowingResponse returnBook(UUID bookCopyId, String companyAccount) {
 
-        // Tìm bản sao sách bằng QR code
+        // Find book copy by id
         BookCopy bookCopy = bookCopyRepository.findByBookCopyId(bookCopyId);
         if (bookCopy == null) {
-            throw new RuntimeException("Không tìm thấy sách với mã QR: " + bookCopyId);
+            throw new RuntimeException("Cannot find bookid: " + bookCopyId);
         }
 
-        // Tìm borrowing mới nhất của book copy này
+        // Find latest borrowing of this book copy
         Borrowing borrowing = borrowingRepository
                 .findTopByBookCopyAndStatusOrderByCreatedAtDesc(
                         bookCopy,
                         Borrowing.BorrowingStatus.BORROWED
                 )
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch mượn sách cho sách này"));
+                .orElseThrow(() -> new RuntimeException("Cannot find transaction borrowing for this book copy"));
 
         if (!borrowing.getStatus().equals(Borrowing.BorrowingStatus.BORROWED)) {
-            throw new RuntimeException("Sách không trong trạng thái đang mượn");
+            throw new RuntimeException("Book is not in BORROWED status");
         }
+
+//        var context = SecurityContextHolder.getContext();
+//        String email = context.getAuthentication().getName();
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new RuntimeException("UserEmail Not Found At getCurrentUserProfile()" + email));
+
+//        if(!user.getRole().equals(User.AccountRole.ADMIN)){
+//            if(!user.getUserId().equals(borrowing.getBorrower().getUserId())){
+//                throw new RuntimeException("Account not permission to return this book, because not exactly borrower");
+//            }
+//        }
 
         LocalDateTime returnDate = LocalDateTime.now();
         double fine = borrowing.calculateFine();
-
+        Optional<User> borrowerOpt = userRepository.findByCompanyAccount(borrowing.getCompanyAccount());
+        // Update borrowing status and fine
         if (returnDate.isAfter(borrowing.getDueDate())) {
             borrowing.setStatus(Borrowing.BorrowingStatus.OVERDUE);
 
-            LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
-                    .bookCopyId(bookCopy.getBookCopyId())
-                    .loyaltyAction(LoyaltyHistory.LoyaltyAction.OVERDUE)
-                    .userId(borrowing.getBorrower().getUserId())
-                    .build();
-            loyaltyService.updateLoyaltyPoint(loyaltyRequest);
+            if (borrowerOpt.isPresent()) {
+                LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
+                        .bookCopyId(bookCopy.getBookCopyId())
+                        .loyaltyAction(LoyaltyHistory.LoyaltyAction.OVERDUE)
+                        .userId(borrowerOpt.get().getUserId())
+                        .build();
+                loyaltyService.updateLoyaltyPoint(loyaltyRequest);
+            }
+            // Update fine amount
         } else {
             borrowing.setStatus(Borrowing.BorrowingStatus.RETURNED);
-
-            LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
-                    .bookCopyId(bookCopy.getBookCopyId())
-                    .loyaltyAction(LoyaltyHistory.LoyaltyAction.RETURNED)
-                    .userId(borrowing.getBorrower().getUserId())
-                    .build();
-            loyaltyService.updateLoyaltyPoint(loyaltyRequest);
+            if (borrowerOpt.isPresent()) {
+                LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
+                        .bookCopyId(bookCopy.getBookCopyId())
+                        .loyaltyAction(LoyaltyHistory.LoyaltyAction.RETURNED)
+                        .userId(borrowerOpt.get().getUserId())
+                        .build();
+                loyaltyService.updateLoyaltyPoint(loyaltyRequest);
+            }
         }
 
         borrowing.setReturnedDate(returnDate);
         borrowing.setFineAmount(fine);
+        borrowing.setCompanyAccount(companyAccount);
 
-        // Cập nhật trạng thái book copy
+        // Update book copy status to AVAILABLE
         bookCopy.setStatus(BookCopy.BookStatus.AVAILABLE);
         bookCopyRepository.save(bookCopy);
 
@@ -260,7 +273,7 @@ public class BorrowingServiceImpl implements BorrowingService {
     }
 
     /**
-     * Báo mất sách
+     * Notice lost book
      */
     @Transactional
     public BorrowingResponse reportLost(UUID bookCopyId) {
@@ -292,11 +305,12 @@ public class BorrowingServiceImpl implements BorrowingService {
         bookCopyRepository.save(bookCopy);
 
         Borrowing savedBorrowing = borrowingRepository.save(borrowing);
-
+        String companyAccount = borrowing.getCompanyAccount();
+        Optional<User> borrowerOpt = userRepository.findByCompanyAccount(companyAccount);
         LoyaltyRequest loyaltyRequest = LoyaltyRequest.builder()
                 .bookCopyId(bookCopy.getBookCopyId())
                 .loyaltyAction(LoyaltyHistory.LoyaltyAction.LOST)
-                .userId(borrowing.getBorrower().getUserId())
+                .userId(borrowerOpt.get().getUserId())
                 .build();
         loyaltyService.updateLoyaltyPoint(loyaltyRequest);
 
@@ -323,13 +337,12 @@ public class BorrowingServiceImpl implements BorrowingService {
         Sort sort = Sort.by("borrowedDate").descending();
         Pageable pageable = PageRequest.of(page - 1, size, sort);
 
-        // Chỉ gọi repository một lần
         Page<Borrowing> pageData = borrowingRepository.findBorrowingByBookCopy_BookCopyId(bookCopyId, pageable);
 
         List<BorrowingHistoryResponse> content = pageData.getContent()
                 .stream()
                 .map(b -> new BorrowingHistoryResponse(
-                        b.getBorrower().getUsername(),
+                        b.getCompanyAccount(),
                         b.getBookCopy().getBookCopyId(),
                         b.getBookCopy().getShelfLocation(),
                         b.getBookCopy().getStatus(),
