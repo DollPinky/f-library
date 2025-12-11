@@ -1,0 +1,13 @@
+# cd.yml
+name: CD Pipeline
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types: [completed]   # Run after CI finishes
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Heroku
+        run: |
+          git push heroku main
